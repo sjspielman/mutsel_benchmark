@@ -1,0 +1,36 @@
+#$ -N amine_tm_pb_restart
+#$ -e e_$JOB_NAME
+#$ -o o_$JOB_NAME
+#$ -S /bin/bash
+#$ -q wilke
+#$ -pe serial 16
+
+DIR=amine_tm_pb_restart
+NAME=$JOB_NAME
+
+source ~/.bashrc
+
+# Create Working Directory and remove anything that might have been there woops!
+MYJOB=$JOB_NAME-$JOB_ID
+WDIR=/state/partition1/sjs3495/$MYJOB
+mkdir -p $WDIR
+
+if [ ! -d $WDIR ]
+then
+  echo $WDIR not created
+  exit
+fi
+cd $WDIR
+
+
+cp /share/WilkeLab/work/sjs3495/$DIR/* .
+cp $HOME/MutSel_benchmark/scripts/process_phylobayes.py .
+mpirun -np 16 ./pb_mpi ${NAME}_phylobayes
+
+module load python
+python process_phylobayes.py ${NAME}_phylobayes 16
+
+
+cd ..
+cp -r $WDIR /share/WilkeLab/work/sjs3495/
+rm -r $WDIR
