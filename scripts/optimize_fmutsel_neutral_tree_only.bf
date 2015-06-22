@@ -30,11 +30,12 @@ function buildCodonFrequencies1x4(obsF)
 OPTIMIZATION_PRECISION = 0.000001;
 DataSet ds = ReadDataFile ("hyin.txt");
 DataSetFilter filtered_nuc_data = CreateFilter(ds,1);
-global k := insert_kappa;
-global freqA := insert_fA;
-global freqC := insert_fC;
-global freqG := insert_fG;
-global freqT := insert_fT;
+global k := 4.0;
+global freqA := 0.25;
+global freqC := 0.25;
+global freqG := 0.25;
+global freqT := 0.25;
+#include "fmutsel_neutral.mdl";
 
 f1x4 = buildCodonFrequencies1x4({{freqA, freqC, freqG, freqT}}); // F1x4
 DataSet ds2 = ReadDataFile ("hyin.txt");

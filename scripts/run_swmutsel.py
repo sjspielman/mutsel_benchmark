@@ -181,13 +181,13 @@ def main():
     assert( os.path.exists(treefile) ), "Specified tree file does not exist. Path?"
     cpu = sys.argv[3]
     dataset = sys.argv[4]
-    estimate_mutation = bool(sys.argv[5])
-    if estimate_mutation:
+    estimate_mutation = bool(int(sys.argv[5]))
+    print estimate_mutation
+    if estimate_mutation is True:
         label = "_estmu_"
     else:
         label = "_fixedmu_"
     opt_treefile = dataset + label + "swmutsel.tre"
-    
     
     # Make sure we have both a fasta (for hyphy) and phylip (for swmutsel) alignment file. 
     alnfile_fasta, alnfile_phy = prep_alignment(alnfile)
@@ -205,7 +205,8 @@ def main():
         mu_dict = {'AT': mu, 'TA':mu, 'CG': mu, 'GC':mu, 'AC': mu, 'CA':mu, 'GT':mu, 'TG':mu, 'AG': kappa*mu, 'GA':kappa*mu, 'CT':kappa*mu, 'TC':kappa*mu}
         treestring = optimize_tree_only(cpu, pi, kappa)
    
-    pi_string = ",".join(pi)             
+    pi2 = [str(i) for i in pi]
+    pi_string = ",".join(pi2)             
     with open(opt_treefile, "w") as f:
         f.write(treestring)
 
