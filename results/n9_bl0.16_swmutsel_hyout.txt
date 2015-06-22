@@ -1,6 +1,0 @@
-Error:
-fmutsel_neutral has not been defined prior to the call to Model = ...
-
-Function call stack
-1 : Define the model FMutsel_Neutral using transition matrix 'fmutsel_neutral' and equilibrium frequencies 'f1x4'
--------

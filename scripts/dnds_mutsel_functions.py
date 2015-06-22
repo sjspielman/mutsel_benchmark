@@ -1,33 +1,86 @@
-# SJS 1/17/15 - present.
-# Functions to derive dN/dS from codon fitness values (Spielman and Wilke 2015), under the assumption of synonymous selection but asymmetric mutation rates.
 
 ZERO = 1e-10
+import re
 import numpy as np
 from scipy import linalg
-import re
+import sys
+from random import uniform, shuffle
 amino_acids  = ["A", "C", "D", "E", "F", "G", "H", "I", "K", "L", "M", "N", "P", "Q", "R", "S", "T", "V", "W", "Y"]
 codons=["AAA", "AAC", "AAG", "AAT", "ACA", "ACC", "ACG", "ACT", "AGA", "AGC", "AGG", "AGT", "ATA", "ATC", "ATG", "ATT", "CAA", "CAC", "CAG", "CAT", "CCA", "CCC", "CCG", "CCT", "CGA", "CGC", "CGG", "CGT", "CTA", "CTC", "CTG", "CTT", "GAA", "GAC", "GAG", "GAT", "GCA", "GCC", "GCG", "GCT", "GGA", "GGC", "GGG", "GGT", "GTA", "GTC", "GTG", "GTT", "TAC", "TAT", "TCA", "TCC", "TCG", "TCT", "TGC", "TGG", "TGT", "TTA", "TTC", "TTG", "TTT"]
 codon_dict = {"AAA":"K", "AAC":"N", "AAG":"K", "AAT":"N", "ACA":"T", "ACC":"T", "ACG":"T", "ACT":"T", "AGA":"R", "AGC":"S", "AGG":"R", "AGT":"S", "ATA":"I", "ATC":"I", "ATG":"M", "ATT":"I", "CAA":"Q", "CAC":"H", "CAG":"Q", "CAT":"H", "CCA":"P", "CCC":"P", "CCG":"P", "CCT":"P", "CGA":"R", "CGC":"R", "CGG":"R", "CGT":"R", "CTA":"L", "CTC":"L", "CTG":"L", "CTT":"L", "GAA":"E", "GAC":"D", "GAG":"E", "GAT":"D", "GCA":"A", "GCC":"A", "GCG":"A", "GCT":"A", "GGA":"G", "GGC":"G", "GGG":"G", "GGT":"G", "GTA":"V", "GTC":"V", "GTG":"V", "GTT":"V", "TAC":"Y", "TAT":"Y", "TCA":"S", "TCC":"S", "TCG":"S", "TCT":"S", "TGC":"C", "TGG":"W", "TGT":"C", "TTA":"L", "TTC":"F", "TTG":"L", "TTT":"F"}
 genetic_code = [["GCA", "GCC", "GCG", "GCT"], ["TGC","TGT"], ["GAC", "GAT"], ["GAA", "GAG"], ["TTC", "TTT"], ["GGA", "GGC", "GGG", "GGT"], ["CAC", "CAT"], ["ATA", "ATC", "ATT"], ["AAA", "AAG"], ["CTA", "CTC", "CTG", "CTT", "TTA", "TTG"], ["ATG"], ["AAC", "AAT"], ["CCA", "CCC", "CCG", "CCT"], ["CAA", "CAG"], ["AGA", "AGG", "CGA", "CGC", "CGG", "CGT"] , ["AGC", "AGT", "TCA", "TCC", "TCG", "TCT"], ["ACA", "ACC", "ACG", "ACT"], ["GTA", "GTC", "GTG", "GTT"], ["TGG"], ["TAC", "TAT"]]
 
 
-def aa_to_codon_fitness(fitness):
+
+def codon_fitness_to_freqs(codon_fitness):
+    ''' 
+        Convert amino acid fitness values to stationary codon frequencies using Sella and Hirsh 2005 (Boltzmann).
+        
     '''
-        Convert list of amino acid *fitnesses* to list of codon *fitness*
-    '''
-    
-    d = {}
-    for i in range(20):
-        syn_codons = genetic_code[i]
-        for syn in syn_codons:
-            d[ syn ] = fitness[i]   
-    codon_fitness = np.zeros(61)
+ 
+    codon_freqs = np.zeros(61)
     count = 0
-    for i in range(61):
-        codon_fitness[i] = d[codons[i]]
-    return codon_fitness
+    for codon in codons:
+        codon_freqs[count] = np.exp( codon_fitness[codon] )
+        count += 1
+    codon_freqs /= np.sum(codon_freqs)                   
+    assert( abs(1. - np.sum(codon_freqs)) <= ZERO), "codon_freq doesn't sum to 1 in codon_fitness_to_freqs"
+    return codon_freqs 
 
 
+
+def add_bias(rawfreqs, bias):
+    ''' 
+        Derive new codon frequencies which incorporate codon bias.
+    '''
+
+    new_freqs = np.zeros(61)
+
+    for i in range(len(genetic_code)):
+        # Determine the new preferred, non-preferred frequencies
+        family = genetic_code[i]
+        aa_freq = rawfreqs[ codons.index(genetic_code[i][0]) ]
+        aa_freq_full = aa_freq * len(family)
+        k = len(family) - 1.
+        
+        if k != 0:
+            freq_pref = aa_freq_full * bias
+            freq_nonpref = (aa_freq_full - freq_pref)/k
+            assert( abs(aa_freq_full - (freq_pref + freq_nonpref*k)) <= ZERO), "New bias frequencies improperly calculated."
+        else:
+            freq_pref = aa_freq
+            
+        # Assign randomly
+        indices = [codons.index(x) for x in family]
+        shuffle(indices)
+        first = True
+        for ind in indices:
+            if first:
+                new_freqs[ind] = freq_pref
+                first=False
+            else:
+                new_freqs[ind] = freq_nonpref
+
+    assert(abs(1. - np.sum(new_freqs)) <= ZERO), "New bias frequencies don't sum to 1."
+    new_freqs_dict = dict(zip(codons, new_freqs))
+    
+    return new_freqs, new_freqs_dict
+    
+
+
+
+def aa_to_codon_freqs(aa_freqs):
+    
+    codon_freqs = np.zeros(61)
+    aa_dict = dict(zip(amino_acids, aa_freqs))
+    for aa in aa_dict:
+        syn_codons = genetic_code[ amino_acids.index(aa) ]
+        cf = aa_dict[aa] / float(len(syn_codons))
+        for syn in syn_codons:
+            codon_freqs[ codons.index(syn) ] = cf
+    
+    assert(1. - np.sum(codon_freqs) <= ZERO), "bad codon freqs from aa freqs"
+    return codon_freqs, dict(zip(codons, codon_freqs))
 
 
 def get_eq_from_eig(m):   
@@ -115,7 +168,7 @@ def derive_dnds(codon_freqs_dict, mu_dict):
         rate, sites = calc_paths(codon, codon_freqs_dict, mu_dict, 'syn')
         numer_ds += rate
         denom_ds += sites
-    
+
     assert( denom_dn != 0. and denom_ds != 0.), "dN/dS calc indicates no evolution, maybe????"
     return (numer_dn/denom_dn)/(numer_ds/denom_ds)
     
@@ -158,7 +211,7 @@ def calc_subst_prob(pi, pj, mu_ij, mu_ji):
         if abs(1. - p_mu) <= ZERO:
             fixation_rate = 1. 
         else:
-            fixation_rate =  np.log(p_mu)/(1. - 1./p_mu)
+            fixation_rate =  (np.log(p_mu))/(1. - (1./p_mu))
     return fixation_rate * mu_ij            
 
 
