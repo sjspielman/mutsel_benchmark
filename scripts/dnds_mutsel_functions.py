@@ -27,6 +27,21 @@ def codon_fitness_to_freqs(codon_fitness):
     assert( abs(1. - np.sum(codon_freqs)) <= ZERO), "codon_freq doesn't sum to 1 in codon_fitness_to_freqs"
     return codon_freqs 
 
+def aa_to_codon_fitness(fitness):
+    '''
+        Convert list of amino acid *fitnesses* to list of codon *fitness*
+    '''
+    
+    d = {}
+    for i in range(20):
+        syn_codons = genetic_code[i]
+        for syn in syn_codons:
+            d[ syn ] = fitness[i]   
+    codon_fitness = np.zeros(61)
+    count = 0
+    for i in range(61):
+        codon_fitness[i] = d[codons[i]]
+    return codon_fitness
 
 
 def add_bias(rawfreqs, bias):
