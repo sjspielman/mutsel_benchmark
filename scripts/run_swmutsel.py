@@ -15,7 +15,7 @@ import sys
 import subprocess
 import numpy as np
 from Bio import AlignIO
-from dnds_functions import *
+from dnds_mutsel_functions import *
 
 # Penalty functions (no penalty + 3 dirichlet + 3 multivariate normal) to run swmutsel with
 penalty = {"nopenal" :"", 
@@ -159,7 +159,7 @@ def run_swmutsel(pi, kappa, alnfile, treefile, cpu, dataset, penalname, penalarg
                 fitness.append( [float(y) for (x,y) in sorted(zip(new_order,newline))] )
     
     # Save a file with fitness values
-    np.savetxt(job_name + 'fitness.txt', fitness, delimiter = '\t')        
+    np.savetxt(job_name + '_fitness.txt', fitness, delimiter = '\t')        
     
     return fitness    
 
@@ -184,9 +184,9 @@ def main():
     estimate_mutation = bool(int(sys.argv[5]))
     print estimate_mutation
     if estimate_mutation is True:
-        label = "_estmu_"
+        label = "_estmu"
     else:
-        label = "_fixedmu_"
+        label = "_fixedmu"
     opt_treefile = dataset + label + "swmutsel.tre"
     
     # Make sure we have both a fasta (for hyphy) and phylip (for swmutsel) alignment file. 
@@ -231,7 +231,7 @@ def main():
             dnds.append( derive_dnds(cf, mu_dict)  )    
 
         # Save
-        with open(dataset + "_" + penal + label + "dnds.txt", "w") as outf:
+        with open(dataset + "_" + penal + label + "_dnds.txt", "w") as outf:
             outf.write( "\n".join([str(i) for i in dnds]) )
   
     
