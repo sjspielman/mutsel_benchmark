@@ -14,7 +14,7 @@ import subprocess
 import numpy as np
 from Bio import AlignIO
 from dendropy import Tree
-from dnds_functions import *
+from dnds_mutsel_functions import *
 
         
 

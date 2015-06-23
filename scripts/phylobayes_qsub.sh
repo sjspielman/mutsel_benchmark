@@ -28,7 +28,7 @@ cd $WDIR
 cp $DATADIR/$ALN .
 cp $DATADIR/$TREE .
 cp $SCRIPTDIR/run_phylobayes.py .
-cp $SCRIPTDIR/dnds_functions.py .
+cp $SCRIPTDIR/dnds_mutsel_functions.py .
 cp $PBEXEC .
 cp $READPBEXEC .
 
