@@ -10,7 +10,6 @@ source ~/.bashrc
 # define files, variables used in analysis
 CPU=16
 DATA=$1
-ESTMU=$2
 
 SWEXEC=$HOME/bin/swmutsel-alpha_jdk1.6.jar
 REPODIR=$HOME/mutsel_bench
@@ -33,7 +32,7 @@ ls
 module load java
 module load python
 export PYTHONPATH=$HOME/bin/lib/python2.7/site-packages # to get biopython behaving w/ phylip-relaxed
-python run_swmutsel.py $DATA $CPU $ESTMU
+python run_swmutsel.py $DATA $CPU
 
 FINALDIR=$REPODIR/results
 mkdir -p $FINALDIR

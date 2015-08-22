@@ -18,15 +18,11 @@ sed -i "s/-N JOB/-N ${DATA}_fel2/" fel2.qsub
 qsub fel2.qsub $DATA
 sed -i "s/-N ${DATA}_fel2/-N JOB/" fel2.qsub
 
-# swmutsel, with estimated mutation rates
-sed -i "s/-N JOB/-N ${DATA}_estmu_sw/" swmutsel.qsub
-qsub swmutsel.qsub $DATA 1
-sed -i "s/-N ${DATA}_estmu_sw/-N JOB/" swmutsel.qsub
+# swmutsel
+sed -i "s/-N JOB/-N ${DATA}_sw/" swmutsel.qsub
+qsub swmutsel.qsub $DATA
+sed -i "s/-N ${DATA}_sw/-N JOB/" swmutsel.qsub
 
-# swmutsel, with symmetric mutation rates
-sed -i "s/-N JOB/-N ${DATA}_treeonly_sw/" swmutsel.qsub
-qsub swmutsel.qsub $DATA 0
-sed -i "s/-N ${DATA}_treeonly_sw/-N JOB/" swmutsel.qsub
  
 # phylobayes
 sed -i "s/-N JOB/-N ${DATA}_pb/" phylobayes.qsub

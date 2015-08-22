@@ -4,7 +4,7 @@
 # Note that optimization is done first with HKY85 to get kappa and nucleotide frequencies, and then with a global MutSel neutral model (this is essentially MG94 with w=1), as this is how swmutsel interprets BL.
 # Once site-wise fitness values are inferred, compute site-wise dN/dS values.
 
-# Usage: python run_mutsel.py <alignment_file> <tree_file> <cpu> <dataset> <estimate_mutation>. 
+# Usage: python run_mutsel.py <alignment_file> <tree_file> <cpu> <dataset>. 
 ## Alignment must be in either phylip/fasta format, and tree must be in newick format. Both must be in working directory.
 ## Additionally note that all executables called (swmutsel.jar and HYPHYMP) must be in the working directory.
 
@@ -151,12 +151,11 @@ def run_swmutsel(pi, kappa, alnfile, treefile, cpu, dataset, penalname, penalarg
 
 
 def main():
-    usage = "\nUsage: python run_swmutsel.py <dataset> <cpu> <estimate_mutation>. Note that all files and all executables ('swmutsel'+'HYPHYMP') must be in the working directory!"
-    assert( len(sys.argv) == 4 ), usage
+    usage = "\nUsage: python run_swmutsel.py <dataset> <cpu>. Note that all files and all executables ('swmutsel'+'HYPHYMP') must be in the working directory!"
+    assert( len(sys.argv) == 3 ), usage
     
     dataset = sys.argv[1]
     cpu = sys.argv[2]
-    estimate_mutation = bool(int(sys.argv[3]))
 
     alnfile_fasta = dataset + ".fasta"
     alnfile_phy = dataset + ".phy"
