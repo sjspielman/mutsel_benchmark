@@ -161,38 +161,16 @@ def main():
     alnfile_fasta = dataset + ".fasta"
     alnfile_phy = dataset + ".phy"
     treefile = dataset + ".tre"
-    #assert( os.path.exists(alnfile_fasta) ), "There is no fasta alignment file."
-    #assert( os.path.exists(alnfile_phy) ), "There is no phylip alignment file."
-    #assert( os.path.exists(treefile) ), "There is tree file."
-
-    if estimate_mutation is True:
-        label = "_estmu"
-    else:
-        label = "_fixedmu"
-    opt_treefile = dataset + label + "_optimized.tre"
-
-
+    opt_treefile = dataset + "_swmutsel_optimized.tre"
     
     
     # Prep hyphy input file and call hyphy to optimize mutational parameters, create mu_dict to use later for dnds derivation, and make a treefile with the optimized tree
     subprocess.call("cat " + alnfile_fasta + " " + treefile + " > hyin.txt", shell=True)
-
-    
-    if estimate_mutation is True:
-        pi, kappa, treestring, mu_dict = optimize_fmutsel_neutral(cpu)    
-    
-    else:
-        pi = ['0.25', '0.25', '0.25', '0.25']
-        kappa = 4.0; mu = 1.
-        mu_dict = {'AT': mu, 'TA':mu, 'CG': mu, 'GC':mu, 'AC': mu, 'CA':mu, 'GT':mu, 'TG':mu, 'AG': kappa*mu, 'GA':kappa*mu, 'CT':kappa*mu, 'TC':kappa*mu}
-        treestring = optimize_tree_only(cpu, pi, kappa)
-   
+    pi, kappa, treestring, mu_dict = optimize_fmutsel_neutral(cpu)       
     pi2 = [str(i) for i in pi]
     pi_string = ",".join(pi2)             
     with open(opt_treefile, "w") as f:
         f.write(treestring)
-
-
 
     # Call swmutsel to obtain site-wise fitness values across a variety of penalizations (no penalty and those tested in Tamuri 2014).
     for penal in penalty:
