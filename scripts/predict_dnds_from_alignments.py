@@ -71,7 +71,7 @@ def multi_worker(name):
         omegas.append( [dnds1, dnds2] )                     
     
     with open(outfile, "w") as outf:
-        outf.write("site,dnds_codon,dnds_aa\n")
+        outf.write("site,dnds_pred_from_codon,dnds_pred_dnds_from_aa\n")
         for i in range(len(omegas)):
             outf.write(str(i) + "," + str(omegas[i][0]) + "," + str(omegas[i][1]) + "\n")
 

@@ -27,27 +27,6 @@ penalty = {"nopenal" :"",
            "mvn1000" :" -p mvn,1000"
           }
 
-
-def prep_alignment(alnfile):
-    ''' 
-        We need both fasta and phylip alignment files, so create the missing one.
-    '''
-    name = ".".join(alnfile.split('.')[:-1])
-    alntype  = alnfile.split('.')[-1]
-    alnfile_fasta = name + '.fasta'
-    alnfile_phy   = name + '.phy'
-    
-    if alntype == 'fasta' or alntype == 'fas':
-        aln = AlignIO.read(alnfile, 'fasta')
-        AlignIO.write(aln, alnfile_phy, 'phylip-relaxed')
-    elif alntype == 'phy':
-        aln = AlignIO.read(alnfile, 'phylip-relaxed')
-        AlignIO.write(aln, alnfile_fasta, 'fasta')
-    else:
-        raise AssertionError("Only accepts fasta or phylip (and phylip-extented) alignment formats, and we parse via extremely stringent extension :) ")
-    
-    return alnfile_fasta, alnfile_phy
-    
     
 def optimize_tree_only(cpu, pi, kappa):
     '''
@@ -172,25 +151,26 @@ def run_swmutsel(pi, kappa, alnfile, treefile, cpu, dataset, penalname, penalarg
 
 
 def main():
-    usage = "\nUsage: python run_swmutsel.py <alignment_file> <tree_file> <cpu> <dataset> <estimate_mutation>. Alignment must be in either phylip/fasta format, and tree must be in newick format. Note that all files and all executables ('swmutsel'+'HYPHYMP') must be in the working directory!"
-    assert( len(sys.argv) == 6 ), usage
+    usage = "\nUsage: python run_swmutsel.py <dataset> <cpu> <estimate_mutation>. Note that all files and all executables ('swmutsel'+'HYPHYMP') must be in the working directory!"
+    assert( len(sys.argv) == 4 ), usage
     
-    alnfile = sys.argv[1]
-    assert( os.path.exists(alnfile) ), "Specified alignment file does not exist. Path?"
-    treefile = sys.argv[2]
-    assert( os.path.exists(treefile) ), "Specified tree file does not exist. Path?"
-    cpu = sys.argv[3]
-    dataset = sys.argv[4]
-    estimate_mutation = bool(int(sys.argv[5]))
-    print estimate_mutation
+    dataset = sys.argv[1]
+    cpu = sys.argv[2]
+    estimate_mutation = bool(int(sys.argv[3]))
+
+    alnfile_fasta = dataset + ".fasta"
+    alnfile_phy = dataset + ".phy"
+    treefile = dataset + ".tre"
+    assert( os.path.exists(alnfile_fasta) ), "There is no fasta alignment file."
+    assert( os.path.exists(alnfile_phy) ), "There is no phylip alignment file."
+    assert( os.path.exists(treefile) ), "There is tree file."
+    opt_treefile = dataset + label + "_optimized.tre"
+
     if estimate_mutation is True:
         label = "_estmu"
     else:
         label = "_fixedmu"
-    opt_treefile = dataset + label + "swmutsel.tre"
     
-    # Make sure we have both a fasta (for hyphy) and phylip (for swmutsel) alignment file. 
-    alnfile_fasta, alnfile_phy = prep_alignment(alnfile)
     
     # Prep hyphy input file and call hyphy to optimize mutational parameters, create mu_dict to use later for dnds derivation, and make a treefile with the optimized tree
     subprocess.call("cat " + alnfile_fasta + " " + treefile + " > hyin.txt", shell=True)

@@ -8,25 +8,33 @@ if [ $# != 1 ]; then
 fi
 DATA=$1
 
-# # SLAC
-#sed -i "s/-N JOB/-N ${DATA}_omega/" slac_qsub.sh
-#qsub slac_qsub.sh $DATA
-#sed -i "s/-N ${DATA}_omega/-N JOB/" slac_qsub.sh
+# FEL1,2
+sed -i "s/-N JOB/-N ${DATA}_fel1/" fel1.qsub
+qsub fel1.qsub $DATA
+sed -i "s/-N ${DATA}_fel1/-N JOB/" fel1.qsub
 
-# swmutsel, with asymmetric mutation rates
-#sed -i "s/-N JOB/-N ${DATA}_estmu_sw/" swmutsel_qsub.sh
-#qsub swmutsel_qsub.sh $DATA 1
-#sed -i "s/-N ${DATA}_estmu_sw/-N JOB/" swmutsel_qsub.sh
+sed -i "s/-N JOB/-N ${DATA}_fel2/" fel2.qsub
+qsub fel2.qsub $DATA
+sed -i "s/-N ${DATA}_fel2/-N JOB/" fel2.qsub
+
+# swmutsel, with estimated mutation rates
+sed -i "s/-N JOB/-N ${DATA}_estmu_sw/" swmutsel.qsub
+qsub swmutsel.qsub $DATA 1
+sed -i "s/-N ${DATA}_estmu_sw/-N JOB/" swmutsel.qsub
+
+# phylobayes
+sed -i "s/-N JOB/-N ${DATA}_pb/" phylobayes.qsub
+qsub phylobayes.qsub $DATA
+sed -i "s/-N ${DATA}_pb/-N JOB/" phylobayes.qsub
+
+
+
+
+
 
 # swmutsel, with symmetric mutation rates
 #sed -i "s/-N JOB/-N ${DATA}_treeonly_sw/" swmutsel_qsub.sh
 #qsub swmutsel_qsub.sh $DATA 0
 #sed -i "s/-N ${DATA}_treeonly_sw/-N JOB/" swmutsel_qsub.sh
 # 
-# # phylobayes
-sed -i "s/-N JOB/-N ${DATA}_pb/" phylobayes_qsub.sh
-qsub phylobayes_qsub.sh $DATA
-sed -i "s/-N ${DATA}_pb/-N JOB/" phylobayes_qsub.sh
-
-
 
