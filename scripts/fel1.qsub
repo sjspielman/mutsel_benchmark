@@ -4,18 +4,18 @@
 #$ -S /bin/bash
 #$ -q wilke
 #$ -m beas
-#$ -pe serial 15
+#$ -pe serial 16
 source ~/.bashrc
 
 
 REPODIR=$HOME/mutsel_bench
 
 # define files, variables used in analysis
-CPU=15
+CPU=16
 DATA=$1
 ALN=${DATA}.fasta
 TREE=${DATA}.tre
-OUTFILE=$REPDOR/results/${DATA}_fel1.txt
+OUTFILE=$REPODIR/results/${DATA}_fel1.txt
 
 # create and enter working directory
 WDIR=/state/partition1/sjs3495/$JOB_NAME-$JOB_ID

@@ -21,7 +21,7 @@ from dnds_mutsel_functions import *
 def run_pb(alnfile, treefile, cpu, job_name, every = '5', until = '1100', burnin = '100'):
     '''
         Call phylobayes and parse output. Return site-wise amino acid fitnesses as list: [ [site1_fitnesses], [site2_fitnesses], [site3_fitnesses] ... [siten_fitnesses] ]
-        By default, phylobayes chain will have a length of 5500, be sampled every 5 (as in Rodrigue 2013 Genetics paper), resulting in a sample size of 1100. Results are then processed with a burnin of 100, leaving a posterior sample size of 1000. 
+        By default, phylobayes chain will have a length of 5500, be sampled every 5, resulting in a sample size of 1100. Results are then processed with a burnin of 100, leaving a posterior sample size of 1000. 
         NOTE: Assumes that pb_mpi and readpb_mpi executables are in the current directory.
     '''
    

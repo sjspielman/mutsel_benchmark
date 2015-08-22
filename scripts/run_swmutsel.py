@@ -161,15 +161,17 @@ def main():
     alnfile_fasta = dataset + ".fasta"
     alnfile_phy = dataset + ".phy"
     treefile = dataset + ".tre"
-    assert( os.path.exists(alnfile_fasta) ), "There is no fasta alignment file."
-    assert( os.path.exists(alnfile_phy) ), "There is no phylip alignment file."
-    assert( os.path.exists(treefile) ), "There is tree file."
-    opt_treefile = dataset + label + "_optimized.tre"
+    #assert( os.path.exists(alnfile_fasta) ), "There is no fasta alignment file."
+    #assert( os.path.exists(alnfile_phy) ), "There is no phylip alignment file."
+    #assert( os.path.exists(treefile) ), "There is tree file."
 
     if estimate_mutation is True:
         label = "_estmu"
     else:
         label = "_fixedmu"
+    opt_treefile = dataset + label + "_optimized.tre"
+
+
     
     
     # Prep hyphy input file and call hyphy to optimize mutational parameters, create mu_dict to use later for dnds derivation, and make a treefile with the optimized tree
