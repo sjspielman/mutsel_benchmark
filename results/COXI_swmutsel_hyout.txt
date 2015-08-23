@@ -1,0 +1,12 @@
+Log Likelihood = -15143.9701465317;
+Shared Parameters:
+aux_1=0.164199
+aux_2=0.286324
+aux_3=0.241032
+k=4.96921
+freqA=aux_1=0.164199
+freqC=(1-aux_1)*aux_2=0.23931
+freqG=(1-aux_1)*(1-aux_2)*aux_3=0.143773
+freqT=(1-aux_1)*(1-aux_2)*(1-aux_3)=0.452717
+
+Tree codon_tree=((T_bancanus:0.117848,(((P_potto:0.0923327,N_coucang:0.150984)Node5:0.0439606,(L_catta:0.0907373,P_verreauxi:0.102692)Node8:0.0565952)Node4:0.0226689,(((S_ustus:0.0188471,S_sciureus:0.0149882)Node13:0.0892316,C_albifrons:0.100717)Node12:0.06541,((T_gelada:0.112962,(C_aethiops:0.0944037,(M_sylvanus:0.0958424,P_hamadryas:0.0907261)Node22:0.0173446)Node20:0.0323792)Node18:0.0427525,((G_gorilla:0.0590455,(H_sapiens:0.0488505,(P_paniscus:0.0211011,P_troglodytes:0.0177437)Node30:0.0284945)Node28:0.016225)Node26:0.033332,((P_pygmaeus_abelii:0.0270403,P_pygmaeus:0.0330989)Node34:0.0560707,H_lar:0.097748)Node33:0.00991257)Node25:0.0305944)Node17:0.0476243)Node11:0.0474954)Node3:0.0252929)Node1:0.0623134,R_norvegicus:0.0931011,M_musculus:0.117344);
