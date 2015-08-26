@@ -115,50 +115,36 @@ def derive_site_dnds(site, records, mu_dict):
 
 
 
+emp_datasets = ["lysin","camelid", "pb2" ,"amine"]
+sim_datasets = ["1B4T_A_simulated", "1G58_B_simulated", "1GV3_A_simulated", "1HUR_A_simulated", "1IBS_A_simulated", "1PV1_A_simulated", "1QMV_A_simulated", "1R6M_A_simulated", "1RII_A_simulated", "1V9S_B_simulated", "1W7W_B_simulated", "1X1O_B_simulated", "1YPI_A_simulated", "1ZNN_A_simulated", "2A84_A_simulated", "2BCG_Y_simulated", "2CFE_A_simulated", "2CJM_C_simulated", "2CNV_A_simulated", "2FLI_A_simulated", "2G0N_B_simulated"]
+datasets = {"simulation":sim_datasets} #,"empirical":emp_datasets
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-seqdir = "../data/empirical/"
-outdir = "../results/empirical/"
-hydir = "../results/empirical/"
-datasets = ["ATP-cone_cleaned"] #["lysin"]#"camelid", "pb2"]#,"amine", "ATP-cone"]
-
-
-for data in datasets:
-    outfile = outdir + data + "_dnds_from_alignment.txt"
-    alnfile = seqdir + data + ".fasta"
+for datatype in datasets:
     
-    hyphile = hydir + data + "_swmutsel_hyout.txt"
-    if not os.path.exists(hyphile):
-        continue
+    seqdir = "../data/" + datatype + "/"
+    resdir = "../results/" + datatype + "/"
     
-    print data
-    mu_dict = extract_mutation_rates(hyphile)
+    for data in datasets[datatype]:
+        print data
+        
+        outfile = resdir + data + "_dnds_from_alignment.txt"
+        alnfile = seqdir + data + ".fasta"
+        hyphile = resdir + data + "_swmutsel_hyout.txt"
+
+        mu_dict = extract_mutation_rates(hyphile)
     
-    records = AlignIO.read(alnfile, "fasta")
-    omegas = []
+        records = AlignIO.read(alnfile, "fasta")
+        omegas = []
     
-    for i in range(len(records[0])/3):
-        print "  ",i
-        site = i*3
-        omegas.append( derive_site_dnds(site, records, mu_dict) )
+        for i in range(len(records[0])/3):
+            site = i*3
+            omegas.append( derive_site_dnds(site, records, mu_dict) )
     
         
-    with open(outfile, "w") as outf:
-        outf.write("site,dnds_codon,dnds_aa\n")
-        for i in range(len(omegas)):
-            outf.write(str(i) + "," + str(omegas[i][0]) + "," + str(omegas[i][1]) + "\n")
+        with open(outfile, "w") as outf:
+            outf.write("site,dnds_codon,dnds_aa\n")
+            for i in range(len(omegas)):
+                outf.write(str(i) + "," + str(omegas[i][0]) + "," + str(omegas[i][1]) + "\n")
     
                 
                         
