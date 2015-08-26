@@ -129,10 +129,10 @@ def derive_site_dnds(site, records, mu_dict):
 
 
 
-seqdir = "../data/"
-outdir = "../results/"
-hydir = "../results/"
-datasets = ["amine", "ATP-cone", "COXI", "Transketolase_C", "camelid", "pb2"]
+seqdir = "../data/empirical/"
+outdir = "../results/empirical/"
+hydir = "../results/empirical/"
+datasets = ["ATP-cone_cleaned"] #["lysin"]#"camelid", "pb2"]#,"amine", "ATP-cone"]
 
 
 for data in datasets:
@@ -142,6 +142,8 @@ for data in datasets:
     hyphile = hydir + data + "_swmutsel_hyout.txt"
     if not os.path.exists(hyphile):
         continue
+    
+    print data
     mu_dict = extract_mutation_rates(hyphile)
     
     records = AlignIO.read(alnfile, "fasta")

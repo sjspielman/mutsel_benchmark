@@ -1,0 +1,6 @@
+Alignment sources:
+    1. amine from Spielman, Kumar, Wilke (2014) PeerJ, with just the transmembrane regions of the alignment concatenated together
+    2. pb2 from Tamuri et al 2014, and other papers in this "group"
+    3. camelid, and lysin are from the CodonTest 2010 paper
+    
+All phylogenies were built with RAxML v8.?? under the GTR+CAT model.
