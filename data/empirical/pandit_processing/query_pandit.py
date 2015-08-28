@@ -2,6 +2,8 @@
 # Script to browse pandit and retrieve alignments.
 # Pandit alignments are only considered if they meet criteria of: a) >=500 sequences, and b) <=0.5 average pairwise identity
 # For those alignments, clean them up so that rows with >=25% data missing and columns with >=0.05% data are missing. If the final cleaning yields at least 450 sequences, save.
+# NOTE: the final alignments 
+
 
 from Bio import AlignIO
 from align_to_matrix import AlignMatrix
@@ -42,6 +44,7 @@ def clean_alignment(infile, outfile):
     with open("rmdups.fasta", 'w') as outf:
         for k, v in a.aln_dict.items():
             outf.write(">" + k + "\n" + v + "\n")
+
     rmdup = subprocess.call("sh dup_hack.sh", shell=True)
     try:
         tempaln = AlignIO.read('rmdups.fasta.reduced', 'phylip-relaxed')
@@ -56,7 +59,6 @@ def clean_alignment(infile, outfile):
     os.system("rm temp.fasta*")
     os.system("rm rmdups.fasta*")
     os.system("rm RAxML*")
-
 
 
 def obtain_source(search_url, type):
@@ -94,6 +96,19 @@ def parse_pandit_page(query_pf):
     return id_list
 
 
+def check_seq_for_stop(seq):
+    '''
+        Return True if stop codons are found. False if ok.
+    '''
+    found_stop = False
+    stops = ["TAA", "TGA", "TAG"]
+    for x in range(0, len(seq), 3):
+        c = seq[x:x+3]
+        if c in stops:
+            found_stop = True
+        if found_stop:
+            break
+    return found_stop
     
 def download_pandit_alignments(ids):
     
@@ -114,13 +129,18 @@ def download_pandit_alignments(ids):
         pairs = page_source.split("\n")[1:-1]
         
         # Save to fasta file
+        j = 0
         with open("temp.fasta", "w") as f:
             for entry in pairs:
                 idseq = entry.split(";")
+                thisid = idseq[0].replace("-","_")
                 seq = idseq[1].replace(".", "-").upper()
-                f.write(">" + idseq[0] + "\n" + seq + "\n")
+                save = check_seq_for_stop(seq)
+                if not save:
+                    j += 1
+                    f.write(">" + thisid + "\n" + seq + "\n")
         
-        print id
+        print id, j
         # Clean and save if passes thresholds, and clean up
         clean_alignment("temp.fasta", outfile)
 
