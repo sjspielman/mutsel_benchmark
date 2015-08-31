@@ -94,7 +94,6 @@ def derive_site_dnds(site, records, mu_dict):
     column_raw = list(records[:, site:site+3])
     for entry in column_raw:
         codon_current = str(entry.seq)
-        print codon_current
         assert(codon_current not in g.stop_codons), "WOAH, STOP CODON!"
         if codon_current in g.codons:
             column.append(codon_current)

@@ -19,20 +19,29 @@ from compute_dnds_from_mutsel import *
 g = Genetics()
         
 
-def run_pb(alnfile, treefile, cpu, job_name, every = '5', until = '1100', burnin = '100'):
+def run_pb(alnfile, treefile, cpu, job_name, every = '5', until = '1100', burnin = '100', restart=False):
     '''
-        Call phylobayes and parse output. Return site-wise amino acid fitnesses as list: [ [site1_fitnesses], [site2_fitnesses], [site3_fitnesses] ... [siten_fitnesses] ]
-        By default, phylobayes chain will have a length of 5500, be sampled every 5, resulting in a sample size of 1100. Results are then processed with a burnin of 100, leaving a posterior sample size of 1000. 
         NOTE: Assumes that pb_mpi and readpb_mpi executables are in the current directory.
     '''
-   
-    # Run phylobayes for 5500 generations, sampling every 5, producing n = 1100
-    pb_call = "mpirun -np " + str(cpu) + " ./pb_mpi -mutsel -cat -d " + alnfile + " -T " + treefile + " -x " + str(every) + " " + str(until) + " " + job_name
-    print pb_call
-    run_pb_call = subprocess.call(pb_call, shell = True)
-    assert( run_pb_call == 0 ), "pb_mpi didn't run!"
+    # Run phylobayes for 5500 generations, sampling every 5, producing posterior distribution of n = 1100
+    # use this command if restarting from a trace file
+    if restart:
+        
+    # use this command if from scratch
+    else:
+        
     
+
+
+def parse_pb(cpu, job_name, burnin = '100'):
+    '''
+        Parse tracefile. Return site-wise amino acid fitnesses as list: [ [site1_fitnesses], [site2_fitnesses], [site3_fitnesses] ... [siten_fitnesses] ], and return dictionary of mutation rates.
+        Phylobayes chain will have had a length of 5500 and been sampled every 5, resulting in a sample size of 1100. 
+        Results are processed here with a burnin of 100, leaving a posterior sample size of 1000. 
+
+    '''
     # Parse phylobayes output.
+    
     readpb_call = "mpirun -np " + str(cpu) + " ./readpb_mpi -x " + str(burnin) + " 1 -1 " + job_name + "\n"
     print readpb_call
     run_readpb_call = subprocess.call(readpb_call, shell = True)
@@ -71,27 +80,41 @@ def parse_phylobayes_tracefile(job_name, burnin = 100):
 
 
 def main():
-    usage = "\nUsage: python run_phylobayes.py <alignment_file> <tree_file> <cpu> <job_name> . Alignment must be in phylip format, and tree must be in newick format. Note that all files and all executables ('pb_mpi' and 'readpb_mpi') must be in the working directory!"
-    assert( len(sys.argv) == 5 ), usage
     
-    alnfile = sys.argv[1]
-    assert( os.path.exists(alnfile) ), "Specified alignment file does not exist. Path?"
-    treefile = sys.argv[2]
-    assert( os.path.exists(treefile) ), "Specified tree file does not exist. Path?"
-    cpu = sys.argv[3]
-    job_name = sys.argv[4]
+    restart = bool(sys.argv[1])
+    cpu = sys.argv[2]
+    job_name = sys.argv[3]
     
+    try:
+        alnfile = sys.argv[4]
+    except:
+        assert(restart is True), "Specified alignment file does not exist. Path?"
+    try:
+        treefile = sys.argv[5]
+    except:
+        assert(restart is True), "Specified tree file does not exist. Path?"
+    
+    
+    
+    if not restart:
+        # Rewrite tree to create trifurcating root, as needed by phylobayes mpi
+        tree = Tree.get_from_path(treefile, "newick", rooted = False)
+        tree.resolve_polytomies() # in case of polytomies.
+        tree.update_splits() # this will create a trifurcating root on an unrooted tree
+        tstring = str(tree).replace('[&U] ', '')
+        with open('temp.tre', 'w') as tf:
+            tf.write(tstring + ';\n')
+            
+        pb_call = "mpirun -np " + str(cpu) + " ./pb_mpi -mutsel -cat -d " + alnfile + " -T " + treefile + " -x " + str(every) + " " + str(until) + " " + job_name
+    
+    else:
+        pb_call = "mpirun -np 16 " + str(cpu) + " ./pb_mpi " + job_name + "_phylobayes"        
+    
+    print pb_call
+    run_pb_call = subprocess.call(pb_call, shell = True)
+    assert( run_pb_call == 0 ), "pb_mpi didn't run!"
 
-    # Rewrite tree to create trifurcating root, as needed by phylobayes mpi
-    tree = Tree.get_from_path(treefile, "newick", rooted = False)
-    tree.resolve_polytomies() # in case of polytomies.
-    tree.update_splits() # this will create a trifurcating root on an unrooted tree
-    tstring = str(tree).replace('[&U] ', '')
-    with open('temp.tre', 'w') as tf:
-        tf.write(tstring + ';\n')
-    
-    # Call phylobayes to obtain site-wise fitness values and mutation rates
-    sitewise_fitness, mu_dict = run_pb( alnfile, 'temp.tre', cpu, job_name )
+    sitewise_fitness, mu_dict = parse_pb(cpu, job_name)
 
     # Compute site-wise dN/dS from amino-acid fitness values. 
     # For this, we need to build a MutSel model to obtain equilibrium frequences (as mu not symmetric) from left eigenvector

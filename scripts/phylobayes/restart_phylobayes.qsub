@@ -1,0 +1,43 @@
+#$ -N JOB
+#$ -e e_$JOB_NAME
+#$ -o o_$JOB_NAME
+#$ -S /bin/bash
+#$ -q wilke
+#$ -m beas
+#$ -pe serial 15
+source ~/.bashrc
+
+# define files, variables used in analysis
+CPU=15 # this takes forever, so use 15 to keep some cores open
+ORIGDIR=$1
+DATA=$2
+REPODIR=$HOME/mutsel_bench
+
+PBEXEC=$HOME/bin/pb_mpi1.5a/data/pb_mpi
+READPBEXEC=$HOME/bin/pb_mpi1.5a/data/readpb_mpi
+
+# create and enter working directory
+WDIR=/state/partition1/sjs3495/$JOB_NAME-$JOB_ID
+mkdir -p $WDIR
+cd $WDIR
+
+# copy files, executables here
+cp $ORIGDIR/* .
+
+# run analysis
+module load python
+export PYTHONPATH=$HOME/bin/lib/python2.7/site-packages # to get biopython behaving w/ phylip-relaxed and to get dendropy
+python run_phylobayes.py ${DATA}_phylobayes $CPU ${DATA}_phylobayes
+
+FINALDIR=$REPODIR/results
+mkdir -p $FINALDIR
+cp *dnds.txt $FINALDIR
+cp *.aap $FINALDIR
+cp *.trace $FINALDIR
+
+cd
+cp -r $WDIR /share/WilkeLab/work/sjs3495/mutsel_bench_data_august
+rm -r $WDIR
+
+
+
