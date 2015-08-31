@@ -27,6 +27,7 @@ cp $DATADIR/$ALN.phy .
 cp $DATADIR/$TREE .
 cp $REPODIR/scripts/swmutsel/* .
 cp $REPODIR/scripts/compute_dnds_from_mutsel.py .
+cp $REPODIR/scripts/parsing_functions.py .
 cp $SWEXEC swmutsel.jar
 cp $HOME/bin/bin/HYPHYMP .
 ls

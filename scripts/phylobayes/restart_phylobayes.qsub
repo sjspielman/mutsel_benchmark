@@ -23,6 +23,7 @@ cd $WDIR
 
 # copy files, executables here
 cp $ORIGDIR/* .
+cp $REPODIR/scripts/parsing_functions.py .
 
 # run analysis
 module load python

@@ -27,6 +27,7 @@ cp $DATADIR/$ALN.phy .
 cp $DATADIR/$TREE .
 cp $REPODIR/scripts/phylobayes/run_phylobayes.py .
 cp $REPODIR/scripts/compute_dnds_from_mutsel.py .
+cp $REPODIR/scripts/parsing_functions.py .
 cp $PBEXEC .
 cp $READPBEXEC .
 
