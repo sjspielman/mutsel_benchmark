@@ -108,7 +108,7 @@ def main():
         pb_call = "mpirun -np " + str(cpu) + " ./pb_mpi -mutsel -cat -d " + alnfile + " -T " + treefile + " -x " + str(every) + " " + str(until) + " " + job_name
     
     else:
-        pb_call = "mpirun -np 16 " + str(cpu) + " ./pb_mpi " + job_name + "_phylobayes"        
+        pb_call = "mpirun -np 16 " + str(cpu) + " ./pb_mpi " + job_name    
     
     print pb_call
     run_pb_call = subprocess.call(pb_call, shell = True)
