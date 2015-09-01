@@ -12,6 +12,7 @@ CPU=16
 DATADIR=$1
 ALN=$2
 TREE=$3
+TYPE=$4
 
 SWEXEC=$HOME/bin/swmutsel-alpha_jdk1.6.jar
 REPODIR=$HOME/mutsel_bench
@@ -25,9 +26,8 @@ cd $WDIR
 cp $DATADIR/$ALN.fasta .
 cp $DATADIR/$ALN.phy .
 cp $DATADIR/$TREE .
-cp $REPODIR/scripts/swmutsel/* .
-cp $REPODIR/scripts/compute_dnds_from_mutsel.py .
-cp $REPODIR/scripts/parsing_functions.py .
+cp $REPODIR/scripts/inference/swmutsel/* .
+cp $REPODIR/scripts/universal_functions.py .
 cp $SWEXEC swmutsel.jar
 cp $HOME/bin/bin/HYPHYMP .
 ls
@@ -36,11 +36,10 @@ ls
 module load java
 module load python
 export PYTHONPATH=$HOME/bin/lib/python2.7/site-packages # to get biopython behaving w/ phylip-relaxed
-python run_swmutsel.py $ALN $TREE $CPU
+python run_swmutsel.py $ALN $TREE $CPU $TYPE
 
 FINALDIR=$REPODIR/results
 mkdir -p $FINALDIR
-cp *dnds.txt $FINALDIR
 cp *MLE.txt $FINALDIR
 cp *fitness.txt $FINALDIR
 cp hyout.txt $FINALDIR/${ALN}_swmutsel_hyout.txt

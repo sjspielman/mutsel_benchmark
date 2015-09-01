@@ -1,26 +1,10 @@
-# SJS
-# Given a coding-sequence alignment and phylogeny, run the swmutsel mutation-selection model (Tamuri 2012,2014) across a variety of penalty functions.
-# Can either use HyPhy to optimize mutational parameters and branch lengths before sending to swmutsel, or just optimize branch lengths according to fixed mutation rates.
-# Note that optimization is done first with HKY85 to get kappa and nucleotide frequencies, and then with a global MutSel neutral model (this is essentially MG94 with w=1), as this is how swmutsel interprets BL.
-# Once site-wise fitness values are inferred, compute site-wise dN/dS values.
-
-# Usage: python run_mutsel.py <alignment_file> <tree_file> <cpu> <dataset>. 
-## Alignment must be in either phylip/fasta format, and tree must be in newick format. Both must be in working directory.
-## Additionally note that all executables called (swmutsel.jar and HYPHYMP) must be in the working directory.
-
 
 import re
-import os
 import sys
 import subprocess
-import numpy as np
-from Bio import AlignIO
-from compute_dnds_from_mutsel import *
-from pyvolve import *
-from parsing_functions import *
-g = Genetics()
+from numpy import savetxt
+from universal_functions import *
 
-ZERO=1e-8
 
 # Penalty functions (no penalty + 3 dirichlet + 3 multivariate normal) to run swmutsel with
 penalty = {"nopenal" :"", 
@@ -53,10 +37,8 @@ def run_swmutsel(pi, kappa, alnfile, treefile, cpu, dataset, penalname, penalarg
             if len(newline) == 20:
                 fitness.append( [float(y) for (x,y) in sorted(zip(new_order,newline))] )
     
-    # Save a file with fitness values
-    np.savetxt(job_name + '_fitness.txt', fitness, delimiter = '\t')        
-    
-    return fitness    
+    # Save a file with the correctly-ordered (well, my order) amino-acid fitness values
+    savetxt(job_name + '_fitness.txt', fitness, delimiter = '\t')        
 
 
 
@@ -67,43 +49,47 @@ def run_swmutsel(pi, kappa, alnfile, treefile, cpu, dataset, penalname, penalarg
 
 
 def main():
-    usage = "\nUsage: python run_swmutsel.py <aln> <treefile> <cpu>. Note that all files and all executables ('swmutsel'+'HYPHYMP') must be in the working directory!"
-    assert( len(sys.argv) == 4 ), usage
+    usage = "\nUsage: python run_swmutsel.py <aln> <treefile> <cpu> <type>. Note that all files and all executables ('swmutsel'+'HYPHYMP') must be in the working directory!"
+    assert( len(sys.argv) == 5 ), usage
     
     dataset = sys.argv[1]
     treefile = sys.argv[2]
     cpu = sys.argv[3]
+    type = sys.argv[4]
+    
+    if type == "emp":
+        run_hyphy = True
+    elif type == "sim":
+        run_hyphy = False
+    else:
+        raise ValueError("type (4th argument) must be either 'emp' or 'sim'.")
 
     alnfile_fasta = dataset + ".fasta"
     alnfile_phy = dataset  + ".phy"
-    opt_treefile = dataset + "_swmutsel_optimized.tre"
     
-    
-    # Prep hyphy input file and call hyphy to optimize mutational parameters, create mu_dict to use later for dnds derivation, and make a treefile with the optimized tree
-    subprocess.call("cat " + alnfile_fasta + " " + treefile + " > hyin.txt", shell=True)
-    run_hyphy = subprocess.call("./HYPHYMP CPU=" + str(cpu) + " optimize_fmutsel_neutral.bf > hyout.txt", shell=True)
-    assert(run_hyphy == 0), "optimize_fmutsel_neutral.bf did not run!"
-    
-    pi, kappa, treestring, mu_dict = extract_optimized_params("hyout.txt")       
-    pi2 = [str(i) for i in pi]
-    pi_string = ",".join(pi2)             
-    with open(opt_treefile, "w") as f:
-        f.write(treestring)
+    if run_hyphy:
+        # Prep hyphy input file and call hyphy to optimize mutational parameters, create mu_dict to use later for dnds derivation, and make a treefile with the optimized tree
+        subprocess.call("cat " + alnfile_fasta + " " + treefile + " > hyin.txt", shell=True)
+        run_hyphy = subprocess.call("./HYPHYMP CPU=" + str(cpu) + " optimize_fmutsel_neutral > hyout.txt", shell=True)
+        assert(run_hyphy == 0), "Hyphy optimization did not run."
+        
+        pi, kappa, treestring, mu_dict = extract_optimized_params("hyout.txt")  
+        pi2 = [str(i) for i in pi]
+        pi_string = ",".join(pi2)             
+
+        opt_treefile = dataset + "_swmutsel_optimized.tre"
+        with open(opt_treefile, "w") as f:
+            f.write(treestring)
+
+    else:
+        opt_treefile = treefile
+        pi_string = "0.25,0.25,0.25,0.25"
+        kappa = "1.0"
+         
 
     # Call swmutsel to obtain site-wise fitness values across a variety of penalizations (no penalty and those tested in Tamuri 2014).
     for penal in penalty:
-        
-        sitewise_fitness = run_swmutsel( pi_string, str(kappa), alnfile_phy, opt_treefile, cpu, dataset, penal, penalty[penal])
-    
-        # Compute site-wise dN/dS from amino-acid fitness values
-        dnds = []
-        for site_fitness in sitewise_fitness:
-            dnds.append(dnds_from_params(site_fitness, mu_dict))
-            
-        # Save
-        with open(dataset + "_" + penal + "_dnds.txt", "w") as outf:
-            outf.write( "\n".join([str(i) for i in dnds]) )
-  
+        run_swmutsel( pi_string, str(kappa), alnfile_phy, opt_treefile, cpu, dataset, penal, penalty[penal])
     
 main()
     

@@ -7,17 +7,8 @@
 ## Executables pb_mpi and readpb_mpi must be in the working directory.
 
 
-import re
-import os
 import sys
-import subprocess
-import numpy as np
-from Bio import AlignIO
 from dendropy import Tree
-from pyvolve import *
-from compute_dnds_from_mutsel import *
-from parsing_functions import *
-g = Genetics()
  
 
 def main():
@@ -36,7 +27,8 @@ def main():
         assert(restart is True), "Specified tree file does not exist. Path?"
     
     
-    
+    # Run phylobayes, either from scratch or restarting a previous chain
+    # Phylobayes is run to chain length 5500, sampling every 5 to yield 1100. Later, burnin of 100 is removed to get a final posterior n=1000
     if not restart:
         # Rewrite tree to create trifurcating root, as needed by phylobayes mpi
         tree = Tree.get_from_path(treefile, "newick", rooted = False)
@@ -51,23 +43,13 @@ def main():
     else:
         pb_call = "mpirun -np 16 " + str(cpu) + " ./pb_mpi " + job_name    
     
-    print pb_call
     run_pb_call = subprocess.call(pb_call, shell = True)
     assert( run_pb_call == 0 ), "pb_mpi didn't run!"
-
-    sitewise_fitness, mu_dict = parse_pb(cpu, job_name)
-
-    # Compute site-wise dN/dS from amino-acid fitness values. 
-    # For this, we need to build a MutSel model to obtain equilibrium frequences (as mu not symmetric) from left eigenvector
-    dnds = []
-    for site_fitness in sitewise_fitness:
-        dnds.append(dnds_from_params(site_fitness, mu_dict))
     
-    
-    # Save dnds file
-    with open(job_name + "_dnds.txt", "w") as outf:
-        outf.write( "\n".join([str(i) for i in dnds]) )
-    
+    # Parse output with readpb_mpi, using a burnin of 100 and saving everything else (posterior size = 1000)
+    readpb_call = "mpirun -np " + str(cpu) + " ./readpb_mpi -x 100 1 -1 " + job_name + "\n"
+    run_readpb_call = subprocess.call(readpb_call, shell = True)
+    assert( run_readpb_call == 0 ), "readpb_mpi didn't run!"
     
     
 main()

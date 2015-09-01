@@ -23,9 +23,7 @@ cd $WDIR
 
 # copy files, executables here
 cp $ORIGDIR/* .
-cp $REPODIR/scripts/parsing_functions.py .
-cp $REPODIR/scripts/compute_dnds_from_mutsel.py .
-cp $REPODIR/scripts/phylobayes/run_phylobayes.py .
+cp $REPODIR/scripts/inference/phylobayes/run_phylobayes.py .
 
 
 # run analysis
