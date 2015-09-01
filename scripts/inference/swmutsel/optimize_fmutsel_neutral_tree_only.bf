@@ -30,7 +30,7 @@ function buildCodonFrequencies1x4(obsF)
 OPTIMIZATION_PRECISION = 0.000001;
 DataSet ds = ReadDataFile ("hyin.txt");
 DataSetFilter filtered_nuc_data = CreateFilter(ds,1);
-global k := 4.0;
+global k := 1.0;
 global freqA := 0.25;
 global freqC := 0.25;
 global freqG := 0.25;
