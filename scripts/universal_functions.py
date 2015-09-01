@@ -22,11 +22,14 @@ def dnds_from_params(site_fitness, mu_dict, sym = False):
     
     # If mutation is symmetric, simply convert with Boltzmann
     if sym:
-        eqfreqs = codon_freqs_from_fitness_boltzmann
+        eqfreqs = codon_freqs_from_fitness_boltzmann(site_fitness)
     
     # If not symmetric, build the MutSel matrix (assumes equal codon frequencies per amino acid) with these parameters and extract equilibrium codon frequencies
     else:
         eqfreqs = codon_freqs_from_fitness(site_fitness, mu_dict)
+    
+    eqfreqs = np.array(eqfreqs)
+    eqfreqs[eqfreqs <= ZERO] = ZERO # for cleaner comparisons with true values, give all zeros here the same zero as mine.
     
     # Derive dN/dS and return
     c = dNdS_from_MutSel( dict(zip(g.codons, eqfreqs)), mu_dict)
@@ -172,7 +175,7 @@ def extract_optimized_params(infile, return_tree = True):
         return nuc_freqs_ordered, kappa, tree, mu_dict
     
     else:
-        return nuc_freqs_ordered, kappa, mu_dict
+        return mu_dict
 
 
     
