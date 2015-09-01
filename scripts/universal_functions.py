@@ -1,4 +1,5 @@
-# Various functions used to parse swMutSel, pbMutSel
+# SJS
+# This file contains functions which are generally used throughout analyses.
 
 
 import re
@@ -13,10 +14,48 @@ from compute_dnds_from_mutsel import *
 g = Genetics()
 ZERO=1e-10
 
-        
+
+
+
+### Crux function for computing dN/dS from MutSel parameters
+def dnds_from_params(site_fitness, mu_dict, sym = False):
+    
+    # If mutation is symmetric, simply convert with Boltzmann
+    if sym:
+        eqfreqs = codon_freqs_from_fitness_boltzmann
+    
+    # If not symmetric, build the MutSel matrix (assumes equal codon frequencies per amino acid) with these parameters and extract equilibrium codon frequencies
+    else:
+        eqfreqs = codon_freqs_from_fitness(site_fitness, mu_dict)
+    
+    # Derive dN/dS and return
+    c = dNdS_from_MutSel( dict(zip(g.codons, eqfreqs)), mu_dict)
+    return c.compute_dnds()
         
 
-def codon_freqs_from_fitness(fitness, mu):
+
+
+########## Generic functions for converting among codon, amino-acid frequencies and fitnesses ###########
+
+
+def codon_freqs_from_fitness_boltzmann(codon_fitness):
+    '''
+        Convert codon fitness to equilibrium frequencies using Boltzmann distribution (Sella and Hirsh 2005).
+    '''
+    codon_freqs = np.zeros(61)
+    count = 0
+    for codon in g.codons:
+        codon_freqs[count] = np.exp( codon_fitness[codon] )
+        count += 1
+    codon_freqs /= np.sum(codon_freqs)                   
+    assert( abs(1. - np.sum(codon_freqs)) <= ZERO), "codon_freq doesn't sum to 1 in codon_fitness_to_freqs"
+    return codon_freqs 
+
+
+def codon_freqs_from_fitness_eigenvector(fitness, mu):
+    '''
+        Extract equilibrium frequencies from eigenvector of MutSel matrix.
+    '''
     params = {"fitness": fitness, "mu": mu}
     matbuilder = mutSel_Matrix(params, scale_matrix = "neutral")
     matrix = matbuilder()
@@ -25,17 +64,60 @@ def codon_freqs_from_fitness(fitness, mu):
 
 
 
-def dnds_from_params(site_fitness, mu_dict):
+def aa_freqs_to_codon_freqs(aa_freqs):
+    '''
+        Convert amino-acid frequencies to codon frequencies, assuming no bias.
+    '''
+    codon_freqs = np.zeros(61)
+    aa_dict = dict(zip(g.amino_acids, aa_freqs))
+    for aa in aa_dict:
+        syn_codons = g.genetic_code[ g.amino_acids.index(aa) ]
+        cf = aa_dict[aa] / float(len(syn_codons))
+        for syn in syn_codons:
+            codon_freqs[ g.codons.index(syn) ] = cf
+    
+    assert(1. - np.sum(codon_freqs) <= ZERO), "bad codon freqs from aa freqs"
+    return codon_freqs, dict(zip(g.codons, codon_freqs))
 
-    # Build the MutSel matrix (assumes equal codon frequencies per amino acid) with these parameters and extract equilibrium codon frequencies
-    eqfreqs = codon_freqs_from_fitness(site_fitness, mu_dict)
-    cf = dict(zip(g.codons, eqfreqs))
 
-    # Derive dN/dS and return
-    c = dNdS_from_MutSel(cf, mu_dict)
-    return c.compute_dnds()
+def codon_freqs_to_aa_freqs(codonfreqs):
+    '''
+        Codon codon frequencies to amino-acid frequencies.
+    '''
+    cf = dict(zip(g.codons, codonfreqs))
+    aa_freqs = []
+    for family in g.genetic_code:
+        total = 0.
+        for syn in family:
+            total += cf[syn]
+        total /= float(len(family))
+        aa_freqs.append(total)
         
+    return aa_freqs
 
+
+def aa_fitness_to_codon_freqs(fitness):
+    '''
+        Convert amino-acid fitnesses to codon fitnesses.
+    '''
+    
+    d = {}
+    for i in range(20):
+        syn_codons = g.genetic_code[i]
+        for syn in syn_codons:
+            d[ syn ] = fitness[i]   
+    codon_fitness = np.zeros(61)
+    count = 0
+    for i in range(61):
+        codon_fitness[i] = d[g.codons[i]]
+    return codon_fitness
+
+
+#########################################################################################
+
+
+
+########## Parsing functions for swMutSel and pbMutSel inferences to get dN/dS ###########
 
 
 
@@ -98,18 +180,9 @@ def extract_optimized_params(infile, return_tree = True):
 
 def parse_pb(cpu, job_name, burnin = '100'):
     '''
-        Parse tracefile. Return site-wise amino acid fitnesses as list: [ [site1_fitnesses], [site2_fitnesses], [site3_fitnesses] ... [siten_fitnesses] ], and return dictionary of mutation rates.
-        Phylobayes chain will have had a length of 5500 and been sampled every 5, resulting in a sample size of 1100. 
-        Results are processed here with a burnin of 100, leaving a posterior sample size of 1000. 
-
+        Parse aap and tracefile. Return site-wise amino acid fitnesses and dictionary of mutation rates.
+        Fitness values are return as list: [ [site1_fitnesses], [site2_fitnesses], [site3_fitnesses] ... [siten_fitnesses] ], and return dictionary of mutation rates.
     '''
-    # Parse phylobayes output.
-    
-    readpb_call = "mpirun -np " + str(cpu) + " ./readpb_mpi -x " + str(burnin) + " 1 -1 " + job_name + "\n"
-    print readpb_call
-    run_readpb_call = subprocess.call(readpb_call, shell = True)
-    assert( run_readpb_call == 0 ), "readpb_mpi didn't run!"
-
     # Read in fitness values from .aap file
     fitness = np.loadtxt(job_name + ".aap")
     
