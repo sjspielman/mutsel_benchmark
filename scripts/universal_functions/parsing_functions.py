@@ -11,7 +11,7 @@ from dendropy import Tree
 from pyvolve import *
 from compute_dnds_from_mutsel import *
 g = Genetics()
-
+ZERO=1e-10
 
 
 def codon_to_aa_freqs(codonfreqs):
@@ -25,6 +25,7 @@ def codon_to_aa_freqs(codonfreqs):
         aa_freqs.append(total)
         
     return aa_freqs
+        
         
 
 def codon_freqs_from_fitness(fitness, mu):

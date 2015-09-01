@@ -80,8 +80,6 @@ def build_mutsel_matrix(mu_dict, codon_fitness):
         Build the mutsel model matrix according to,  q_ij = mu_ij * Sij / (1-e^(-Sij)).
         The resulting *left* eigenvector of this matrix gives the state frequencies.
     '''
-
-    p = 
     mb = mutSel_Matrix(self.params, "neutral")
     self.matrix = mb()
     
