@@ -13,18 +13,6 @@ from compute_dnds_from_mutsel import *
 g = Genetics()
 ZERO=1e-10
 
-
-def codon_to_aa_freqs(codonfreqs):
-    cf = dict(zip(g.codons, codonfreqs))
-    aa_freqs = []
-    for family in g.genetic_code:
-        total = 0.
-        for syn in family:
-            total += cf[syn]
-        total /= float(len(family))
-        aa_freqs.append(total)
-        
-    return aa_freqs
         
         
 

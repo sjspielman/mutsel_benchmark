@@ -9,6 +9,20 @@ from pyvolve import *
 g = Genetics()
 
 
+
+def codon_to_aa_freqs(codonfreqs):
+    cf = dict(zip(g.codons, codonfreqs))
+    aa_freqs = []
+    for family in g.genetic_code:
+        total = 0.
+        for syn in family:
+            total += cf[syn]
+        total /= float(len(family))
+        aa_freqs.append(total)
+        
+    return aa_freqs
+
+
 def aa_to_codon_fitness(fitness):
     '''
         Convert list of amino acid *fitnesses* to list of codon *fitness*
