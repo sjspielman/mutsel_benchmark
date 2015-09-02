@@ -17,19 +17,12 @@ ZERO=1e-10
 
 
 
-### Crux function for computing dN/dS from MutSel parameters
-def dnds_from_params(site_fitness, mu_dict, sym = False):
+### Crux function for computing dN/dS from MutSel parameters ###
+def dnds_from_params(site_fitness, mu_dict):
     
-    # If mutation is symmetric, simply convert with Boltzmann
-    if sym:
-        eqfreqs = codon_freqs_from_fitness_boltzmann(site_fitness)
-    
-    # If not symmetric, build the MutSel matrix (assumes equal codon frequencies per amino acid) with these parameters and extract equilibrium codon frequencies
-    else:
-        eqfreqs = codon_freqs_from_fitness(site_fitness, mu_dict)
-    
-    eqfreqs = np.array(eqfreqs)
-    eqfreqs[eqfreqs <= ZERO] = ZERO # for cleaner comparisons with true values, give all zeros here the same zero as mine.
+    # Build the MutSel matrix (assumes equal codon frequencies per amino acid) with these parameters and extract equilibrium codon frequencies
+    # Note that if mutation is symmetric, this gives the same results as Boltzmann distribution does anyways
+    eqfreqs = codon_freqs_from_fitness_eigenvector(site_fitness, mu_dict)
     
     # Derive dN/dS and return
     c = dNdS_from_MutSel( dict(zip(g.codons, eqfreqs)), mu_dict)
@@ -99,7 +92,7 @@ def codon_freqs_to_aa_freqs(codonfreqs):
     return aa_freqs
 
 
-def aa_fitness_to_codon_freqs(fitness):
+def aa_fitness_to_codon_fitness(fitness):
     '''
         Convert amino-acid fitnesses to codon fitnesses.
     '''
