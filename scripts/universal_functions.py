@@ -53,9 +53,9 @@ def codon_freqs_from_fitness_eigenvector(fitness, mu):
         Extract equilibrium frequencies from eigenvector of MutSel matrix.
     '''
     params = {"fitness": fitness, "mu": mu}
-    matbuilder = mutSel_Matrix(params, scale_matrix = "neutral")
-    matrix = matbuilder()
-    eqfreqs = matbuilder.extract_state_freqs(matrix)
+    m = Model("mutsel", params)
+    matrix = m.matrix
+    eqfreqs = m.extract_state_freqs()
     return eqfreqs
 
 
@@ -126,55 +126,28 @@ def build_mu_dict(pi, kappa):
     mu = {'AG':kappa*g, 'TC':kappa*c, 'GA':kappa*a, 'CT':kappa*t, 'AC':c, 'TG':g, 'CA':a, 'GT':t, 'AT':t, 'TA':a, 'GC':c, 'CG':g}  
     return mu
     
-    
 
-def extract_optimized_params(infile, return_tree = True):
+
+
+def parse_swMutSel_mutation(infile):
     '''
-        Parse results from hyphy batchfile "optimize_fmutsel_neutral.bf" run.  Return all parameters (a new newick tree string, freqs, kappa). Note that freqs are returned as an ordered (T,C,A,G) csv string and kappa is also a string.
-        NOTE: Assumes that the executable HYPHYMP is in the current directory.
-    '''    
-    with open(infile, "r") as hyout:
-        hyout_string = str( hyout.read() )
-
-    # Nucleotide frequencies #
-    nuc_freqs = np.zeros(4)
-    find_aux_1 = re.search("aux_1=(0\.\d+)", hyout_string)
-    aux_1 = float( find_aux_1.group(1) )
-    find_aux_2 = re.search("aux_2=(0\.\d+)", hyout_string)
-    aux_2 = float( find_aux_2.group(1) )
-    find_aux_3 = re.search("aux_3=(0\.\d+)", hyout_string)
-    aux_3 = float( find_aux_3.group(1) )
-    nuc_freqs[0] = aux_1
-    nuc_freqs[1] = (1. - aux_1) * aux_2
-    nuc_freqs[2] = (1. - aux_1) * (1. - aux_2) * aux_3
-    nuc_freqs[3] = (1. - aux_1) * (1. - aux_2) * (1. - aux_3)
-    assert( abs(1. - np.sum(nuc_freqs)) < ZERO ), "Nucleotide frequencies do not sum to 1!"
-    nuc_freqs_ordered = nuc_freqs[[3,1,0,2]]
-
-    # Kappa #
-    find_kappa = re.search("k=(\d+\.\d+)", hyout_string)
-    kappa = find_kappa.group(1)
+        Extract kappa (line 11) and nucleotide frequencies (line 14) from a swMutSel MLE file.
+        Combine info to return a dictionary of mutation rates.
+    '''
+    with open(infile, "r") as f:
+        lines = f.readlines()
+    kappa = float(lines[10].strip())
+    rawpis   = lines[13].strip().split(",")
+    pis = []
+    for pi in rawpis:
+        pis.append(float(pi)) 
     
-    # Mutation dictionary #
-    mu_dict = build_mu_dict(nuc_freqs, float(kappa) )
-    
-    if return_tree:
-        # Tree w/ optimized branch lengths #
-        find_tree = re.search("Tree codon_tree=(.+)$", hyout_string)
-        tree = find_tree.group(1)
-        tree = re.sub(r"Node\d+", r"", tree) # remove node labels
-        #tree = re.sub(r"([XN]P)(\d+)(\d)([XN]M)(\d+)(\d)", r"\1_\2.\3_\4_\5.\6", tree) # add back underscores, periods to taxon labels. This is necessary for the amine dataset and shouldn't match anything else.
-
-        return nuc_freqs_ordered, kappa, tree, mu_dict
-    
-    else:
-        return mu_dict
-
+    return build_mu_dict(pis, kappa)
 
     
 
 
-def parse_pb(cpu, job_name, burnin = '100'):
+def parse_pbMutSel_fitness(cpu, job_name, burnin = '100'):
     '''
         Parse aap and tracefile. Return site-wise amino acid fitnesses and dictionary of mutation rates.
         Fitness values are return as list: [ [site1_fitnesses], [site2_fitnesses], [site3_fitnesses] ... [siten_fitnesses] ], and return dictionary of mutation rates.
@@ -189,7 +162,7 @@ def parse_pb(cpu, job_name, burnin = '100'):
 
 
 
-def parse_trace_mutation(file, job_name, burnin = 100):
+def parse_pbMutSel_mutation(file, burnin = 100):
     ''' 
         Parse the .trace file returned by phylobayes to obtain mutation rates
         ORDER (starts at field 10, index from 0): fA fC fG fT nucrrAC nucrrAG nucrrAT nucrrCG nucrrCT nucrrGT
