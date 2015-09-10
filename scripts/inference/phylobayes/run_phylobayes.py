@@ -8,12 +8,13 @@
 
 
 import sys
+import subprocess
 from dendropy import Tree
  
 
 def main():
     
-    restart = bool(sys.argv[1])
+    restart = bool(int(sys.argv[1]))
     cpu = sys.argv[2]
     job_name = sys.argv[3]
     
@@ -26,7 +27,6 @@ def main():
     except:
         assert(restart is True), "Specified tree file does not exist. Path?"
     
-    
     # Run phylobayes, either from scratch or restarting a previous chain
     # Phylobayes is run to chain length 5500, sampling every 5 to yield 1100. Later, burnin of 100 is removed to get a final posterior n=1000
     if not restart:
@@ -38,10 +38,10 @@ def main():
         with open('temp.tre', 'w') as tf:
             tf.write(tstring + ';\n')
             
-        pb_call = "mpirun -np " + str(cpu) + " ./pb_mpi -mutsel -cat -d " + alnfile + " -T " + treefile + " -x " + str(every) + " " + str(until) + " " + job_name
+        pb_call = "mpirun -np " + str(cpu) + " ./pb_mpi -mutsel -cat -d " + alnfile + " -T temp.tre -x 5 1100 " + job_name
     
     else:
-        pb_call = "mpirun -np 16 " + str(cpu) + " ./pb_mpi " + job_name    
+        pb_call = "mpirun -np " + str(cpu) + " ./pb_mpi " + job_name    
     
     run_pb_call = subprocess.call(pb_call, shell = True)
     assert( run_pb_call == 0 ), "pb_mpi didn't run!"
