@@ -152,8 +152,9 @@ def parse_pbMutSel_fitness(cpu, job_name, burnin = '100'):
         Parse aap and tracefile. Return site-wise amino acid fitnesses and dictionary of mutation rates.
         Fitness values are return as list: [ [site1_fitnesses], [site2_fitnesses], [site3_fitnesses] ... [siten_fitnesses] ], and return dictionary of mutation rates.
     '''
-    # Read in fitness values from .aap file
-    fitness = np.loadtxt(job_name + ".aap")
+    # Read in fitness values from .aap file and take exponential to obtain usable fitness values
+    fitness_raw = np.loadtxt(job_name + ".aap")
+    fitness = np.exp(fitness)    
     
     # Grab posterior means for mutation rates from the .trace file, using same sampling as for fitnesses
     mu_dict = parse_trace_mutation( job_name + ".trace", burnin )
