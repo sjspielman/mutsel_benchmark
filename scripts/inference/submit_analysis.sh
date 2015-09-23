@@ -11,39 +11,26 @@ TYPE=$2
 
 
 if [[ $TYPE == "sim" ]]; then 
-    TOPDIR=$HOME/mutsel_bench/data/simulation
+    TOPDIR=$HOME/mutsel_benchmark/data/simulation
     ALN=${DATA}_simulated
     TREE="ntaxa1024_bl0.5.tre"
 else
-    TOPDIR=$HOME/mutsel_bench/data/empirical
+    TOPDIR=$HOME/mutsel_benchmark/data/empirical
     ALN=$DATA
     TREE=$DATA.tre
     
 fi 
 
 # FEL 1rate
-#sed -i "s/-N JOB/-N fel1_${DATA}/" hyphy/fel1.qsub
-#qsub hyphy/fel1.qsub $TOPDIR $ALN $TREE
-#sed -i "s/-N fel1_${DATA}/-N JOB/" hyphy/fel1.qsub
-
-# FEL 2rate, sjs
-#sed -i "s/-N JOB/-N fel2_${DATA}/" hyphy/fel2.qsub
-#qsub hyphy/fel2.qsub $TOPDIR $ALN $TREE
-#sed -i "s/-N fel2_${DATA}/-N JOB/" hyphy/fel2.qsub
-
-
-# FEL 2rate, default
-#sed -i "s/-N JOB/-N fel2d_${DATA}/" hyphy/fel2_default.qsub
-#qsub hyphy/fel2_default.qsub $TOPDIR $ALN $TREE
-#sed -i "s/-N fel2d_${DATA}/-N JOB/" hyphy/fel2_default.qsub
-
+sed -i "s/-N JOB/-N fel1_${DATA}/" hyphy/fel1.qsub
+qsub hyphy/fel1.qsub $TOPDIR $ALN $TREE
+sed -i "s/-N fel1_${DATA}/-N JOB/" hyphy/fel1.qsub
 
 # swmutsel
-#sed -i "s/-N JOB/-N sw_${DATA}/" swmutsel/swmutsel.qsub
-#qsub swmutsel/swmutsel.qsub $TOPDIR $ALN $TREE
-#sed -i "s/-N sw_${DATA}/-N JOB/" swmutsel/swmutsel.qsub
+sed -i "s/-N JOB/-N sw_${DATA}/" swmutsel/swmutsel.qsub
+qsub swmutsel/swmutsel.qsub $TOPDIR $ALN $TREE
+sed -i "s/-N sw_${DATA}/-N JOB/" swmutsel/swmutsel.qsub
 
- 
 # phylobayes
 sed -i "s/-N JOB/-N pb_${DATA}/" phylobayes/phylobayes.qsub
 qsub phylobayes/phylobayes.qsub $TOPDIR $ALN $TREE
