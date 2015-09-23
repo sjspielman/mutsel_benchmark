@@ -2,7 +2,6 @@ require(dplyr)
 require(tidyr)
 require(cowplot)
 require(readr)
-#require(reshape2)
 require(grid)
 
 result_directory <- "../../results/"
@@ -10,8 +9,7 @@ result_directory <- "../../results/"
 results <- read_csv(paste0(result_directory,"results.csv"))
 sim.results <- results %>% filter(type == "simulation") %>% select(-type)
 emp.results <- results %>% filter(type == "empirical")  %>% select(-type)
-#sim.results$method <- factor(levels = c("true", "fel1", "nopenal", "mvn10", "mvn100", "mvn1000", "d0.01", "d0.1", "d1.0", "pbmutsel"), labels = c("True", "FEL", "No penalty", "mvn10", "mvn100", "mvn1000", "d0.01", "d0.1", "d1.0", "pbMutSel"))
-#emp.results$method <- factor(levels = c("fel1", "mvn10", "pbmutsel"), labels = c("FEL", "swMutSel", "pbMutSel"))
+
 
 
 
@@ -67,6 +65,19 @@ sim.scatterplots <- plot_grid(p1, p2, p3, p4, nrow=1, labels=c("A", "B", "C", "D
 save_plot("scatterplots_simulated_raw.pdf", sim.scatterplots, base_width = 12, base_height = 3 )
 
 
+
+##### Frequency comparison barplots for representative dataset #####
+theme_set(theme_cowplot() + theme(axis.text.y = element_text(size = 14), axis.text.x = element_text(size = 10),  axis.title = element_text(size = 16), panel.border = element_rect(size = 0.5), panel.margin = unit(0.75, "lines"), strip.background = element_rect(fill="white"), strip.text = element_text(size=14, face="bold")))
+aafreq <- read.csv("aa_frequency_comparison_1IBS_A_simulated.csv") # Same representative dataset as in scatterplots
+keep <- c(283,176,56)  # here, define sites to plot.
+aafreq %>% filter(site %in% keep) -> sub_aafreq
+sub_aafreq$truednds <- round(sub_aafreq$truednds, 4)
+sub_aafreq <- mutate(sub_aafreq, true_facet = paste0("dN/dS = ",truednds))
+sub_aafreq$method <- factor(sub_aafreq$method, levels=c("true", "mvn10", "phylobayes"), labels = c("True", "swMutSel", "pbMutSel"))
+sub_aafreq$freq <- sub_aafreq$freq + 0.001 # For clarity in plot
+
+sub_aafreq %>% ggplot(aes(x = aminoacid, y = freq, group=method, fill=method)) + geom_bar(stat="identity",position="dodge",width=0.75) + facet_grid(~true_facet) + ylab("Equilibrium frequency") + xlab("Amino Acid") + scale_fill_manual(name = "", values = c("black", "firebrick1", "mediumblue")) -> freq_barplot
+save_plot("aa_frequency_comparison_barplot_1IBS_A.pdf", freq_barplot, base_width = 11.5, base_height = 3.75)
 
 
 ##### Correlation boxplots for empirical data #####
