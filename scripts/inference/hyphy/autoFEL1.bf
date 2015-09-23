@@ -2,7 +2,7 @@
 // The batch file QuickSelectionDetection_sjs.bf has been changed from original to use F1x4 frequencies rather than CF3x4
 
 HYPHYDIR = "/home/sjs3495/bin/hyphy-master/res/TemplateBatchFiles/";
-WDIR = "/state/partition1/sjs3495/placeholder/";
+WDIR = "placeholder/";
 datafile="temp.fasta";
 treefile="temp.tre";
 nucfitfile="nuc.fit";
