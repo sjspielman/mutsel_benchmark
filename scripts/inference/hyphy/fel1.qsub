@@ -8,14 +8,14 @@
 source ~/.bashrc
 
 
-REPODIR=$HOME/mutsel_bench
+REPODIR=$HOME/mutsel_benchmark
 
 # define files, variables used in analysis
 CPU=16
 DATADIR=$1
 ALN=$2
 TREE=$3
-OUTFILE=$REPODIR/results/${ALN}_fel1.txt
+OUTFILE=$REPODIR/results/${ALN}_FEL1.txt
 
 # create and enter working directory
 WDIR=/state/partition1/sjs3495/$JOB_NAME-$JOB_ID
@@ -26,10 +26,10 @@ cd $WDIR
 cp $DATADIR/$ALN.fasta temp.fasta
 cp $DATADIR/$TREE temp.tre
 cp $REPODIR/scripts/inference/hyphy/autoFEL1.bf .
+cp -r $REPODIR/scripts/inference/hyphy/batchfiles/* .
 cp $HOME/bin/bin/HYPHYMP .
 
-replace=$JOB_NAME-$JOB_ID
-sed -i "s/placeholder/$replace/g" autoFEL1.bf
+sed -i "s/placeholder/$WDIR/g" autoFEL1.bf
 ./HYPHYMP CPU=$CPU autoFEL1.bf
 
 cp fel.txt $OUTFILE
