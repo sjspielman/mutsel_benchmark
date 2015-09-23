@@ -71,9 +71,9 @@ with open(outfile, "w") as f:
         pbmutsel_row = pbmutsel_aafreqs[i]
         for j in range(len(g.amino_acids)):
         
-            line1 = str(i) + "," + truednds[i] + ",true," + str(true_row[j]) + "," + g.amino_acids[j] + "\n"
-            line2 = str(i) + "," + truednds[i] + ",mvn10," + str(swmutsel_row[j]) + "," + g.amino_acids[j] + "\n"
-            line3 = str(i) + "," + truednds[i] + ",phylobayes," + str(pbmutsel_row[j]) + "," + g.amino_acids[j] + "\n"
+            line1 = str(i+1) + "," + truednds[i] + ",true," + str(true_row[j]) + "," + g.amino_acids[j] + "\n"
+            line2 = str(i+1) + "," + truednds[i] + ",mvn10," + str(swmutsel_row[j]) + "," + g.amino_acids[j] + "\n"
+            line3 = str(i+1) + "," + truednds[i] + ",phylobayes," + str(pbmutsel_row[j]) + "," + g.amino_acids[j] + "\n"
 
             f.write(line1 + line2 + line3)
             
