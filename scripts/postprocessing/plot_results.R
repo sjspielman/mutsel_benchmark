@@ -2,6 +2,7 @@ require(dplyr)
 require(tidyr)
 require(cowplot)
 require(readr)
+require(reshape2)
 require(grid)
 
 result_directory <- "../../results/"
@@ -45,9 +46,9 @@ for (dataname in simnames){
 simcorrs$Var2 <-  factor(simcorrs$Var2, levels = c("fel1", "nopenal", "mvn10", "mvn100", "mvn1000", "d0.01", "d0.1", "d1.0", "pbmutsel"), labels = c("FEL", "No penalty", "mvn10", "mvn100", "mvn1000", "d0.01", "d0.1", "d1.0", "pbMutSel"))
 
 
-theme_set(theme_cowplot() + theme(axis.text.y = element_text(size = 15), axis.text.x = element_text(size = 12),  axis.title = element_text(size = 16))
+theme_set(theme_cowplot() + theme(axis.text.y = element_text(size = 15), axis.text.x = element_text(size = 12),  axis.title = element_text(size = 16)))
 simcorrs %>% filter(Var1 == "true") %>% ggplot(aes(x = Var2, y = r)) + geom_boxplot() + xlab("\nInference method") + ylab("Pearson Correlation") -> sim.boxplots
-save_plot("correlation_boxplots_simulated_raw.pdf", sim.boxplots, base_width = 8, base_height = 4.5 )
+save_plot("plots/correlation_boxplots_simulated_raw.pdf", sim.boxplots, base_width = 8, base_height = 4.5 )
 
 
 
@@ -62,7 +63,7 @@ p2 <- ggplot(plotme, aes(x = true, y = mvn10)) + geom_point(alpha=0.6) + geom_ab
 p3 <- ggplot(plotme, aes(x = true, y = d1.0)) + geom_point(alpha=0.6) + geom_abline(slope = 1, intercept = 0, color="red") + xlab("True") + ylab("swMutSel d1.0") + scale_y_continuous(limits=c(0,1))
 p4 <- ggplot(plotme, aes(x = true, y = pbmutsel)) + geom_point(alpha=0.6) + geom_abline(slope = 1, intercept = 0, color="red") + xlab("True") + ylab("pbMutSel") + scale_y_continuous(limits=c(0,1))
 sim.scatterplots <- plot_grid(p1, p2, p3, p4, nrow=1, labels=c("A", "B", "C", "D"), label_size = 16)
-save_plot("scatterplots_simulated_raw.pdf", sim.scatterplots, base_width = 12, base_height = 3 )
+save_plot("plots/scatterplots_simulated_raw.pdf", sim.scatterplots, base_width = 12, base_height = 3 )
 
 
 
@@ -77,7 +78,7 @@ sub_aafreq$method <- factor(sub_aafreq$method, levels=c("true", "mvn10", "phylob
 sub_aafreq$freq <- sub_aafreq$freq + 0.001 # For clarity in plot
 
 sub_aafreq %>% ggplot(aes(x = aminoacid, y = freq, group=method, fill=method)) + geom_bar(stat="identity",position="dodge",width=0.75) + facet_grid(~true_facet) + ylab("Equilibrium frequency") + xlab("Amino Acid") + scale_fill_manual(name = "", values = c("black", "firebrick1", "mediumblue")) -> freq_barplot
-save_plot("aa_frequency_comparison_barplot_1IBS_A.pdf", freq_barplot, base_width = 11.5, base_height = 3.75)
+save_plot("plots/aa_frequency_comparison_barplot_1IBS_A.pdf", freq_barplot, base_width = 11.5, base_height = 3.75)
 
 
 ##### Correlation boxplots for empirical data #####
@@ -87,7 +88,7 @@ first <- TRUE
 i <- 1
 for (dataname in empnames){
     temp <- emp.results %>% filter(dataset == dataname) %>% spread(method, dnds) %>% select(-dataset, -site) %>% na.omit()
-    corrs <- as.matrix(cor(temp)) %>% melt() %>% filter(Var1 == "fel1", value != 1) %>% arrange(Var1)
+    corrs <- as.matrix(cor(temp, method = "spearman")) %>% melt() %>% filter(Var1 == "fel1", value != 1) %>% arrange(Var1)
     corrs$dataset <- dataname
     colnames(corrs)[3] <- "r"
     if (first){
@@ -102,8 +103,8 @@ for (dataname in empnames){
 
 empcorrs$Var2 <-  factor(empcorrs$Var2, levels = c("fel1", "mvn10", "pbmutsel"), labels = c("FEL", "swMutSel", "pbMutSel"))
 theme_set(theme_cowplot() + theme(axis.text = element_text(size = 11),  axis.title = element_text(size = 13)))
-empcorrs %>% filter(Var1 == "fel1") %>% ggplot(aes(x = Var2, y = r)) + geom_boxplot() + xlab("Inference method") + ylab("Pearson Correlation") + scale_y_continuous(limits=c(0,1), labels=c(0.1, 0.3, 0.5, 0.7, 0.9)) -> emp.boxplots
-save_plot("correlation_boxplots_empirical_raw.pdf", emp.boxplots, base_width = 4, base_height = 3)
+empcorrs %>% filter(Var1 == "fel1") %>% ggplot(aes(x = Var2, y = r)) + geom_boxplot() + xlab("Inference method") + ylab("Spearman Correlation") + scale_y_continuous(limits=c(0,1), labels=c(0.1, 0.3, 0.5, 0.7, 0.9)) -> emp.boxplots
+save_plot("plots/correlation_boxplots_empiricalspearman_raw.pdf", emp.boxplots, base_width = 4, base_height = 3)
 
 
 emp.stats <- read_csv("empirical_data_statistics.csv")
@@ -113,10 +114,10 @@ empcorrs <- left_join(empcorrs, emp.stats)
 
 
 ##### Scatterplots for empirical datasets #####
-theme_set(theme_cowplot() + theme(axis.text = element_text(size = 15), axis.title = element_text(size = 17)))
+theme_set(theme_cowplot() + theme(axis.text = element_text(size = 14), axis.title = element_text(size = 16)))
 
 representative_emp <- "PF00593"
-p1 <- emp.results %>% filter(dataset == representative_emp) %>% spread(method, dnds) %>% ggplot(aes(x = fel1, y = mvn10)) + geom_point(alpha=0.8) + geom_abline(slope = 1, intercept = 0, color="red") + xlab("FEL") + ylab("swMutSel") + scale_y_continuous(limits=c(0,1.1), breaks=c(0, 0.25, 0.50, 0.75, 1.0)) + scale_x_continuous(limits=c(0,1.1), breaks=c(0, 0.25, 0.50, 0.75, 1.0)) + annotate("text", x = 0.8, y = )
+p1 <- emp.results %>% filter(dataset == representative_emp) %>% spread(method, dnds) %>% ggplot(aes(x = fel1, y = mvn10)) + geom_point(alpha=0.8) + geom_abline(slope = 1, intercept = 0, color="red") + xlab("FEL") + ylab("swMutSel") + scale_y_continuous(limits=c(0,1.1), breaks=c(0, 0.25, 0.50, 0.75, 1.0)) + scale_x_continuous(limits=c(0,1.1), breaks=c(0, 0.25, 0.50, 0.75, 1.0))
 
 p2 <- emp.results %>% filter(dataset == representative_emp) %>% spread(method, dnds) %>% ggplot(aes(x = fel1, y = pbmutsel)) + geom_point(alpha=0.8) + geom_abline(slope = 1, intercept = 0, color="red") + xlab("FEL") + ylab("pbMutSel") + scale_y_continuous(limits=c(0,1.1), breaks=c(0, 0.25, 0.50, 0.75, 1.0)) + scale_x_continuous(limits=c(0,1.1), breaks=c(0, 0.25, 0.50, 0.75, 1.0))
 
@@ -131,7 +132,8 @@ p5 <- emp.results %>% filter(dataset == representative_emp) %>% spread(method, d
 p6 <- emp.results %>% filter(dataset == representative_emp) %>% spread(method, dnds) %>% ggplot(aes(x = fel1, y = pbmutsel)) + geom_point(alpha=0.8) + geom_abline(slope = 1, intercept = 0, color="red") + xlab("FEL") + ylab("pbMutSel") + scale_y_continuous(limits=c(0,1.1), breaks=c(0, 0.25, 0.50, 0.75, 1.0)) + scale_x_continuous(limits=c(0,1.1), breaks=c(0, 0.25, 0.50, 0.75, 1.0))
 
 
-p<-plot_grid(p1, p2, p3, p4, p5, p6, nrow=3, labels = c("A", "B", "C", "D", "E", "F"), label_size=16)
+p<-plot_grid(p1, p2, p3, p4, p5, p6, nrow=3, labels = c("A", "B", "C", "D", "E", "F"), label_size=17, scale=0.95)
+save_plot("plots/scatterplots_empirical_raw.pdf", p, base_width = 8, base_height = 10)
 
 
 
