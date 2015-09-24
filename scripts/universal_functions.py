@@ -17,7 +17,7 @@ ZERO=1e-10
 
 
 
-### Crux function for computing dN/dS from MutSel parameters ###
+### Compute dN/dS from MutSel parameters ###
 def dnds_from_params(site_fitness, mu_dict):
     
     # Build the MutSel matrix (assumes equal codon frequencies per amino acid) with these parameters and extract equilibrium codon frequencies
@@ -27,7 +27,38 @@ def dnds_from_params(site_fitness, mu_dict):
     # Derive dN/dS and return
     c = dNdS_from_MutSel( dict(zip(g.codons, eqfreqs)), mu_dict)
     return c.compute_dnds()
-        
+ 
+
+def jsd_from_params(true_codon_freqs, site_fitness, mu_dict):
+    
+    # convert codon frequencies to amino acid frequencies
+    true = np.array(codon_freqs_to_aa_freqs(true_codon_freqs)) + ZERO   # since need to log
+    
+    # inferred
+    raw_inferred  = codon_freqs_from_fitness_eigenvector(site_fitness, mu_dict)
+    inferred = np.array(codon_freqs_to_aa_freqs(raw_inferred)) + ZERO   # since need to log
+
+    # JSD between
+    return calculate_jsd( true, inferred )
+    
+
+def calc_kl(a,b):
+    return np.sum( a * np.log(a/b) ) 
+
+    
+### Compute JSD from frequency distributions ###
+def calculate_jsd(p, q):
+    '''
+        p and q are input distributions to compare, each of length 20.
+    '''
+
+    m = (p+q)/2.
+
+
+    term1 = 0.5*calc_kl(p, m)
+    term2 = 0.5*calc_kl(q, m)
+    
+    return np.sqrt( term1 + term2 )
 
 
 
@@ -113,7 +144,7 @@ def aa_fitness_to_codon_fitness(fitness):
 
 
 
-########## Parsing functions for swMutSel and pbMutSel inferences to get dN/dS ###########
+########## Parsing functions for swMutSel and pbMutSel inferences to get dN/dS, JSD ###########
 
 
 

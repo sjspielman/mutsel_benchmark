@@ -3,7 +3,6 @@
 
 import sys
 import numpy as np
-from Bio import AlignIO
 from compute_dnds_from_mutsel import *
 from universal_functions import *
 
@@ -18,15 +17,12 @@ inftypes = {"empirical": ["mvn10", "phylobayes"], "simulation": ["phylobayes", "
 
 for datatype in datasets:
     
-    seqdir = "../data/" + datatype + "/"
     resdir = "../results/" + datatype + "/"
     
     for data in datasets[datatype]:        
         for method in inftypes[datatype]:
             
             outfile = resdir + data + "_" + method + "_dnds.txt"
-            if os.path.exists(outfile):
-                continue
             print "Calculating dN/dS for", data, method
             
             ######## OBTAIN FITNESS VALUES AND MUTATION RATES ########
