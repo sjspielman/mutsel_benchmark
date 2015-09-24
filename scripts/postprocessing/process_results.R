@@ -35,7 +35,7 @@ for (dataset in datasets){
     datadir  <- paste0(datadir_parent,type,"/")
 
     # dN/dS from FEL1 
-    dat <- read.csv(paste0(datadir, dataset, "_fel1.txt"))
+    dat <- read.csv(paste0(datadir, dataset, "_FEL1.txt"))
     datdnds <- dat$dN.dS
     l <- nrow(dat)
     temp <- data.frame("dataset" = dataset, "site" = 1:l, "dnds" = datdnds , "method" = "fel1", type = type)
