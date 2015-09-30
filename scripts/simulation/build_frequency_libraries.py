@@ -7,6 +7,7 @@ from Bio import AlignIO
 from numpy import savetxt, count_nonzero
 from compute_dnds_from_mutsel import *
 from pyvolve import Genetics, state_freqs
+ZERO=1e-8
 g = Genetics()
 
 yeast_directory = "/Users/sjspielman/Research/OtherPeople/protein_design_and_site_variability/project_files/sequences/duncan_sequences/aligned_sequences/"
@@ -47,12 +48,12 @@ for file in yeastfiles:
                         save = False
 
                     # Retain this information
-                    if save and dnds > 1e-8:
+                    if save and dnds > ZERO:
                         #saving
                         frequencies.append(cf)
                         omegas.append(dnds)
             
-        # Save simulation information (true omegas and 
+        # Save simulation information (true omegas and frequencies)
         freqfile = out_prefix + "_codon_freq_lib.txt"
         dndsfile = out_prefix + "_true_dnds.txt"
         savetxt(freqfile, frequencies)

@@ -12,7 +12,7 @@ with open(outfile, "w") as f:
     f.write("dataset,ntaxa,ncol,treelen,meanpairwise\n")
     
     
-datasets = ["amine", "pb2", "PF00126", "PF00593", "PF01336", "PF01266", "PF01926", "PF02518", "PF04055", "PF07715"]
+datasets = ["pb2", "PF00126", "PF00593", "PF01336", "PF01266", "PF01926", "PF02518", "PF04055", "PF07715"]
 for data in datasets:
     
     # Alignment information

@@ -4,6 +4,8 @@ require(cowplot)
 require(readr)
 require(reshape2)
 require(grid)
+require(lme4)
+require(lmerTest)
 
 result_directory <- "../../results/"
 
@@ -21,6 +23,18 @@ theme_set(theme_cowplot() + theme(axis.text.y = element_text(size = 15), axis.te
 jsd.boxplots <- ggplot(jsd.data, aes(x = method, y = meanjsd)) + geom_boxplot() + xlab("Inference Method") + ylab("Average JSD") + scale_y_continuous(limits = c(0, 0.4), breaks = c(0, 0.1, 0.2, 0.3, 0.4))
 save_plot("plots/jsd_boxplot_raw.pdf", jsd.boxplots, base_width = 8, base_height = 4.5 )
 
+
+
+##### Does level of constraint correlate with error? #####
+# Marginally. Error is a bit higher when constraint is lower, but the effect is minimal and probably not worth mentioning.
+#sim.results %>% filter(method == "true") %>% spread(method, dnds) %>% select(-jsd) -> sim.true
+#sim.results %>% filter(method == "nopenal") %>% spread(method, dnds) -> nopenal.jsd
+#nopenal.jsd <- left_join(nopenal.jsd, sim.true)
+#summary(lmer(jsd ~ true + 1(|dataset), data = nopenal.jsd))
+# Estimate Std. Error        df t value Pr(>|t|)    
+# (Intercept) 5.325e-02  1.679e-03 8.000e+01  31.709  < 2e-16 ***
+#     true    2.460e-02  4.423e-03 3.682e+03   5.562 2.86e-08 ***
+#ggplot(nopenal.jsd, aes(x = true, y = jsd)) + geom_point() 
 
 
 
