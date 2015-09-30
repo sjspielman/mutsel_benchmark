@@ -66,20 +66,26 @@ save_plot("plots/aafreq_barplot_1IBS_A.pdf", freq_barplot, base_width = 11.5, ba
 
 
 ##### Scatterplots for empirical datasets #####
+
+# These lines of code give some summary statistics to decide what to use in scatterplot. We want the least and most biased.
+# emp.results %>% spread(method, dnds) %>% group_by(dataset) %>% do(bias.raw = glm(nopenal ~ offset(fel1), dat = .), cor.raw = cor(.$fel1, .$nopenal)) %>% mutate(estbias = summary(bias.raw)$coeff[1], r = cor.raw[1]) %>% select(-bias.raw, -cor.raw) -> emp.r.bias
+# emp.stats <- read_csv("empirical_data_statistics.csv")
+# emp.stats <- left_join(emp.r.bias, emp.stats)
+
 theme_set(theme_cowplot() + theme(axis.text = element_text(size = 14), axis.title = element_text(size = 16)))
 
-representative_emp <- "PF00593"
+representative_emp <- "PF00593" # least estimator bias = -0.034, r = 0.84
 p1 <- emp.results %>% filter(dataset == representative_emp) %>% spread(method, dnds) %>% ggplot(aes(x = fel1, y = nopenal)) + geom_point(alpha=0.8) + geom_abline(slope = 1, intercept = 0, color="red") + xlab("FEL dN/dS") + ylab("swMutSel dN/dS") + scale_y_continuous(limits=c(0,1.1), breaks=c(0, 0.25, 0.50, 0.75, 1.0)) + scale_x_continuous(limits=c(0,1.1), breaks=c(0, 0.25, 0.50, 0.75, 1.0))
 
 p2 <- emp.results %>% filter(dataset == representative_emp) %>% spread(method, dnds) %>% ggplot(aes(x = fel1, y = pbmutsel)) + geom_point(alpha=0.8) + geom_abline(slope = 1, intercept = 0, color="red") + xlab("FEL dN/dS") + ylab("pbMutSel dN/dS") + scale_y_continuous(limits=c(0,1.1), breaks=c(0, 0.25, 0.50, 0.75, 1.0)) + scale_x_continuous(limits=c(0,1.1), breaks=c(0, 0.25, 0.50, 0.75, 1.0))
 
 
-representative_emp <- "PF01926"
+representative_emp <- "PF04055" # highest estimator bias 0.26, r = 0.73
 p3 <- emp.results %>% filter(dataset == representative_emp) %>% spread(method, dnds) %>% ggplot(aes(x = fel1, y = nopenal)) + geom_point(alpha=0.8) + geom_abline(slope = 1, intercept = 0, color="red") + xlab("FEL dN/dS") + ylab("swMutSel dN/dS") + scale_y_continuous(limits=c(0,1.1), breaks=c(0, 0.25, 0.50, 0.75, 1.0)) + scale_x_continuous(limits=c(0,1.1), breaks=c(0, 0.25, 0.50, 0.75, 1.0))
 p4 <- emp.results %>% filter(dataset == representative_emp) %>% spread(method, dnds) %>% ggplot(aes(x = fel1, y = pbmutsel)) + geom_point(alpha=0.8) + geom_abline(slope = 1, intercept = 0, color="red") + xlab("FEL dN/dS") + ylab("pbMutSel dN/dS") + scale_y_continuous(limits=c(0,1.1), breaks=c(0, 0.25, 0.50, 0.75, 1.0)) + scale_x_continuous(limits=c(0,1.1), breaks=c(0, 0.25, 0.50, 0.75, 1.0))
 
 
-representative_emp <- "pb2"
+representative_emp <- "pb2" # everybody has analyzed this, so we should too
 p5 <- emp.results %>% filter(dataset == representative_emp) %>% spread(method, dnds) %>% ggplot(aes(x = fel1, y = nopenal)) + geom_point(alpha=0.8) + geom_abline(slope = 1, intercept = 0, color="red") + xlab("FEL dN/dS") + ylab("swMutSel dN/dS") + scale_y_continuous(limits=c(0,1.1), breaks=c(0, 0.25, 0.50, 0.75, 1.0)) + scale_x_continuous(limits=c(0,1.1), breaks=c(0, 0.25, 0.50, 0.75, 1.0))
 p6 <- emp.results %>% filter(dataset == representative_emp) %>% spread(method, dnds) %>% ggplot(aes(x = fel1, y = pbmutsel)) + geom_point(alpha=0.8) + geom_abline(slope = 1, intercept = 0, color="red") + xlab("FEL dN/dS") + ylab("pbMutSel dN/dS") + scale_y_continuous(limits=c(0,1.1), breaks=c(0, 0.25, 0.50, 0.75, 1.0)) + scale_x_continuous(limits=c(0,1.1), breaks=c(0, 0.25, 0.50, 0.75, 1.0))
 
