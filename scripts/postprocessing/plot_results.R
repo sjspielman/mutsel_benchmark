@@ -52,35 +52,35 @@ save_plot("plots/scatterplots_simulated.pdf", sim.scatterplots, base_width = 12,
 
 
 ##### Frequency comparison barplots for representative dataset #####
-theme_set(theme_cowplot() + theme(axis.text.y = element_text(size = 14), axis.text.x = element_text(size = 10),  axis.title = element_text(size = 16), panel.border = element_rect(size = 0.5), panel.margin = unit(0.75, "lines"), strip.background = element_rect(fill="white"), strip.text = element_text(size=14, face="bold")))
+theme_set(theme_cowplot() + theme(axis.text.y = element_text(size = 14), axis.text.x = element_text(size = 10),  axis.title = element_text(size = 16),  panel.margin = unit(0.75, "lines"), strip.background = element_blank(), strip.text = element_blank()))
 aafreq <- read.csv("aa_frequency_comparison_1IBS_A_simulated.csv") # Same representative dataset as in scatterplots
 keep <- c(283,176,56)  # here, define sites to plot.
 aafreq %>% filter(site %in% keep) -> sub_aafreq
-sub_aafreq$truednds <- round(sub_aafreq$truednds, 4)
-sub_aafreq <- mutate(sub_aafreq, true_facet = paste0("dN/dS = ",truednds))
-sub_aafreq$method <- factor(sub_aafreq$method, levels=c("true", "mvn10", "phylobayes"), labels = c("True", "swMutSel", "pbMutSel"))
-sub_aafreq$freq <- sub_aafreq$freq + 0.001 # For clarity in plot
+#sub_aafreq$truednds <- round(sub_aafreq$truednds, 4)
+#sub_aafreq <- mutate(sub_aafreq, true_facet = paste0("dN/dS = ",truednds))
+sub_aafreq$method <- factor(sub_aafreq$method, levels=c("true", "swmutsel", "pbmutsel"), labels = c("True", "swMutSel", "pbMutSel"))
+sub_aafreq$freq <- sub_aafreq$freq + 0.0005 # For clarity in plot
 
-sub_aafreq %>% ggplot(aes(x = aminoacid, y = freq, group=method, fill=method)) + geom_bar(stat="identity",position="dodge",width=0.75) + facet_grid(~true_facet) + ylab("Equilibrium frequency") + xlab("Amino Acid") + scale_fill_manual(name = "", values = c("black", "firebrick1", "mediumblue")) -> freq_barplot
-save_plot("plots/aafreq_barplot_1IBS_A.pdf", freq_barplot, base_width = 11.5, base_height = 3.75)
+sub_aafreq %>% ggplot(aes(x = aminoacid, y = freq, group=method, fill=method)) + geom_bar(stat="identity",position="dodge",width=0.75) + facet_wrap(~site) + ylab("Equilibrium frequency") + xlab("Amino Acid") + scale_y_continuous(expand = c(0, 0), limits=c(0, 0.16)) + scale_fill_manual(name = "", values = c("black", "firebrick1", "mediumblue")) -> freq_barplot
+save_plot("plots/aafreq_barplot_1IBS_A.pdf", freq_barplot, base_width = 11.5, base_height = 3.25)
 
 
 ##### Scatterplots for empirical datasets #####
 
 # These lines of code give some summary statistics to decide what to use in scatterplot. We want the least and most biased.
-# emp.results %>% spread(method, dnds) %>% group_by(dataset) %>% do(bias.raw = glm(nopenal ~ offset(fel1), dat = .), cor.raw = cor(.$fel1, .$nopenal)) %>% mutate(estbias = summary(bias.raw)$coeff[1], r = cor.raw[1]) %>% select(-bias.raw, -cor.raw) -> emp.r.bias
-# emp.stats <- read_csv("empirical_data_statistics.csv")
-# emp.stats <- left_join(emp.r.bias, emp.stats)
+emp.results %>% spread(method, dnds) %>% group_by(dataset) %>% do(bias.raw = glm(nopenal ~ offset(fel1), dat = .), cor.raw.sp = cor(.$fel1, .$nopenal, method = "spearman"), cor.raw.p = cor(.$fel1, .$nopenal)) %>% mutate(estbias = summary(bias.raw)$coeff[1], r.spear = cor.raw.sp[1], r.pear = cor.raw.p[1]) %>% select(-bias.raw, -cor.raw.sp, -cor.raw.p) -> emp.r.bias
+emp.stats <- read_csv("empirical_data_statistics.csv")
+emp.stats <- left_join(emp.r.bias, emp.stats) %>% arrange(r.pear)
 
 theme_set(theme_cowplot() + theme(axis.text = element_text(size = 14), axis.title = element_text(size = 16)))
 
-representative_emp <- "PF00593" # least estimator bias = -0.034, r = 0.84
+representative_emp <- "PF01926"
 p1 <- emp.results %>% filter(dataset == representative_emp) %>% spread(method, dnds) %>% ggplot(aes(x = fel1, y = nopenal)) + geom_point(alpha=0.8) + geom_abline(slope = 1, intercept = 0, color="red") + xlab("FEL dN/dS") + ylab("swMutSel dN/dS") + scale_y_continuous(limits=c(0,1.1), breaks=c(0, 0.25, 0.50, 0.75, 1.0)) + scale_x_continuous(limits=c(0,1.1), breaks=c(0, 0.25, 0.50, 0.75, 1.0))
 
 p2 <- emp.results %>% filter(dataset == representative_emp) %>% spread(method, dnds) %>% ggplot(aes(x = fel1, y = pbmutsel)) + geom_point(alpha=0.8) + geom_abline(slope = 1, intercept = 0, color="red") + xlab("FEL dN/dS") + ylab("pbMutSel dN/dS") + scale_y_continuous(limits=c(0,1.1), breaks=c(0, 0.25, 0.50, 0.75, 1.0)) + scale_x_continuous(limits=c(0,1.1), breaks=c(0, 0.25, 0.50, 0.75, 1.0))
 
 
-representative_emp <- "PF04055" # highest estimator bias 0.26, r = 0.73
+representative_emp <- "PF00593"
 p3 <- emp.results %>% filter(dataset == representative_emp) %>% spread(method, dnds) %>% ggplot(aes(x = fel1, y = nopenal)) + geom_point(alpha=0.8) + geom_abline(slope = 1, intercept = 0, color="red") + xlab("FEL dN/dS") + ylab("swMutSel dN/dS") + scale_y_continuous(limits=c(0,1.1), breaks=c(0, 0.25, 0.50, 0.75, 1.0)) + scale_x_continuous(limits=c(0,1.1), breaks=c(0, 0.25, 0.50, 0.75, 1.0))
 p4 <- emp.results %>% filter(dataset == representative_emp) %>% spread(method, dnds) %>% ggplot(aes(x = fel1, y = pbmutsel)) + geom_point(alpha=0.8) + geom_abline(slope = 1, intercept = 0, color="red") + xlab("FEL dN/dS") + ylab("pbMutSel dN/dS") + scale_y_continuous(limits=c(0,1.1), breaks=c(0, 0.25, 0.50, 0.75, 1.0)) + scale_x_continuous(limits=c(0,1.1), breaks=c(0, 0.25, 0.50, 0.75, 1.0))
 
