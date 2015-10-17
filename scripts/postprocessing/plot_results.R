@@ -16,8 +16,7 @@ jsd.results <- read_csv(paste0(result_directory, "jsd_results.csv"))
 
 
 #### Boxplots of Jensen-Shannon distance among methods for simulated datasets ####
-sim.results <- left_join(sim.results, jsd.results) 
-sim.results %>% filter(method != "fel1") %>% select(-dnds) %>% na.omit() %>% group_by(dataset, method) %>% summarize(meanjsd = mean(jsd)) -> jsd.data
+left_join(sim.results, jsd.results)  %>% filter(method != "fel1") %>% select(-dnds) %>% na.omit() %>% group_by(dataset, method) %>% summarize(meanjsd = mean(jsd)) -> jsd.data
 jsd.data$method <- factor(jsd.data$method, levels = c("nopenal", "mvn10", "mvn100", "mvn1000", "d0.01", "d0.1", "d1.0", "pbmutsel"), labels = c("No penalty", "mvn10", "mvn100", "mvn1000", "d0.01", "d0.1", "d1.0", "pbMutSel"))
 theme_set(theme_cowplot() + theme(axis.text.y = element_text(size = 15), axis.text.x = element_text(size = 13),  axis.title = element_text(size = 16)))
 jsd.boxplots <- ggplot(jsd.data, aes(x = method, y = meanjsd)) + geom_boxplot() + xlab("Inference Method") + ylab("Average JSD") + scale_y_continuous(limits = c(0, 0.2), breaks = c(0, 0.05, 0.1, 0.15, 0.2))
@@ -27,131 +26,55 @@ save_plot("plots/jsd_boxplot_raw.pdf", jsd.boxplots, base_width = 8, base_height
 
 ##### Scatterplots for a representative dataset #####
 theme_set(theme_cowplot() + theme(axis.text = element_text(size = 13), axis.title = element_text(size = 15)))
-representative_sim <- "1IBS_A_simulated" # Note that this dataset was chosen because it has the most sites
-plotme <- sim.results %>% select(-jsd) %>% filter(dataset == representative_sim) %>% spread(method, dnds) 
+representative_sim <- "1ZNN_A_simulated" # Chosen since its r, bias are most similar to average for pbMutSel
+plotme <- sim.results %>% filter(dataset == representative_sim) %>% spread(method, dnds) 
 p1 <- ggplot(plotme, aes(x = true, y = fel1)) + geom_point(alpha=0.6) + geom_abline(slope = 1, intercept = 0, color="red") + xlab("True dN/dS") + ylab("FEL dN/dS") + scale_y_continuous(limits=c(0,1))
 p2 <- ggplot(plotme, aes(x = true, y = nopenal)) + geom_point(alpha=0.6) + geom_abline(slope = 1, intercept = 0, color="red") + xlab("True dN/dS") + ylab("swMutSel dN/dS") + scale_y_continuous(limits=c(0,1))
 p3 <- ggplot(plotme, aes(x = true, y = d1.0)) + geom_point(alpha=0.6) + geom_abline(slope = 1, intercept = 0, color="red") + xlab("True dN/dS") + ylab("swMutSel d1.0 dN/dS") + scale_y_continuous(limits=c(0,1)) + theme(axis.title.y = element_text(size = 13))
 p4 <- ggplot(plotme, aes(x = true, y = pbmutsel)) + geom_point(alpha=0.6) + geom_abline(slope = 1, intercept = 0, color="red") + xlab("True dN/dS") + ylab("pbMutSel dN/dS") + scale_y_continuous(limits=c(0,1))
 sim.scatterplots <- plot_grid(p1, p2, p3, p4, nrow=1, labels=c("A", "B", "C", "D"), label_size = 15)
-save_plot("plots/scatterplots_simulated.pdf", sim.scatterplots, base_width = 12, base_height = 3 )
+save_plot("plots/scatterplots_simulated_1ZNN.pdf", sim.scatterplots, base_width = 12, base_height = 3 )
 
 
 
-##### Frequency comparison barplots for representative dataset #####
-# theme_set(theme_cowplot() + theme(axis.text.y = element_text(size = 14), axis.text.x = element_text(size = 10),  axis.title = element_text(size = 16),  panel.margin = unit(0.75, "lines"), strip.background = element_blank(), strip.text = element_blank()))
-# aafreq <- read.csv("aa_frequency_comparison_1IBS_A_simulated.csv") # Same representative dataset as in scatterplots
-# keep <- c(283,176,56)  # here, define sites to plot.
-# aafreq %>% filter(site %in% keep) -> sub_aafreq
-# #sub_aafreq$truednds <- round(sub_aafreq$truednds, 4)
-# #sub_aafreq <- mutate(sub_aafreq, true_facet = paste0("dN/dS = ",truednds))
-# sub_aafreq$method <- factor(sub_aafreq$method, levels=c("true", "swmutsel", "pbmutsel"), labels = c("True", "swMutSel", "pbMutSel"))
-# sub_aafreq$freq <- sub_aafreq$freq + 0.0005 # For clarity in plot
-# 
-# sub_aafreq %>% ggplot(aes(x = aminoacid, y = freq, group=method, fill=method)) + geom_bar(stat="identity",position="dodge",width=0.75) + facet_wrap(~site) + ylab("Equilibrium frequency") + xlab("Amino Acid") + scale_y_continuous(expand = c(0, 0), limits=c(0, 0.16)) + scale_fill_manual(name = "", values = c("black", "firebrick1", "mediumblue")) -> freq_barplot
-# save_plot("plots/aafreq_barplot_1IBS_A.pdf", freq_barplot, base_width = 11.5, base_height = 3.25)
+
+##### Violin plots of correlation and estimator bias across simulated datasets #####
+sim.results %>% spread(method, dnds) %>% group_by(dataset) %>% do(bias.raw = glm(pbmutsel ~ offset(true), dat = .), cor.raw = cor(.$true, .$pbmutsel)) %>% mutate(bias = summary(bias.raw)$coeff[1], r2 = (cor.raw[1])^2) %>% select(-bias.raw, -cor.raw) %>% ungroup() %>% mutate(method = "pbMutSel", meanbias = mean(bias), meanr2 = mean(r2)) -> sim.r2.bias.pb
+sim.results %>% spread(method, dnds) %>% group_by(dataset) %>% do(bias.raw = glm(nopenal ~ offset(true), dat = .), cor.raw = cor(.$true, .$nopenal)) %>% mutate(bias = summary(bias.raw)$coeff[1], r2 = (cor.raw[1])^2) %>% select(-bias.raw, -cor.raw) %>% ungroup() %>% mutate(method = "swMutSel", meanbias = mean(bias), meanr2 = mean(r2)) -> sim.r2.bias.sw
+sim.results %>% spread(method, dnds) %>% group_by(dataset) %>% do(bias.raw = glm(fel1 ~ offset(true), dat = .), cor.raw = cor(.$true, .$fel1)) %>% mutate(bias = summary(bias.raw)$coeff[1], r2 = (cor.raw[1])^2) %>% select(-bias.raw, -cor.raw) %>% ungroup() %>% mutate(method = "FEL", meanbias = mean(bias), meanr2 = mean(r2)) -> sim.r2.bias.fel
+sim.r2.bias <- rbind(sim.r2.bias.pb, sim.r2.bias.sw, sim.r2.bias.fel)
+sim.r2.bias$method <- factor(sim.r2.bias$method, levels=c("FEL", "swMutSel", "pbMutSel"))
+
+theme_set(theme_cowplot() + theme(axis.text = element_text(size = 13), axis.title.x = element_text(size = 15), axis.title.y = element_text(size = 17)))
+r2.violin <- ggplot(sim.r2.bias, aes(x = method, y= r2)) + geom_violin(scale="width") + geom_point(aes(x = method, y = meanr2), size=3) + xlab("Inference Method") + ylab("Variance Explained") + scale_y_continuous(limits = c(0.6,1.0), breaks=c(0.6,0.7,0.8,0.9,1.0))
+bias.violin <- ggplot(sim.r2.bias, aes(x = method, y= bias)) + geom_violin() + geom_point(aes(x = method, y = meanbias),size=3) + xlab("Inference Method") + ylab("Estimator Bias") + geom_hline(yintercept=0, color="grey40", size=0.75) + scale_y_continuous(breaks = c(-0.05, -0.025, 0, 0.025, 0.05, 0.075))
+violins.r2.bias <- plot_grid(r2.violin, bias.violin, nrow=1, labels = c("A","B"), label_size=18, scale=0.95)
+save_plot("plots/violins_r2_bias.pdf", violins.r2.bias, base_width=9, base_height=4)
+
+
+
+
+
+
+
 
 
 ##### Scatterplots for empirical datasets #####
+theme_set(theme_cowplot() + theme(axis.text = element_text(size = 14), axis.title = element_text(size = 15)))
 
-# These lines of code give some summary statistics to decide what to use in scatterplot. We want the least and most biased.
-# emp.results %>% spread(method, dnds) %>% group_by(dataset) %>% do(bias.raw = glm(nopenal ~ offset(fel1), dat = .), cor.raw.sp = cor(.$fel1, .$nopenal, method = "spearman"), cor.raw.p = cor(.$fel1, .$nopenal)) %>% mutate(estbias = summary(bias.raw)$coeff[1], r.spear = cor.raw.sp[1], r.pear = cor.raw.p[1]) %>% select(-bias.raw, -cor.raw.sp, -cor.raw.p) -> emp.r.bias.swmutsel
-# emp.results %>% spread(method, dnds) %>% group_by(dataset) %>% do(bias.raw = glm(pbmutsel ~ offset(fel1), dat = .), cor.raw.sp = cor(.$fel1, .$pbmutsel, method = "spearman"), cor.raw.p = cor(.$fel1, .$pbmutsel)) %>% mutate(estbias = summary(bias.raw)$coeff[1], r.spear = cor.raw.sp[1], r.pear = cor.raw.p[1]) %>% select(-bias.raw, -cor.raw.sp, -cor.raw.p) -> emp.r.bias.pbmutsel
+plot_empirical_scatter_row <- function(representative_emp)
+{
+  p1 <- emp.results %>% filter(dataset == representative_emp) %>% spread(method, dnds) %>% ggplot(aes(x = fel1, y = nopenal)) + geom_point(alpha=0.8) + geom_abline(slope = 1, intercept = 0, color="red") + xlab("FEL dN/dS") + ylab("swMutSel dN/dS") + scale_y_continuous(limits=c(0,1.1), breaks=c(0, 0.25, 0.50, 0.75, 1.0)) + scale_x_continuous(limits=c(0,1.1), breaks=c(0, 0.25, 0.50, 0.75, 1.0))
+  
+  p2 <- emp.results %>% filter(dataset == representative_emp) %>% spread(method, dnds) %>% ggplot(aes(x = fel1, y = pbmutsel)) + geom_point(alpha=0.8) + geom_abline(slope = 1, intercept = 0, color="red") + xlab("FEL dN/dS") + ylab("pbMutSel dN/dS") + scale_y_continuous(limits=c(0,1.1), breaks=c(0, 0.25, 0.50, 0.75, 1.0)) + scale_x_continuous(limits=c(0,1.1), breaks=c(0, 0.25, 0.50, 0.75, 1.0))
+  
+  p3 <- emp.results %>% filter(dataset == representative_emp) %>% spread(method, dnds) %>% ggplot(aes(x = pbmutsel, y = nopenal)) + geom_point(alpha=0.8) + geom_abline(slope = 1, intercept = 0, color="red") + xlab("pbMutSel dN/dS") + ylab("swMutSel dN/dS") + scale_y_continuous(limits=c(0,1.1), breaks=c(0, 0.25, 0.50, 0.75, 1.0)) + scale_x_continuous(limits=c(0,1.1), breaks=c(0, 0.25, 0.50, 0.75, 1.0))
+  
+  list(p1,p2,p3)
+}
 
-theme_set(theme_cowplot() + theme(axis.text = element_text(size = 14), axis.title = element_text(size = 16)))
-
-representative_emp <- "PF01926"
-p1 <- emp.results %>% filter(dataset == representative_emp) %>% spread(method, dnds) %>% ggplot(aes(x = fel1, y = nopenal)) + geom_point(alpha=0.8) + geom_abline(slope = 1, intercept = 0, color="red") + xlab("FEL dN/dS") + ylab("swMutSel dN/dS") + scale_y_continuous(limits=c(0,1.1), breaks=c(0, 0.25, 0.50, 0.75, 1.0)) + scale_x_continuous(limits=c(0,1.1), breaks=c(0, 0.25, 0.50, 0.75, 1.0))
-
-p2 <- emp.results %>% filter(dataset == representative_emp) %>% spread(method, dnds) %>% ggplot(aes(x = fel1, y = pbmutsel)) + geom_point(alpha=0.8) + geom_abline(slope = 1, intercept = 0, color="red") + xlab("FEL dN/dS") + ylab("pbMutSel dN/dS") + scale_y_continuous(limits=c(0,1.1), breaks=c(0, 0.25, 0.50, 0.75, 1.0)) + scale_x_continuous(limits=c(0,1.1), breaks=c(0, 0.25, 0.50, 0.75, 1.0))
-
-
-representative_emp <- "PF00593"
-p3 <- emp.results %>% filter(dataset == representative_emp) %>% spread(method, dnds) %>% ggplot(aes(x = fel1, y = nopenal)) + geom_point(alpha=0.8) + geom_abline(slope = 1, intercept = 0, color="red") + xlab("FEL dN/dS") + ylab("swMutSel dN/dS") + scale_y_continuous(limits=c(0,1.1), breaks=c(0, 0.25, 0.50, 0.75, 1.0)) + scale_x_continuous(limits=c(0,1.1), breaks=c(0, 0.25, 0.50, 0.75, 1.0))
-p4 <- emp.results %>% filter(dataset == representative_emp) %>% spread(method, dnds) %>% ggplot(aes(x = fel1, y = pbmutsel)) + geom_point(alpha=0.8) + geom_abline(slope = 1, intercept = 0, color="red") + xlab("FEL dN/dS") + ylab("pbMutSel dN/dS") + scale_y_continuous(limits=c(0,1.1), breaks=c(0, 0.25, 0.50, 0.75, 1.0)) + scale_x_continuous(limits=c(0,1.1), breaks=c(0, 0.25, 0.50, 0.75, 1.0))
-
-
-representative_emp <- "pb2" # everybody has analyzed this, so we should too
-p5 <- emp.results %>% filter(dataset == representative_emp) %>% spread(method, dnds) %>% ggplot(aes(x = fel1, y = nopenal)) + geom_point(alpha=0.8) + geom_abline(slope = 1, intercept = 0, color="red") + xlab("FEL dN/dS") + ylab("swMutSel dN/dS") + scale_y_continuous(limits=c(0,1.1), breaks=c(0, 0.25, 0.50, 0.75, 1.0)) + scale_x_continuous(limits=c(0,1.1), breaks=c(0, 0.25, 0.50, 0.75, 1.0))
-p6 <- emp.results %>% filter(dataset == representative_emp) %>% spread(method, dnds) %>% ggplot(aes(x = fel1, y = pbmutsel)) + geom_point(alpha=0.8) + geom_abline(slope = 1, intercept = 0, color="red") + xlab("FEL dN/dS") + ylab("pbMutSel dN/dS") + scale_y_continuous(limits=c(0,1.1), breaks=c(0, 0.25, 0.50, 0.75, 1.0)) + scale_x_continuous(limits=c(0,1.1), breaks=c(0, 0.25, 0.50, 0.75, 1.0))
-
-
-p<-plot_grid(p1, p2, p3, p4, p5, p6, nrow=3, labels = c("A", "B", "C", "D", "E", "F"), label_size=17, scale=0.95)
-save_plot("plots/scatterplots_empirical_raw.pdf", p, base_width = 8, base_height = 10)
-
-
-
-
-
-
-
-######## OLD PLOTS ARE DOWN HERE!! ##########
-
-
-##### Correlation boxplots for simulated data #####
-# simcorrs <- NULL
-# simnames <- unique(sim.results$dataset)
-# first <- TRUE
-# i <- 1
-# for (dataname in simnames){
-#   newdname <- strsplit(dataname, "_")[[1]][1]
-#   temp <- sim.results %>% spread(method, dnds) %>% filter(dataset == dataname, fel1 != 1) %>% select(-dataset, -site) %>% na.omit()
-#   corrs <- as.matrix(cor(temp)) %>% melt() %>% filter(Var1 %in% c("true", "fel1"), value != 1) %>% arrange(Var1)
-#   corrs$dataset <- newdname
-#   colnames(corrs)[3] <- "r"
-#   if (first){
-#     simcorrs <- corrs 
-#   }
-#   else{
-#     simcorrs <- rbind(simcorrs, corrs)
-#   }
-#   first <- FALSE
-#   i <- i+1
-# }
-# # correlations between true and inferred
-# #      Var2 median(r)
-# # 1   d0.01 0.9854866
-# # 2    d0.1 0.9452034
-# # 3    d1.0 0.8427745
-# # 5   mvn10 0.9870753  # best but not far off
-# # 6  mvn100 0.9865595
-# # 7 mvn1000 0.9865439
-# # 8 nopenal 0.9865319
-# simcorrs$Var2 <-  factor(simcorrs$Var2, levels = c("fel1", "nopenal", "mvn10", "mvn100", "mvn1000", "d0.01", "d0.1", "d1.0", "pbmutsel"), labels = c("FEL", "No penalty", "mvn10", "mvn100", "mvn1000", "d0.01", "d0.1", "d1.0", "pbMutSel"))
-# theme_set(theme_cowplot() + theme(axis.text.y = element_text(size = 15), axis.text.x = element_text(size = 12),  axis.title = element_text(size = 16)))
-# simcorrs %>% filter(Var1 == "true") %>% ggplot(aes(x = Var2, y = r)) + geom_boxplot() + xlab("\nInference method") + ylab("Pearson Correlation") -> sim.boxplots
-# save_plot("plots/correlation_boxplots_simulated_raw.pdf", sim.boxplots, base_width = 8, base_height = 4.5 )
-
-
-# ##### Correlation boxplots for empirical data #####
-# empcorrs <- NULL
-# empnames <- unique(emp.results$dataset)
-# first <- TRUE
-# i <- 1
-# for (dataname in empnames){
-#   temp <- emp.results %>% filter(dataset == dataname) %>% spread(method, dnds) %>% select(-dataset, -site) %>% na.omit()
-#   corrs <- as.matrix(cor(temp)) %>% melt() %>% filter(Var1 == "fel1", value != 1) %>% arrange(Var1)
-#   corrs$dataset <- dataname
-#   colnames(corrs)[3] <- "r"
-#   if (first){
-#     empcorrs <- corrs 
-#   }
-#   else{
-#     empcorrs <- rbind(empcorrs, corrs)
-#   }
-#   first <- FALSE
-#   i <- i+1
-# }
-# 
-# empcorrs$Var2 <-  factor(empcorrs$Var2, levels = c("fel1", "nopenal", "pbmutsel"), labels = c("FEL", "swMutSel", "pbMutSel"))
-# theme_set(theme_cowplot() + theme(axis.text = element_text(size = 11),  axis.title = element_text(size = 13)))
-# empcorrs %>% filter(Var1 == "fel1") %>% ggplot(aes(x = Var2, y = r)) + geom_boxplot() + xlab("Inference method") + ylab("Spearman Correlation") + scale_y_continuous(limits=c(0,1), labels=c(0.1, 0.3, 0.5, 0.7, 0.9)) -> emp.boxplots
-# save_plot("plots/correlation_boxplots_empirical_raw.pdf", emp.boxplots, base_width = 4, base_height = 3)
-
-#emp.stats <- read_csv("empirical_data_statistics.csv")
-#empcorrs <- left_join(empcorrs, emp.stats)
-#empcorrs %>% filter(Var2 == "swMutSel", dataset !="pb2")-> sanspb2
-#summary(lm(r~meanpairwise, data=sanspb2))
-
-
-
+row1 <- plot_empirical_scatter_row("PF00593") # swMutSel better than pbMutSel
+row2 <- plot_empirical_scatter_row("PF04055") # pbMutSel better than swMutSel
+row3 <- plot_empirical_scatter_row("pb2")     # commonly analyzed
+p <- plot_grid(row1[[1]], row1[[2]], row1[[3]], row2[[1]], row2[[2]], row2[[3]], row3[[1]], row3[[2]], row3[[3]], nrow=3, ncol=3, labels = c("A", "B", "C", "D", "E", "F", "G", "H", "I"), label_size=19, scale=0.95)
+save_plot("plots/scatterplots_empirical_raw.pdf", p, base_width = 13, base_height = 10)
