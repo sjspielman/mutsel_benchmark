@@ -1,4 +1,4 @@
-Observed S Changes	Observed NS Changes	E[S Sites]	E[NS Sites]	Observed S. Prop.	P{S}	dS	dN	dN-dS	P{S leq. observed}	P{S geq. observed}	Scaled dN-dS
+ObservedSChanges	ObservedNSChanges	E[SSites]	E[NSSites]	ObservedS.Prop.	P{S}	dS	dN	dN-dS	P{Sleq.observed}	P{Sgeq.observed}	ScaleddN-dS
 269	279	0.986899	1.99699	0.490876	0.330743	272.571	139.711	-132.86	1	-2.02061e-14	-0.9747
 259	125	0.994708	1.9795	0.674479	0.334445	260.378	63.1474	-197.231	1	1.78746e-14	-1.44694
 236	238	0.7892	2.03843	0.49789	0.279103	299.037	116.757	-182.28	1	-1.9984e-15	-1.33726

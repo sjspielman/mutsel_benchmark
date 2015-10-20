@@ -33,11 +33,11 @@ for (dataset in datasets){
     }
     datadir  <- paste0(datadir_parent,type,"/")
 
-    # dN/dS from FEL1 
-    dat <- read.csv(paste0(datadir, dataset, "_FEL1.txt"))
-    datdnds <- dat$dN.dS
+    # dN/dS from SLAC 
+    dat <- read.table(paste0(datadir, dataset, "_SLAC.txt"), header=T)
+    datdnds <- (dat$dN)/(mean(dat$dS))
     l <- nrow(dat)
-    temp <- data.frame("dataset" = dataset, "site" = 1:l, "dnds" = datdnds , "method" = "fel1", type = type)
+    temp <- data.frame("dataset" = dataset, "site" = 1:l, "dnds" = datdnds , "method" = "slac", type = type)
     results.dnds <- rbind(results.dnds, temp)
 
 
