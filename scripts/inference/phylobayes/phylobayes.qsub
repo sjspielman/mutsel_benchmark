@@ -4,15 +4,15 @@
 #$ -S /bin/bash
 #$ -q wilke
 #$ -m beas
-#$ -pe serial 8
+#$ -pe serial 16
 source ~/.bashrc
 
 # define files, variables used in analysis
-CPU=8 
+CPU=16
 DATADIR=$1
 DATA=$2
 TREE=$3
-REPODIR=$HOME/mutsel_bench
+REPODIR=$HOME/mutsel_benchmark
 
 PBEXEC=$HOME/bin/pb_mpi1.5a/data/pb_mpi
 READPBEXEC=$HOME/bin/pb_mpi1.5a/data/readpb_mpi
@@ -40,9 +40,7 @@ cp *dnds.txt $FINALDIR
 cp *.aap $FINALDIR
 cp *.trace $FINALDIR
 
-#cd
-#cp -r $WDIR /share/WilkeLab/work/sjs3495/mutsel_bench_data_august
-#rm -r $WDIR
+rm -r $WDIR
 
 
 
