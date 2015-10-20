@@ -14,7 +14,7 @@ ALN=$2
 TREE=$3
 
 SWEXEC=$HOME/bin/swmutsel-alpha_jdk1.6.jar
-REPODIR=$HOME/mutsel_bench
+REPODIR=$HOME/mutsel_benchmark
 
 # create and enter working directory
 WDIR=/state/partition1/sjs3495/$JOB_NAME-$JOB_ID
@@ -40,6 +40,4 @@ cp *MLE.txt $FINALDIR
 cp *fitness.txt $FINALDIR
 cp hyout.txt $FINALDIR/${ALN}_swmutsel_hyout.txt
 
-cd
-cp -r $WDIR /share/WilkeLab/work/sjs3495/mutsel_bench_data_august
 rm -r $WDIR
