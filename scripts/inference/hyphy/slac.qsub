@@ -1,0 +1,38 @@
+#$ -N JOB
+#$ -e e_$JOB_NAME
+#$ -o o_$JOB_NAME
+#$ -S /bin/bash
+#$ -q wilke
+#$ -m beas
+#$ -pe serial 16
+source ~/.bashrc
+
+
+REPODIR=$HOME/mutsel_benchmark
+
+# define files, variables used in analysis
+CPU=16
+DATADIR=$1
+ALN=$2
+TREE=$3
+OUTFILE=$REPODIR/results/${ALN}_SLAC.txt
+
+# create and enter working directory
+WDIR=/state/partition1/sjs3495/$JOB_NAME-$JOB_ID
+mkdir -p $WDIR
+cd $WDIR
+
+# copy files, hyphy executable here
+cp $DATADIR/$ALN.fasta temp.fasta
+cp $DATADIR/$TREE temp.tre
+cp $REPODIR/scripts/inference/hyphy/autoSLAC.bf .
+cp -r $REPODIR/scripts/inference/hyphy/batchfiles/* .
+cp $HOME/bin/bin/HYPHYMP .
+
+sed -i "s@placeholder@$WDIR@g" autoSLAC.bf
+./HYPHYMP CPU=$CPU autoSLAC.bf
+
+cp slac.txt $OUTFILE
+
+rm -r $WDIR
+
