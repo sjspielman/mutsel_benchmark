@@ -7,6 +7,19 @@ require(grid)
 require(lme4)
 require(lmerTest)
 
+# datasets <- unique(emp.results$dataset)
+# for (d in datasets){
+#     emp.results %>% filter(dataset == d) -> temp
+#     print(d)
+#     for (m in c("nopenal", "d0.01", "d0.1", "d1.0", "mvn10", "mvn100", "mvn1000", "pbmutsel")){
+#         
+#         r <- cor(temp$dnds[temp$method == "slac"], temp$dnds[temp$method == m]) 
+#         braw <- lm(temp$dnds[temp$method == m] ~ offset(temp$dnds[temp$method == "slac"]))
+#         b <- summary(braw)$coeff[1]
+#         print(paste(m, r, b))
+# }}
+
+
 result_directory <- "../../results/"
 
 dnds.results <- read_csv(paste0(result_directory,"dnds_results.csv"))
