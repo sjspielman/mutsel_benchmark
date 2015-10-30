@@ -82,8 +82,30 @@ plot_empirical_scatter_row <- function(representative_emp)
   list(p1,p2,p3)
 }
 
-row1 <- plot_empirical_scatter_row("PF00593") # swMutSel better than pbMutSel
-row2 <- plot_empirical_scatter_row("PF04055") # pbMutSel better than swMutSel
-row3 <- plot_empirical_scatter_row("pb2")     # commonly analyzed
+row1 <- plot_empirical_scatter_row("PF04055")
+row2 <- plot_empirical_scatter_row("PF07715")
+row3 <- plot_empirical_scatter_row("pb2")
 p <- plot_grid(row1[[1]], row1[[2]], row1[[3]], row2[[1]], row2[[2]], row2[[3]], row3[[1]], row3[[2]], row3[[3]], nrow=3, ncol=3, labels = c("A", "B", "C", "D", "E", "F", "G", "H", "I"), label_size=19, scale=0.95)
-save_plot("plots/scatterplots_empirical_raw.pdf", p, base_width = 13, base_height = 10)
+save_plot("plots/scatterplots_empirical_raw.pdf", p, base_width = 11, base_height = 9)
+
+# SI empirical plots
+theme_set(theme_cowplot() + theme(axis.text = element_text(size = 9), axis.title = element_text(size = 9)))
+row1 <- plot_empirical_scatter_row("PF00126")
+row2 <- plot_empirical_scatter_row("PF00593")
+row3 <- plot_empirical_scatter_row("PF01266")
+row4 <- plot_empirical_scatter_row("PF01336")
+row5 <- plot_empirical_scatter_row("PF01926")
+row6 <- plot_empirical_scatter_row("PF02518")
+
+p <- plot_grid(row1[[1]], row1[[2]], row1[[3]], row2[[1]], row2[[2]], row2[[3]], row3[[1]], row3[[2]], row3[[3]], row4[[1]], row4[[2]], row4[[3]], row5[[1]], row5[[2]], row5[[3]], row6[[1]], row6[[2]], row6[[3]], nrow=6, ncol=3, labels = c("A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R"), label_size=11)
+save_plot("plots/SI_scatterplots_empirical_raw.pdf", p, base_width = 7, base_height = 10)
+
+
+
+
+
+
+
+
+
+
