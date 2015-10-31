@@ -4,11 +4,11 @@
 require(dplyr)
 require(tidyr)
 
-datadir_parent="../../results/"
-sim.datasets <- c("1B4T_A_simulated", "1G58_B_simulated", "1GV3_A_simulated", "1HUR_A_simulated", "1IBS_A_simulated", "1PV1_A_simulated", "1QMV_A_simulated", "1R6M_A_simulated", "1V9S_B_simulated", "1W7W_B_simulated", "1X1O_B_simulated", "1YPI_A_simulated", "1ZNN_A_simulated", "2A84_A_simulated", "2BCG_Y_simulated", "2CFE_A_simulated", "2CJM_C_simulated", "2CNV_A_simulated", "2FLI_A_simulated", "2G0N_B_simulated")
-emp.datasets <- c("pb2", "PF00126", "PF00593", "PF01266", "PF01336", "PF01926", "PF02518", "PF04055", "PF07715")
-sim.meths    <- c("nopenal", "d0.01", "d0.1", "d1.0", "mvn10", "mvn100", "mvn1000", "phylobayes")
-emp.meths    <- c("nopenal", "phylobayes")
+datadir_parent <- "../../results/"
+sim.datasets   <- c("1B4T_A_simulated", "1G58_B_simulated", "1GV3_A_simulated", "1HUR_A_simulated", "1IBS_A_simulated", "1PV1_A_simulated", "1QMV_A_simulated", "1R6M_A_simulated", "1V9S_B_simulated", "1W7W_B_simulated", "1X1O_B_simulated", "1YPI_A_simulated", "1ZNN_A_simulated", "2A84_A_simulated", "2BCG_Y_simulated", "2CFE_A_simulated", "2CJM_C_simulated", "2CNV_A_simulated", "2FLI_A_simulated", "2G0N_B_simulated")
+emp.datasets   <- c("pb2", "PF00126", "PF00593", "PF01266", "PF01336", "PF01926", "PF02518", "PF04055", "PF07715")
+datasets       <- c(sim.datasets, emp.datasets)
+meths          <- c("nopenal", "d0.01", "d0.1", "d1.0", "mvn10", "mvn100", "mvn1000", "phylobayes")
 
 
 
@@ -19,17 +19,15 @@ results.dnds <- data.frame("dataset" = factor(),
                       "method"  = factor())
 
 
-datasets <- c(sim.datasets, emp.datasets)
+
 for (dataset in datasets){
     
     if (grepl("_simulated",dataset)){
         type <- "simulation"
-        meths <- sim.meths
         
     }
     else{
         type <- "empirical"
-        meths <- emp.meths
     }
     datadir  <- paste0(datadir_parent,type,"/")
 
@@ -64,8 +62,17 @@ for (dataset in datasets){
         temp <- data.frame("dataset" = dataset, "site" = true$site, "dnds" = true$dnds , "method" = "true", type = type)
         results.dnds <- rbind(results.dnds, temp)    
     }    
-        
-        
+#       
+#     # Empirically determined (directly from alignment) dN/dS AS APPLICABLE
+#     if (type == "empirical")
+#     {
+#         emp  <- read.csv(paste0(datadir, dataset, "_dnds_from_alignment.txt"))
+#         temp <- data.frame("dataset" = dataset, "site" = 1:l, "dnds" = emp$dnds_codon , "method" = "emp_codon", type = type)
+#         results.dnds <- rbind(results.dnds, temp)    
+#         temp <- data.frame("dataset" = dataset, "site" = 1:l, "dnds" = emp$dnds_aa , "method" = "emp_aa", type = type)
+#         results.dnds <- rbind(results.dnds, temp)    
+#     }   
+#         
 }
 write.csv(results.dnds, paste0(datadir_parent, "dnds_results.csv", sep=""), row.names=FALSE, quote=FALSE)
 
@@ -92,7 +99,7 @@ for (dataset in sim.datasets){
     newname <- strsplit(dataset, "_simulated")[[1]][1]
     datadir <- paste0(datadir_parent,"simulation/")
 
-    for (meth in sim.meths){    
+    for (meth in meths){    
         if (meth == "phylobayes"){
           savemeth <- "pbmutsel"
         }
