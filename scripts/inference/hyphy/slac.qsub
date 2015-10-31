@@ -32,6 +32,7 @@ cp $HOME/bin/bin/HYPHYMP .
 sed -i "s@placeholder@$WDIR@g" autoSLAC.bf
 ./HYPHYMP CPU=$CPU autoSLAC.bf
 
+sed -i "s/ //g" slac.txt
 cp slac.txt $OUTFILE
 
 rm -r $WDIR
