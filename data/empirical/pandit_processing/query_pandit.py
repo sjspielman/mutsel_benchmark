@@ -1,8 +1,8 @@
 # SJS
 # Script to browse pandit and retrieve alignments.
-# Pandit alignments are only considered if they meet criteria of: a) >=500 sequences, and b) <=0.5 average pairwise identity
-# For those alignments, clean them up so that rows with >=25% data missing and columns with >=0.05% data are missing. If the final cleaning yields at least 450 sequences, save.
-# NOTE: the final alignments 
+# Pandit alignments are only considered if they meet criteria of: a) >=250 sequences, and b) <=0.8 average pairwise identity
+# For those alignments, clean them up so that rows with >=25% data missing and columns with >=0.05% data are missing. 
+#  If the final cleaning yields at least 200 sequences with 50 columns, save.
 
 
 from Bio import AlignIO
@@ -14,9 +14,9 @@ import os
 
 cull_columns    = 0.05 # Remove columns with >=5% of data missing, ambiguous
 cull_rows       = 0.25 # Remove rows with >=25% data missing, ambiguous
-pandit_numseq   = 500 # Only pull down PANDIT entries with >= 500 sequences
-pandit_pairwise = 0.5 # Only pull down PANDIT entries with average pairwise identity <= 0.5
-final_numseq    = 450 # Cleaned alignments are only saved if there are at least 450 sequences
+pandit_numseq   = 250 # Only pull down PANDIT entries with >= 250 sequences
+pandit_pairwise = 0.8 # Only pull down PANDIT entries with average pairwise identity <= 0.8
+final_numseq    = 200 # Cleaned alignments are only saved if there are at least 200 sequences
 final_numcol    = 150 # Cleaned alignments are only saved if there are at least 50 columns (since codon, len=150)
 
 
@@ -144,17 +144,6 @@ def download_pandit_alignments(ids):
         # Clean and save if passes thresholds, and clean up
         clean_alignment("temp.fasta", outfile)
 
-
-        
-        
-        
-        
-      
-        
-    
-    
-    
-    
     
 def main():
 
