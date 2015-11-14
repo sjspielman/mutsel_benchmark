@@ -1,5 +1,7 @@
+SJS
 Alignment sources:
-    1. pb2 from Tamuri et al 2014, and other papers in this "group"
-    2. Rest are from PANDIT. See directory pandit_processing/ for details.
+    1. pb2 alignment from Tamuri et al 2014, and other papers in this "group"
+    2. All PFAM alignments were collected from PANDIT database using code in ../../scripts/empirical_data_collection/query_pandit.py 
+    
     
 All phylogenies (except pb2, which was directly taken) were built with RAxML v8.1 under the GTR+CAT model.
