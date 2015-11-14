@@ -2,6 +2,7 @@
 
 import os
 import sys
+sys.path.append("../") #for compute_dnds_from_mutsel module
 import subprocess
 from Bio import AlignIO
 from numpy import savetxt, count_nonzero
@@ -10,7 +11,7 @@ from pyvolve import Genetics, state_freqs
 ZERO=1e-8
 g = Genetics()
 
-yeast_directory = "/Users/sjspielman/Research/OtherPeople/protein_design_and_site_variability/project_files/sequences/duncan_sequences/aligned_sequences/"
+yeast_directory = "ramsey2011_yeast_alignments/" # From github repository: protein_design_and_site_variability/project_files/sequences/duncan_sequences/
 taxa_threshold = 100
 
 yeastfiles = os.listdir(yeast_directory)
