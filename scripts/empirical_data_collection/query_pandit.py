@@ -2,7 +2,7 @@
 # Script to browse pandit and retrieve alignments.
 # Pandit alignments are only considered if they meet criteria of: a) >=250 sequences, and b) <=0.8 average pairwise identity
 # For those alignments, clean them up so that rows with >=25% data missing and columns with >=0.05% data are missing. 
-#  If the final cleaning yields at least 200 sequences with 50 columns, save.
+# If the final cleaning yields at least 200 sequences with 50 columns, save.
 
 
 from Bio import AlignIO
@@ -22,12 +22,15 @@ final_numcol    = 150 # Cleaned alignments are only saved if there are at least 
 
 base_search_url = "http://www.ebi.ac.uk/goldman-srv/pandit/pandit.cgi?action=browse&key=REPLACE"
 base_aln_url    = "http://www.ebi.ac.uk/goldman-srv/pandit/pandit.cgi?action=browse&fam=REPLACE&field=nam-dsq"
-base_tree_url   = "http://www.ebi.ac.uk/goldman-srv/pandit/pandit.cgi?action=browse&fam=REPLACE&field=dtp-dph"
 
-outdir = "pfam_queries/"
+outdir = "../../data/empirical/"
 
 
 def clean_alignment(infile, outfile):
+    '''
+        Process multiple sequence alignment by removing rows and columns with, respectively, a prespecified threshold of missing/ambiguous data.
+        If final processed alignment meets saving thresholds, then save.
+    '''
     
     a = AlignMatrix(alnfile = infile, format = "fasta", type = "codon")
     a.convert_aln_to_matrix()
@@ -51,14 +54,17 @@ def clean_alignment(infile, outfile):
     except:
         tempaln = AlignIO.read('rmdups.fasta', 'fasta')
     
-    # If final number of sequences is >= final_numseq, save it
+    # If final number of sequences is >= final_numseq, save it in both fasta and phylip format
     if len(tempaln) >= final_numseq and len(tempaln[0]) >= final_numcol:
-        AlignIO.write(tempaln, outfile, "fasta")
+        AlignIO.write(tempaln, outfile + ".fasta", "fasta")
+        AlignIO.write(tempaln, outfile + ".phy", "phylip-relaxed")
         
     # Cleanup
     os.system("rm temp.fasta*")
     os.system("rm rmdups.fasta*")
     os.system("rm RAxML*")
+
+
 
 
 def obtain_source(search_url, type):
@@ -70,6 +76,7 @@ def obtain_source(search_url, type):
         page_source = response.read()
         
     return page_source
+
 
 
 def parse_pandit_page(query_pf):
@@ -96,6 +103,7 @@ def parse_pandit_page(query_pf):
     return id_list
 
 
+
 def check_seq_for_stop(seq):
     '''
         Return True if stop codons are found. False if ok.
@@ -109,13 +117,13 @@ def check_seq_for_stop(seq):
         if found_stop:
             break
     return found_stop
+
+
     
 def download_pandit_alignments(ids):
     
     for id in ids:
-        #print "        Checking PFAM", id
-        outfile = id + ".fasta"
-        
+
         # download alignment page source
         url = base_aln_url.replace("REPLACE",id)
         page_source = obtain_source(url, "full")
@@ -142,7 +150,7 @@ def download_pandit_alignments(ids):
         
         print id, j
         # Clean and save if passes thresholds, and clean up
-        clean_alignment("temp.fasta", outfile)
+        clean_alignment("temp.fasta", id)
 
     
 def main():
