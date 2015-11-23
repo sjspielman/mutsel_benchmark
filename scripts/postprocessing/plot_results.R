@@ -7,17 +7,21 @@ require(grid)
 require(lme4)
 require(lmerTest)
 
-# datasets <- unique(emp.results$dataset)
-# for (d in datasets){
-#     emp.results %>% filter(dataset == d) -> temp
-#     print(d)
-#     for (m in c("nopenal", "d0.01", "d0.1", "d1.0", "mvn10", "mvn100", "mvn1000", "pbmutsel")){
-#         
-#         r <- cor(temp$dnds[temp$method == "slac"], temp$dnds[temp$method == m]) 
-#         braw <- lm(temp$dnds[temp$method == m] ~ offset(temp$dnds[temp$method == "slac"]))
-#         b <- summary(braw)$coeff[1]
-#         print(paste(m, r, b))
-# }}
+emp.summary <- data.frame(dataset = character(), method = character(), r = numeric(), b = numeric()) 
+datasets <- unique(emp.results$dataset)
+for (d in datasets){
+     emp.results %>% filter(dataset == d) -> temp
+     print(d)
+     for (m in c("nopenal", "d0.01", "d0.1", "d1.0", "mvn10", "mvn100", "mvn1000")){  #, "pbmutsel")){
+         
+         r <- cor(temp$dnds[temp$method == "slac"], temp$dnds[temp$method == m]) 
+         braw <- lm(temp$dnds[temp$method == m] ~ offset(temp$dnds[temp$method == "slac"]))
+         b <- summary(braw)$coeff[1]
+         temp2 <- data.frame(dataset = d, method = m, r = r, b = b)
+         emp.summary <- rbind(emp.summary, temp2)
+}}
+emp.summary <- left_join(emp.summary, emp.stats, by = "dataset")
+
 
 
 result_directory <- "../../results/"
@@ -26,7 +30,7 @@ dnds.results <- read_csv(paste0(result_directory,"dnds_results.csv"))
 sim.results <- dnds.results %>% filter(type == "simulation") %>% select(-type)
 emp.results <- dnds.results %>% filter(type == "empirical")  %>% select(-type)
 jsd.results <- read_csv(paste0(result_directory, "jsd_results.csv"))
-
+emp.stats   <- read_csv(paste0(result_directory, "empirical_data_statistics.csv"))
 
 #### Boxplots of Jensen-Shannon distance among methods for simulated datasets ####
 left_join(sim.results, jsd.results)  %>% filter(method != "slac") %>% select(-dnds) %>% na.omit() %>% group_by(dataset, method) %>% summarize(meanjsd = mean(jsd)) -> jsd.data
