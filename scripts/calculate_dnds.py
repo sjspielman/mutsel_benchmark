@@ -3,7 +3,6 @@
 
 import sys
 import numpy as np
-from compute_dnds_from_mutsel import *
 from universal_functions import *
 
 
@@ -14,7 +13,7 @@ methods = {"swmutsel": ["mvn10", "mvn100", "mvn1000", "d1.0", "d0.1", "d0.01", "
 families = methods.keys()
 
 
-notdone = ["PF00501", "PF01061"]
+notdone = ["PF00501"]
 
 for datatype in datasets:
     
