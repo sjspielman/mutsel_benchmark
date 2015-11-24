@@ -9,11 +9,12 @@ from universal_functions import *
 
 emp_datasets =  ["PF00106", "PF00149", "PF00188", "PF00300", "PF00512", "PF00753", "PF01261", "PF01551", "PF01636", "PF03144", "PF00141", "PF00158", "PF00226", "PF00482", "PF00520", "PF01061", "PF01546", "PF01584", "PF02775", "PF04542", "PF00168", "PF00486", "PF00535", "PF01590", "PF03466", "PF00271", "PF00501", "PF00571", "PF00593", "PF00126", "PF01266", "PF01336", "PF01926", "PF02518", "PF04055", "PF07715", "pb2"] 
 sim_datasets = ["1B4T_A_simulated", "1G58_B_simulated", "1GV3_A_simulated", "1HUR_A_simulated", "1IBS_A_simulated", "1PV1_A_simulated", "1QMV_A_simulated", "1R6M_A_simulated", "1V9S_B_simulated", "1W7W_B_simulated", "1X1O_B_simulated", "1YPI_A_simulated", "1ZNN_A_simulated", "2A84_A_simulated", "2BCG_Y_simulated", "2CFE_A_simulated", "2CJM_C_simulated", "2CNV_A_simulated", "2FLI_A_simulated", "2G0N_B_simulated"]
-datasets =  {"empirical":emp_datasets} #, "simulation":sim_datasets}
-methods = {"phylobayes": ["phylobayes"], "swmutsel": ["mvn10", "mvn100", "mvn1000", "d1.0", "d0.1", "d0.01", "nopenal"]}
+datasets =  {"empirical":emp_datasets, "simulation":sim_datasets}
+methods = {"swmutsel": ["mvn10", "mvn100", "mvn1000", "d1.0", "d0.1", "d0.01", "nopenal"], "phylobayes": ["phylobayes"]}
 families = methods.keys()
 
 
+notdone = ["PF00501", "PF01061"]
 
 for datatype in datasets:
     
@@ -47,8 +48,6 @@ for datatype in datasets:
                     fitness = np.loadtxt(resdir + data + "_" + method + "_fitness.txt")
                     mu_dict = parse_swMutSel_mutation(resdir + data + "_" + method + "_MLE.txt")   
 
-                if fitness is None or mu_dict is None:
-                    continue
                 assert(fitness is not None), "\n Could not retrieve fitness values."
                 assert(mu_dict is not None), "\n Could not retrieve mutation rates."
 

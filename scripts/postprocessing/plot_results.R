@@ -10,9 +10,10 @@ require(lmerTest)
 emp.summary <- data.frame(dataset = character(), method = character(), r = numeric(), b = numeric()) 
 datasets <- unique(emp.results$dataset)
 for (d in datasets){
+    if (d == "pb2") next
      emp.results %>% filter(dataset == d) -> temp
      print(d)
-     for (m in c("nopenal", "d0.01", "d0.1", "d1.0", "mvn10", "mvn100", "mvn1000")){  #, "pbmutsel")){
+     for (m in c("nopenal", "d0.01", "d0.1", "d1.0", "mvn10", "mvn100", "mvn1000", "pbmutsel")){
          
          r <- cor(temp$dnds[temp$method == "slac"], temp$dnds[temp$method == m]) 
          braw <- lm(temp$dnds[temp$method == m] ~ offset(temp$dnds[temp$method == "slac"]))
@@ -20,7 +21,11 @@ for (d in datasets){
          temp2 <- data.frame(dataset = d, method = m, r = r, b = b)
          emp.summary <- rbind(emp.summary, temp2)
 }}
-emp.summary <- left_join(emp.summary, emp.stats, by = "dataset")
+fit <- lmer(b ~ method + (1|dataset), data = emp.summary)
+summary(glht(fit, linfct=mcp(method='Tukey')))
+
+
+#emp.summary <- left_join(emp.summary, emp.stats, by = "dataset")
 
 
 

@@ -17,6 +17,7 @@ ZERO=1e-10
 
 
 
+
 ### Compute dN/dS from MutSel parameters ###
 def dnds_from_params(site_fitness, mu_dict):
     
@@ -144,22 +145,7 @@ def aa_fitness_to_codon_fitness(fitness):
 
 
 
-########## Parsing functions for swMutSel and pbMutSel inferences to get dN/dS, JSD ###########
-
-
-
-def build_mu_dict(pi, kappa):
-    ''' Construct mutation rates dictionary.'''
-    a = pi[0]
-    c = pi[1]
-    g = pi[2]
-    t = pi[3]
-    mu = {'AG':kappa*g, 'TC':kappa*c, 'GA':kappa*a, 'CT':kappa*t, 'AC':c, 'TG':g, 'CA':a, 'GT':t, 'AT':t, 'TA':a, 'GC':c, 'CG':g}  
-    return mu
-    
-
-
-
+########## Parsing functions for swMutSel and pbMutSel inferences, specifically for mutation rates ###########
 def parse_swMutSel_mutation(infile):
     '''
         Extract kappa (line 11) and nucleotide frequencies (line 14) from a swMutSel MLE file.
@@ -172,26 +158,14 @@ def parse_swMutSel_mutation(infile):
     pis = []
     for pi in rawpis:
         pis.append(float(pi)) 
-    
-    return build_mu_dict(pis, kappa)
+    t = pis[0]
+    c = pis[1]
+    a = pis[2]
+    g = pis[3]
+    mu = {'AG':kappa*g, 'TC':kappa*c, 'GA':kappa*a, 'CT':kappa*t, 'AC':c, 'TG':g, 'CA':a, 'GT':t, 'AT':t, 'TA':a, 'GC':c, 'CG':g}  
+    return mu
 
     
-
-
-def parse_pbMutSel_fitness(cpu, job_name, burnin = '100'):
-    '''
-        Parse aap and tracefile. Return site-wise amino acid fitnesses and dictionary of mutation rates.
-        Fitness values are return as list: [ [site1_fitnesses], [site2_fitnesses], [site3_fitnesses] ... [siten_fitnesses] ], and return dictionary of mutation rates.
-    '''
-    # Read in fitness values from .aap file and take exponential to obtain usable fitness values
-    fitness_raw = np.loadtxt(job_name + ".aap")
-    fitness = np.exp(fitness)    
-    
-    # Grab posterior means for mutation rates from the .trace file, using same sampling as for fitnesses
-    mu_dict = parse_trace_mutation( job_name + ".trace", burnin )
-    
-    return fitness, mu_dict
-
 
 
 def parse_pbMutSel_mutation(file, burnin = 100):
@@ -214,3 +188,26 @@ def parse_pbMutSel_mutation(file, burnin = 100):
         mu[key] = targetfreq * exch
     return mu
     
+    
+def compute_asym(mudict):
+    ''' 
+        Compute average mu_xy / mu_yx 
+    '''
+    x = 0  
+    completed = []
+    ratios = np.zeros(6) 
+    for source in ["A", "C", "G", "T"]:
+        for target in ["A", "C", "G", "T"]:
+            if source == target or source+target in completed or target+source in completed:
+                continue
+            else:
+                ratio = mudict[source + target] / mudict[target + source] 
+                if ratio >= 1.:
+                    completed.append(source + target)
+                    ratios[x] = ratio
+                else:
+                    completed.append(target + source)
+                    ratios[x] = 1./ratio
+                x+=1  
+    return np.mean(ratios)  
+
