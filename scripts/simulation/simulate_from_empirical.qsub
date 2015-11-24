@@ -1,0 +1,27 @@
+#$ -N simulation
+#$ -e e_$JOB_NAME
+#$ -o o_$JOB_NAME
+#$ -S /bin/bash
+#$ -q wilke
+#$ -m beas
+#$ -t 2-37:1
+source ~/.bashrc
+
+
+REPODIR=$HOME/mutsel_benchmark/
+SCRIPTDIR=$REPODIR/scripts/
+
+# create and enter working directory
+WDIR=/state/partition1/sjs3495/$JOB_NAME-$JOB_ID-$SGE_TASK_ID
+mkdir -p $WDIR
+
+cd $WDIR
+cp $REPODIR/scripts/universal_functions.py .
+cp $REPODIR/scripts/simulation/simulate_from_empirical.py .
+
+module load python
+export PYTHONPATH=$HOME/bin/lib/python2.7/site-packages
+
+python simulate_from_empirical.py $REPODIR $SGE_TASK_ID
+
+rm -r $WDIR
