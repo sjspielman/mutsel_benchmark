@@ -1,0 +1,37 @@
+#$ -N swmutsel_simfromemp
+#$ -e e_$JOB_NAME
+#$ -o o_$JOB_NAME
+#$ -S /bin/bash
+#$ -q wilke
+#$ -m beas
+#$ -pe serial 16
+source ~/.bashrc
+
+# define files, variables used in analysis
+CPU=16
+DATA=$1
+
+SWEXEC=$HOME/bin/swmutsel-alpha_jdk1.6.jar
+REPODIR=$HOME/mutsel_benchmark
+
+# create and enter working directory
+WDIR=/state/partition1/sjs3495/$JOB_NAME-$JOB_ID
+mkdir -p $WDIR
+cd $WDIR
+
+# copy files, executables here
+cp $REPODIR/data/simulated_from_empirical/$DATA.phy .
+cp $REPODIR/data/empirical/$DATA.tre .
+cp $SWEXEC swmutsel.jar
+
+# run analysis
+module load java
+java -jar swmutsel.jar -n ${DATA} -s ${DATA}.phy -t ${DATA}.tre -fix branches -gc standard -threads ${CPU}   # No penalty only!
+
+
+FINALDIR=$REPODIR/results/raw_results/simulated_from_empirical/
+mkdir -p $FINALDIR
+cp *MLE.txt $FINALDIR
+cp *fitness.txt $FINALDIR
+
+rm -r $WDIR
