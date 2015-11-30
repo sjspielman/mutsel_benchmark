@@ -20,12 +20,12 @@ def extract_info(directory, data, type):
     fitness = None
     mu_dict = None
     if type == "phylobayes":
-        fitness = np.loadtxt(directory + "phylobayes/" + data + "_phylobayes.aap")
+        fitness = np.loadtxt(directory + data + "_phylobayes.aap")
         fitness = np.log(fitness)
-        mu_dict = parse_pbMutSel_mutation(directory + "phylobayes/" + data + "_phylobayes.trace")
+        mu_dict = parse_pbMutSel_mutation(directory + data + "_phylobayes.trace")
     else:
-        fitness = np.loadtxt(directory + "swmutsel/" + data + "_" + type + "_fitness.txt")
-        mu_dict = parse_swMutSel_mutation(directory + "swmutsel/" + data + "_" + type + "_MLE.txt")   
+        fitness = np.loadtxt(directory + data + "_" + type + "_fitness.txt")
+        mu_dict = parse_swMutSel_mutation(directory + data + "_" + type + "_MLE.txt")   
 
     assert(fitness is not None), "\n Could not retrieve fitness values."
     assert(mu_dict is not None), "\n Could not retrieve mutation rates."
@@ -41,18 +41,17 @@ def calculate_save_dnds(fitness, mu_dict, outfile):
         outf.write( "\n".join([str(i) for i in dnds]) )
 
 
-notdone = ["PF00501"]
 
 # For simulated yeast, empirical
 for datatype in datasets:
     
-    resdir_raw = "../results/raw_results/" + datatype + "/"
-    outdir = resdir_raw + "derived_dnds/"
+    rawdir = "../results/raw_results/" + datatype + "/"
+    outdir = rawdir + "derived_dnds/"
     
     for data in datasets[datatype]:        
         for family in families:
 
-            resdir = resdir_raw + family + "/"   
+            resdir = rawdir + family + "/"   
                   
             for method in methods[family]:
                 
@@ -69,43 +68,17 @@ for datatype in datasets:
 
 
 # For simulated from empirical parameters, which are named differently.
-resdir = "../results/raw_results/simulated_from_empirical/"
-outdir = resdir + "derived_dnds/"
+rawdir = "../results/raw_results/simulated_from_empirical/"
+resdir = rawdir + "swmutsel/"
+outdir = rawdir + "derived_dnds/"
 for data in emp_datasets:
 
     outfile = outdir + data + "_simulated_dnds.txt"
     if os.path.exists(outfile):
         continue
-                    
+    
     print "Calculating dN/dS for simulated", data
     fitness, mu_dict = extract_info(resdir, data, "simulated")
     calculate_save_dnds(fitness, mu_dict, outfile)
     
     
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-
-
-
-
-
-
