@@ -7,22 +7,37 @@ require(grid)
 require(lme4)
 require(lmerTest)
 
-emp.summary <- data.frame(dataset = character(), method = character(), r = numeric(), b = numeric()) 
-datasets <- unique(emp.results$dataset)
-for (d in datasets){
-    if (d == "pb2") next
-     emp.results %>% filter(dataset == d) -> temp
-     print(d)
-     for (m in c("nopenal", "d0.01", "d0.1", "d1.0", "mvn10", "mvn100", "mvn1000", "pbmutsel")){
-         
-         r <- cor(temp$dnds[temp$method == "slac"], temp$dnds[temp$method == m]) 
-         braw <- lm(temp$dnds[temp$method == m] ~ offset(temp$dnds[temp$method == "slac"]))
-         b <- summary(braw)$coeff[1]
-         temp2 <- data.frame(dataset = d, method = m, r = r, b = b)
-         emp.summary <- rbind(emp.summary, temp2)
-}}
-fit <- lmer(b ~ method + (1|dataset), data = emp.summary)
-summary(glht(fit, linfct=mcp(method='Tukey')))
+# emp.summary <- data.frame(dataset = character(), method = character(), r = numeric(), slope = numeric()) 
+# datasets <- unique(emp.results$dataset)
+# for (d in datasets){
+# 
+#      emp.results %>% filter(dataset == d) -> temp
+#      print(d)
+#      for (m in c("nopenal", "d0.01", "d0.1", "d1.0", "mvn10", "mvn100", "mvn1000", "pbmutsel")){
+#          
+#          r <- cor(temp$dnds[temp$method == "slac"], temp$dnds[temp$method == m]) 
+#          fit <- lm(temp$dnds[temp$method == m] ~ temp$dnds[temp$method == "slac"])
+#          slope <- fit$coefficients[[2]]
+#          #braw <- lm(temp$dnds[temp$method == m] ~ offset(temp$dnds[temp$method == "slac"]))
+#          #b <- summary(braw)$coeff[1]
+#          temp2 <- data.frame(dataset = d, method = m, r = r, slope = slope)
+#          emp.summary <- rbind(emp.summary, temp2)
+# }}
+# 
+# 
+# for (d in datasets){
+#     emp.results %>% filter(dataset == d) %>% spread(method,dnds) -> temp
+#     p1 <- ggplot(temp, aes(x = slac, y = nopenal)) + geom_point(size=3) + geom_abline(slope = 1, intercept = 0) + ggtitle("swmutSel")
+#     p2 <- ggplot(temp, aes(x = slac, y = pbmutsel)) + geom_point(size=3) + geom_abline(slope = 1, intercept = 0) + ggtitle("pbMutSel")
+#     p3 <- ggplot(temp, aes(x = nopenal, y = pbmutsel)) + geom_point(size=3) + geom_abline(slope = 1, intercept = 0) + ggtitle("together")
+#     fullp <- plot_grid(p1,p2,p3,nrow=1)
+#     print(fullp)
+#     readline()
+# }
+    
+
+#fit <- lmer(b ~ method + (1|dataset), data = emp.summary)
+#summary(glht(fit, linfct=mcp(method='Tukey')))
 
 
 #emp.summary <- left_join(emp.summary, emp.stats, by = "dataset")
