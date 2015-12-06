@@ -1,7 +1,6 @@
 # SJS
-# Simulate alignments according to inferred empirical parameters, by swMutSel without penalty. 
-# IMPORTANT: branch lengths must be appropriately re-scaled to correspond to empirical nucleotide branch lengths
-# Usage: python simulate_from_inferred.py <repository path> <dataset index>
+# Simulate alignments according to inferred empirical parameters, by swMutSel without penalty. Note that branch lengths must be appropriately re-scaled to correspond to empirical nucleotide branch lengths.
+# Usage: python simulate_from_empirical.py <repository path> <dataset index>
 # NOTE: universal_functions.py must be in working directory!
 
 import os
@@ -40,7 +39,7 @@ treefile_raw = treedir + dataset + ".tre"
 treefile  = outdir + dataset + "_scaled.tre"
 rawtree = Tree.get_from_path(treefile_raw, "newick")
 rawtree.scale_edges(scaling)
-treestring = str(rawtree).replace('[&U] ','')
+treestring = str(rawtree).replace('[&U] ','') + ";"
 with open(treefile, "w") as f:
     f.write(treestring)			
 
