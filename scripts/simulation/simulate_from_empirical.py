@@ -35,15 +35,17 @@ dataset = datasets[index]
 fitness  = np.loadtxt(resdir + dataset + "_nopenal_fitness.txt")
 mu_dict, scaling  = parse_swMutSel_mutation(resdir + dataset + "_nopenal_MLE.txt", return_scaling = True)   
 
-# Update tree with appropriately scaled branch lengths, and save
+# Update tree with appropriately scaled branch lengths, remove unrooted silliness tag, and save
 treefile_raw = treedir + dataset + ".tre"
 treefile  = outdir + dataset + "_scaled.tre"
-tree = Tree.get_from_path(treefile_raw, "newick")
-tree.scale_edges(scaling)
-tree.write_to_path(treefile, "newick")
+rawtree = Tree.get_from_path(treefile_raw, "newick")
+rawtree.scale_edges(scaling)
+treestring = str(rawtree).replace('[&U] ','')
+with open(treefile, "w") as f:
+    f.write(treestring)			
 
 # Simulate with pyvolve
-simtree = read_tree(file = treefile)
+simtree = read_tree(tree = treestring)
 partitions = []
 for row in fitness:
     m = Model("mutsel", {"fitness": row, "mu": mu_dict})
