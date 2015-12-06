@@ -149,10 +149,11 @@ def aa_fitness_to_codon_fitness(fitness):
 
 
 ########## Parsing functions for swMutSel and pbMutSel inferences, specifically for mutation rates ###########
-def parse_swMutSel_mutation(infile):
+def parse_swMutSel_mutation(infile, return_scaling = False):
     '''
         Extract kappa (line 11) and nucleotide frequencies (line 14) from a swMutSel MLE file.
         Combine info to return a dictionary of mutation rates.
+        Argument "return_scaling" means to also return the swMutSel-inferred branch scaling factor.
     '''
     with open(infile, "r") as f:
         lines = f.readlines()
@@ -166,7 +167,11 @@ def parse_swMutSel_mutation(infile):
     a = pis[2]
     g = pis[3]
     mu = {'AG':kappa*g, 'TC':kappa*c, 'GA':kappa*a, 'CT':kappa*t, 'AC':c, 'TG':g, 'CA':a, 'GT':t, 'AT':t, 'TA':a, 'GC':c, 'CG':g}  
-    return mu
+    if return_scaling:
+        scaling = float(lines[16].strip())
+        return mu, scaling
+    else:
+        return mu
 
     
 
