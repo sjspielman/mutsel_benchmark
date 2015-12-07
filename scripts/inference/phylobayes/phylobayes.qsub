@@ -32,7 +32,7 @@ cp $READPBEXEC .
 # run analysis
 module load python
 export PYTHONPATH=$HOME/bin/lib/python2.7/site-packages # to get biopython behaving w/ phylip-relaxed and to get dendropy
-python run_phylobayes.py 0 $CPU ${DATA}_phylobayes $DATA.phy $DATA.tre
+python run_phylobayes.py 0 $CPU ${DATA}_phylobayes $DATA.phy $TREE
 
 FINALDIR=$REPODIR/results
 mkdir -p $FINALDIR

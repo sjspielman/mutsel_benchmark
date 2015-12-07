@@ -4,7 +4,7 @@
 #$ -S /bin/bash
 #$ -q wilke
 #$ -m beas
-#$ -t 2-37:1
+#$ -t 2-36:1
 source ~/.bashrc
 
 

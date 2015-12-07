@@ -1,4 +1,4 @@
-#$ -N swmutsel_simfromemp
+#$ -N d1.0_swmutsel_simfromemp
 #$ -e e_$JOB_NAME
 #$ -o o_$JOB_NAME
 #$ -S /bin/bash
@@ -20,13 +20,13 @@ mkdir -p $WDIR
 cd $WDIR
 
 # copy files, executables here
-cp $REPODIR/data/simulated_from_empirical/$DATA.phy .
-cp $REPODIR/data/empirical/$DATA.tre .
+cp $REPODIR/data/simulated_from_empirical/${DATA}_simulated.phy .
+cp $REPODIR/data/simulated_from_empirical/${DATA}_scaled.tre .
 cp $SWEXEC swmutsel.jar
 
 # run analysis
 module load java
-java -jar swmutsel.jar -n ${DATA} -s ${DATA}.phy -t ${DATA}.tre -fix branches -gc standard -threads ${CPU}   # No penalty only!
+java -jar swmutsel.jar -n ${DATA}_simulated_d1.0 -s ${DATA}_simulated.phy -t ${DATA}_scaled.tre -fix branches -gc standard -threads ${CPU} -p dirichlet,1.0  # No penalty only!
 
 
 FINALDIR=$REPODIR/results/raw_results/simulated_from_empirical/

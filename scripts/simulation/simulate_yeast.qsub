@@ -11,7 +11,7 @@ DATA=$1
 
 REPODIR=$HOME/mutsel_benchmark/
 SCRIPTDIR=$REPODIR/scripts/simulation
-OUTDIR=$REPODIR/data/simulation/
+OUTDIR=$REPODIR/data/simulation/n256
 
 # create and enter working directory
 WDIR=/state/partition1/sjs3495/$JOB_NAME-$JOB_ID
