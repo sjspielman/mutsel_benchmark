@@ -43,7 +43,8 @@ def calculate_save_coeffs(fitness, outfile):
     '''
         Compute and save distribution of selection coefficients.
     '''
-    all_coefficients = []
+    raw = []
+    binned = []
     for site in fitness:
         for i in range(len(site)):
             f_i = site[i]
@@ -51,9 +52,14 @@ def calculate_save_coeffs(fitness, outfile):
                 if i == j:
                     continue
                 else:
-                    all_coefficients.append(f_i - site[j])
+                    s = f_i - site[j]
+                    raw.append(s)
+                    if (10. - abs(s) <= 1e-8):
+                        s = -10.
+                    binned.append(s)
     with open(outfile, "w") as outf:
-        outf.write( "\n".join([str(i) for i in all_coefficients]) )
+        outf.write("realcoeff,binnedcoeff\n")
+        outf.write( "\n".join([str(raw[x])+","+str(binned[x]) for x in range(len(raw))]) )
     
     
 
@@ -72,7 +78,7 @@ def compute_dnds_coefficicents(input_directory, output_directory):
                 prefix = file.split(suffix)[0]
             
                 outfile_dnds   = output_directory + prefix + "_dnds.txt"
-                outfile_coeffs = output_directory + prefix + "_selcoeffs.txt"
+                outfile_coeffs = output_directory + prefix + "_selcoeffs.csv"
                 
                 fitness, mu_dict = extract_info(input_directory, prefix)
                 
@@ -102,7 +108,24 @@ def main():
     indir = rawdir + "swmutsel/"
     outdir = rawdir + "derived_dnds_coeffs/"
     compute_dnds_coefficicents(indir, outdir)
-
+    
+    
+    # True simulated. Note that dN/dS are already calculated for these (during simulation), we just need selection coefficients.
+    rawdir = "../results/raw_results/simulation/"
+    outdir = rawdir + "derived_dnds_coeffs/"
+    indir  = "simulation/flib/"
+    infiles = os.listdir(indir)
+    for file in infiles:
+        prefix = file.split("_codon_freq_lib.txt")[0]
+        outfile = outdir + prefix + "_true_selcoeffs.csv"
+        if not os.path.exists(outfile):
+            print "Computing selection coefficients for true", prefix
+            fitness = np.log( np.loadtxt(indir + file) )
+            fitness[np.isinf(fitness)] = -15. # Yeah, but this is nonsense which *will* muck with distribution.
+            calculate_save_coeffs(fitness, outfile)
+    
+    
+    
 
 main()
 
