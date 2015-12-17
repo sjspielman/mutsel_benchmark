@@ -12,6 +12,7 @@ CPU=16
 DATADIR=$1
 ALN=$2
 TREE=$3
+METHOD=$4
 
 SWEXEC=$HOME/bin/swmutsel-alpha_jdk1.6.jar
 REPODIR=$HOME/mutsel_benchmark
@@ -32,12 +33,11 @@ ls
 module load java
 module load python
 export PYTHONPATH=$HOME/bin/lib/python2.7/site-packages # to get biopython behaving w/ phylip-relaxed
-python run_swmutsel.py $ALN $TREE $CPU
+python run_swmutsel.py $ALN $TREE $METHOD $CPU
 
 FINALDIR=$REPODIR/results
 mkdir -p $FINALDIR
 cp *MLE.txt $FINALDIR
 cp *fitness.txt $FINALDIR
-cp hyout.txt $FINALDIR/${ALN}_swmutsel_hyout.txt
 
 rm -r $WDIR

@@ -1,4 +1,4 @@
-#$ -N d1.0_swmutsel_simfromemp
+#$ -N mvn10_swmutsel_simfromemp
 #$ -e e_$JOB_NAME
 #$ -o o_$JOB_NAME
 #$ -S /bin/bash
@@ -26,7 +26,7 @@ cp $SWEXEC swmutsel.jar
 
 # run analysis
 module load java
-java -jar swmutsel.jar -n ${DATA}_simulated_d1.0 -s ${DATA}_simulated.phy -t ${DATA}_scaled.tre -fix branches -gc standard -threads ${CPU} -p dirichlet,1.0  # No penalty only!
+java -jar swmutsel.jar -n ${DATA}_simulated_mvn10 -s ${DATA}_simulated.phy -t ${DATA}_scaled.tre -fix branches -gc standard -threads ${CPU} -p mvn,10  
 
 
 FINALDIR=$REPODIR/results/raw_results/simulated_from_empirical/

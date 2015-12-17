@@ -9,11 +9,10 @@ from numpy import savetxt
 penalty = {"d0.01"   :" -p dirichlet,0.01", 
            "d0.1"    :" -p dirichlet,0.1", 
            "d1.0"    :" -p dirichlet,1.0", 
+           "mvn1"    :" -p mvn,1", 
            "mvn10"   :" -p mvn,10", 
-           "mvn100"  :" -p mvn,100", 
-           "mvn1000" :" -p mvn,1000",
+           "mvn100"  :" -p mvn,100",
            "nopenal" :""}
-    
 
 def run_swmutsel(alnfile, treefile, cpu, dataset, penalname, penalarg):
     '''
@@ -47,17 +46,16 @@ def run_swmutsel(alnfile, treefile, cpu, dataset, penalname, penalarg):
 
 
 def main():
-    usage = "\nUsage: python run_swmutsel.py <aln> <treefile> <cpu>. Note that all files and all executables ('swmutsel'+'HYPHYMP') must be in the working directory!"
-    assert( len(sys.argv) == 4 ), usage
+    usage = "\nUsage: python run_swmutsel.py <aln> <treefile> <penalty> <cpu>. Note that all files and all executables must be in the working directory!"
+    assert( len(sys.argv) == 5 ), usage
     
-    dataset = sys.argv[1]
+    dataset  = sys.argv[1]
     treefile = sys.argv[2]
-    cpu = sys.argv[3]
-    alnfile = dataset  + ".phy"
+    penal    = sys.argv[3]
+    cpu      = sys.argv[4]
+    alnfile  = dataset  + ".phy"
 
-    # Run swMutSel under a variety of penalty functions
-    for penal in penalty:
-        run_swmutsel( alnfile, treefile, cpu, dataset, penal, penalty[penal])
+    run_swmutsel( alnfile, treefile, cpu, dataset, penal, penalty[penal])
     
 main()
     
