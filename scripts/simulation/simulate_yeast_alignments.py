@@ -23,4 +23,4 @@ for row in aa_fitnesses:
 simtree = read_tree(file = treefile)
 outname = name + "_simulated.phy"
 e = Evolver(partitions = partitions, tree = simtree)
-e(seqfile = outname + ".phy", seqfmt = "phylip-relaxed", ratefile = None, infofile = None)
+e(seqfile = outname, seqfmt = "phylip-relaxed", ratefile = None, infofile = None)
