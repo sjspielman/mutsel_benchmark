@@ -6,18 +6,21 @@ import sys
 from pyvolve import *
 from numpy import loadtxt
 
-prefix = sys.argv[1]
-freqs = loadtxt("freqs.txt")
-simtree = read_tree(file = "ntaxa256_bl0.5.tre")
+
+name     = sys.argv[1]
+fitfile  = sys.argv[2]
+treefile = sys.argv[3]
+
+aa_fitnesses = loadtxt(fitfile)
+
 
 partitions = []
-for row in freqs:
-    m = Model("mutsel", {"state_freqs": row})
+for row in aa_fitnesses:
+    m = Model("mutsel", {"fitness": row})
     p = Partition(models = m, size = 1)
     partitions.append(p)
-                        
-# Simulate and save alignment in both fasta, phylip format
-print "Simulating"
+                
+simtree = read_tree(file = treefile)
+outname = name + "_simulated.phy"
 e = Evolver(partitions = partitions, tree = simtree)
-e(seqfile = prefix + "_simulated_n256.fasta", ratefile = None, infofile = None)
-AlignIO.convert(prefix + "_simulated_n256.fasta", "fasta", prefix + "_simulated_n256.phy", "phylip-relaxed")
+e(seqfile = outname + ".phy", seqfmt = "phylip-relaxed", ratefile = None, infofile = None)

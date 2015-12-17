@@ -8,10 +8,11 @@ source ~/.bashrc
 
 # define files, variables used in analysis
 DATA=$1
+TREEFILE=n512_bl0.5.tre
 
 REPODIR=$HOME/mutsel_benchmark/
 SCRIPTDIR=$REPODIR/scripts/simulation
-OUTDIR=$REPODIR/data/simulation/n256
+OUTDIR=$REPODIR/data/simulation_weakstrong
 
 # create and enter working directory
 WDIR=/state/partition1/sjs3495/$JOB_NAME-$JOB_ID
@@ -19,8 +20,8 @@ mkdir -p $WDIR
 cd $WDIR
 
 # copy files
-cp $OUTDIR/*.tre .
-cp $SCRIPTDIR/flib/${DATA}_codon_freq_lib.txt freqs.txt
+cp $OUTDIR/$TREEFILE .
+cp $SCRIPTDIR/true_simulation_parameters/${DATA}_true_aa_fitness.txt fitfile.txt
 cp $SCRIPTDIR/simulate_yeast_alignments.py .
 
 # python
@@ -28,11 +29,9 @@ module load python
 export PYTHONPATH=$HOME/bin/lib/python2.7/site-packages
 
 # Simulate
-python simulate_yeast_alignments.py $DATA
+python simulate_yeast_alignments.py $DATA fitfile.txt $TREEFILE 
 
-# Save
-cp *.fasta $OUTDIR
+# Save, cleanup
+mkdir -r $OUTDIR
 cp *.phy $OUTDIR
-
-# cleanup (no need to save directory since nothing in it)
 rm -r $WDIR
