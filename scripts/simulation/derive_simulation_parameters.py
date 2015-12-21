@@ -88,10 +88,10 @@ for file in yeastfiles:
                         
             # Save simulation information (amino acid fitnesses, codon frequencies, dN/dS)
             front = output_directory + out_prefix + "_del" + delf
-            freqfile = front + "_simulated_true_codon_frequencies.txt"
-            fitfile  = front + "_simulated_true_aa_fitness.txt"
-            dndsfile = front + "_simulated_true_dnds.csv"
-            selcfile = front + "_simulated_true_selcoeffs.csv"
+            freqfile = front + "_true_codon_frequencies.txt"
+            fitfile  = front + "_true_aa_fitness.txt"
+            dndsfile = front + "_true_dnds.csv"
+            selcfile = front + "_true_selcoeffs.csv"
 
             np.savetxt(freqfile, frequencies)
             np.savetxt(fitfile, fitnesses)
