@@ -100,7 +100,7 @@ def main():
     
     method_suffixes = {"swmutsel":"_MLE.txt", "phylobayes":".aap"}
     
-    for datatype in ["simulation_weakstrong", "empirical"]:
+    for datatype in ["simulation", "empirical"]:
         rawdir = "../results/raw_results/" + datatype + "/"
         outdir = rawdir + "derived_dnds_coeffs/"
     
