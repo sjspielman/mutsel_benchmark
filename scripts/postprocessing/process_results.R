@@ -1,99 +1,68 @@
 # SJS
-# Script to merge dN/dS calculations from FEL, swMutSel, and pbMutSel into a single data frame.
+# Script to merge dN/dS predictions from swMutSel and Phylobayes into a single data frame, one for simulated and empirical data.
 
 require(dplyr)
 require(tidyr)
 
 results_dir    <- "../../results/"
 datadir_parent <- paste0(results_dir,"raw_results/")
-sim.datasets   <- c("1B4T_A_simulated", "1G58_B_simulated", "1GV3_A_simulated", "1HUR_A_simulated", "1IBS_A_simulated", "1PV1_A_simulated", "1QMV_A_simulated", "1R6M_A_simulated", "1V9S_B_simulated", "1W7W_B_simulated", "1X1O_B_simulated", "1YPI_A_simulated", "1ZNN_A_simulated", "2A84_A_simulated", "2BCG_Y_simulated", "2CFE_A_simulated", "2CJM_C_simulated", "2CNV_A_simulated", "2FLI_A_simulated", "2G0N_B_simulated")
+sim.datasets   <- c("1B4T_A", "1RII_A", "1V9S_B", "1G58_B", "1W7W_B", "1GV3_A", "2BCG_Y", "1IBS_A", "2CFE_A", "1R6M_A", "2FLI_A")
+deltypes       <- c("weak", "strong")
 emp.datasets   <- c("PF00106", "PF00149", "PF00188", "PF00300", "PF00512", "PF00753", "PF01261", "PF01551", "PF01636", "PF03144", "PF00141", "PF00158", "PF00226", "PF00482", "PF00520", "PF01061", "PF01546", "PF01584", "PF02775", "PF04542", "PF00168", "PF00486", "PF00535", "PF01590", "PF03466", "PF00271", "PF00501", "PF00571", "PF00593", "PF00126", "PF01266", "PF01336", "PF01926", "PF02518", "PF04055", "PF07715")
-datasets       <- c(sim.datasets, emp.datasets)
-methods        <- c("nopenal", "d0.01", "d0.1", "d1.0", "mvn10", "mvn100", "mvn1000", "phylobayes")
+methods        <- c("nopenal", "d0.01", "d0.1", "d1.0", "mvn1", "mvn10", "mvn100")#  , "phylobayes")
 
 
-results.dnds <- data.frame("dataset" = factor(), 
+# Simulated datasets #
+sim.dat <- data.frame("dataset" = character(), 
+                      "del"     = character(),
                       "site"    = numeric(), 
                       "dnds"    = numeric(),
-                      "type"    = factor(),
                       "method"  = factor())
+datadir <- paste0(datadir_parent, "simulation/")
+truedir <- "../simulation/true_simulation_parameters/"
+for (name in sim.datasets)
+{    
+    for (deltype in deltypes)
+    { 
+        true <- read.csv(paste0(truedir, name, "_del", deltype, "_true_dnds.csv"))
 
-
-
-for (dataset in datasets){
+        for (meth in c("true", methods))
+        {  
         
-    if (grepl("_simulated",dataset)){
-        type <- "simulation"
+            if (meth == "true")
+            {
+                dat <- read.csv(paste0(truedir, name, "_del", deltype, "_true_dnds.csv"))
+                datdnds <- dat$dnds
+            }
+            else
+            {
+                dat <- read.table(paste0(datadir, "derived_dnds_coeffs/", name, "_del", deltype, "_",  meth, "_dnds.csv"))
+                datdnds <- dat$V1
+            }
+            l <- nrow(dat)
+            temp <- data.frame("dataset" = name, "del" = deltype, "site" = 1:l, "dnds" = datdnds , "method" = meth)
+            sim.dat <- rbind(sim.dat, temp)
+        }
     }
-    else{
-        type <- "empirical"
-    }
-    datadir  <- paste0(datadir_parent,type,"/")
+}
+write.csv(sim.dat, paste0(results_dir, "simulation_derived_dnds.csv", sep=""), row.names=FALSE, quote=FALSE)
 
-    # dN/dS from SLAC 
-    dat <- read.table(paste0(datadir, "slac/", dataset, "_SLAC.txt"), header=T)
-    datdnds <- dat$dN/mean(dat$dS)
-    l <- nrow(dat)
-    temp <- data.frame("dataset" = dataset, "site" = 1:l, "dnds" = datdnds , "method" = "slac", type = type)
-    results.dnds <- rbind(results.dnds, temp)
 
-    # dN/dS predicted from MutSel inference
+
+# Empirical datasets #
+emp.dat <- data.frame("dataset" = character(), 
+                      "site"    = numeric(), 
+                      "dnds"    = numeric(),
+                      "method"  = factor())
+datadir <- paste0(datadir_parent, "empirical/")
+for (name in emp.datasets)
+{    
     for (meth in methods){    
-        if (meth == "phylobayes"){
-          savemeth <- "pbmutsel"
-        }
-        else{
-          savemeth <- meth
-        }
-        dat <- read.table(paste0(datadir, "derived_dnds/", dataset, "_", meth, "_dnds.txt"))
+        dat <- read.table(paste0(datadir, "derived_dnds_coeffs/", name, "_", meth, "_dnds.csv"))
         datdnds <- dat$V1
         l <- nrow(dat)
-        temp <- data.frame("dataset" = dataset, "site" = 1:l, "dnds" = datdnds , "method" = savemeth, type = type)
-        results.dnds <- rbind(results.dnds, temp)
+        temp <- data.frame("dataset" = name, "site" = 1:l, "dnds" = datdnds , "method" = meth)
+        emp.dat <- rbind(emp.dat, temp)
     }
-    
-    # True simulated dN/dS AS APPLICABLE
-    if (type == "simulation")
-    {
-        newname <- strsplit(dataset, "_simulated")[[1]][1]
-        true <- read.csv(paste0(datadir, "derived_dnds/", newname, "_true_dnds.txt"))
-        temp <- data.frame("dataset" = dataset, "site" = true$site, "dnds" = true$dnds , "method" = "true", type = type)
-        results.dnds <- rbind(results.dnds, temp)    
-    }    
 }
-
-write.csv(results.dnds, paste0(results_dir, "dnds_results.csv", sep=""), row.names=FALSE, quote=FALSE)
-
-
-
-
-
-results.jsd <- data.frame("dataset" = factor(), 
-                          "site"    = numeric(), 
-                          "jsd"    = numeric(),
-                          "method"  = factor())
-
-
-for (dataset in sim.datasets){
-    
-    newname <- strsplit(dataset, "_simulated")[[1]][1]
-    datadir <- paste0(datadir_parent,"simulation/jsd/")
-
-    for (meth in methods){    
-        if (meth == "phylobayes"){
-          savemeth <- "pbmutsel"
-        }
-        else{
-          savemeth <- meth
-        }
-        dat <- read.table(paste0(datadir, newname, "_", meth, "_jsd.txt"))
-        jsd <- dat$V1
-        l <- nrow(dat)
-        temp <- data.frame("dataset" = dataset, "site" = 1:l, "jsd" = jsd , "method" = savemeth)
-        results.jsd <- rbind(results.jsd, temp)
-    }
-       
-        
-}
-write.csv(results.jsd, paste0(results_dir, "jsd_results.csv", sep=""), row.names=FALSE, quote=FALSE)
-
+write.csv(emp.dat, paste0(results_dir, "empirical_derived_dnds.csv", sep=""), row.names=FALSE, quote=FALSE)
