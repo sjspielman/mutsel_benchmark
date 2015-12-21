@@ -85,7 +85,7 @@ def compute_dnds_coefficicents(input_directory, output_directory, suffix):
             prefix = file.split(suffix)[0]
             
             
-            outfile_dnds   = output_directory + prefix + "_dnds.txt"
+            outfile_dnds   = output_directory + prefix + "_dnds.csv"
             outfile_coeffs = output_directory + prefix + "_selcoeffs.csv"
 
             fitness, mu_dict = extract_parameters(input_directory, prefix)                     
