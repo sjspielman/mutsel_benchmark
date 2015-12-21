@@ -6,7 +6,7 @@ import numpy as np
 from universal_functions import *
 
 
-def extract_info(directory, name):
+def extract_parameters(directory, name):
     '''
         Extract fitness and mutation rates from a given inference.
     '''
@@ -35,16 +35,20 @@ def calculate_save_dnds(fitness, mu_dict, outfile):
         dnds.append( dnds_from_params(sitefitness, mu_dict) )     
     with open(outfile, "w") as outf:
         outf.write( "\n".join([str(i) for i in dnds]) )
+    
+    return dnds
 
 
 
 
-def calculate_save_coeffs(fitness, outfile):
+def calculate_save_coeffs(fitness, outfile, dnds):
     '''
         Compute and save distribution of selection coefficients.
     '''
     raw = []
     binned = []
+    sitednds = []
+    y = 0
     for site in fitness:
         for i in range(len(site)):
             f_i = site[i]
@@ -54,78 +58,56 @@ def calculate_save_coeffs(fitness, outfile):
                 else:
                     s = f_i - site[j]
                     raw.append(s)
-                    if (10. - abs(s) <= 1e-8):
+                    if s <= -10:
                         s = -10.
+                    if s >= 10.:
+                        s = 10.
                     binned.append(s)
+                    sitednds.append(dnds[y])
+        y += 1
     with open(outfile, "w") as outf:
-        outf.write("realcoeff,binnedcoeff\n")
-        outf.write( "\n".join([str(raw[x])+","+str(binned[x]) for x in range(len(raw))]) )
+        outf.write("realcoeff,binnedcoeff,sitednds\n")
+        outf.write( "\n".join([str(raw[x])+","+str(binned[x])+","+str(sitednds[x]) for x in range(len(raw))]) )
     
     
 
 
-def compute_dnds_coefficicents(input_directory, output_directory):
+def compute_dnds_coefficicents(input_directory, output_directory, suffix):
     '''
         For all inference files in a given input directory, calculate dN/dS and selection coefficients.
     '''
-    suffixes = ["_MLE.txt", ".aap"]
+    
     filenames = os.listdir(input_directory)
     for file in filenames:
     
         prefix = None
-        for suffix in suffixes:
-            if file.endswith(suffix):
-                prefix = file.split(suffix)[0]
+        if file.endswith(suffix):
+            prefix = file.split(suffix)[0]
             
-                outfile_dnds   = output_directory + prefix + "_dnds.txt"
-                outfile_coeffs = output_directory + prefix + "_selcoeffs.csv"
-                
-                fitness, mu_dict = extract_info(input_directory, prefix)
-                
-                if not os.path.exists(outfile_dnds):
-                    print "Computing dN/dS for", prefix
-                    calculate_save_dnds(fitness, mu_dict, outfile_dnds)
-                
-                if not os.path.exists(outfile_coeffs):
-                    print "Computing selection coefficients for", prefix
-                    calculate_save_coeffs(fitness, outfile_coeffs)
+            
+            outfile_dnds   = output_directory + prefix + "_dnds.txt"
+            outfile_coeffs = output_directory + prefix + "_selcoeffs.csv"
+
+            fitness, mu_dict = extract_parameters(input_directory, prefix)                     
+            
+            if not os.path.exists(outfile_dnds) and not os.path.exists(outfile_coeffs):
+                print "Computing dN/dS and selection coefficients for", prefix
+                dnds = calculate_save_dnds(fitness, mu_dict, outfile_dnds)
+                calculate_save_coeffs(fitness, outfile_coeffs, dnds)
 
 
 def main():
     
-    # Simulated yeast and empirical inferences
-    for datatype in ["simulation", "empirical"]:
+    method_suffixes = {"swmutsel":"_MLE.txt", "phylobayes":".aap"}
+    
+    for datatype in ["simulation_weakstrong", "empirical"]:
         rawdir = "../results/raw_results/" + datatype + "/"
         outdir = rawdir + "derived_dnds_coeffs/"
     
-        for method in ["phylobayes", "swmutsel"]:
+        for method in method_suffixes:
             indir = rawdir + method + "/"
-            compute_dnds_coefficicents(indir, outdir)
-
-
-    # Simulated from empirical 
-    rawdir = "../results/raw_results/simulated_from_empirical/"
-    indir = rawdir + "swmutsel/"
-    outdir = rawdir + "derived_dnds_coeffs/"
-    compute_dnds_coefficicents(indir, outdir)
-    
-    
-    # True simulated. Note that dN/dS are already calculated for these (during simulation), we just need selection coefficients.
-    rawdir = "../results/raw_results/simulation/"
-    outdir = rawdir + "derived_dnds_coeffs/"
-    indir  = "simulation/flib/"
-    infiles = os.listdir(indir)
-    for file in infiles:
-        prefix = file.split("_codon_freq_lib.txt")[0]
-        outfile = outdir + prefix + "_true_selcoeffs.csv"
-        if not os.path.exists(outfile):
-            print "Computing selection coefficients for true", prefix
-            fitness = np.log( np.loadtxt(indir + file) )
-            fitness[np.isinf(fitness)] = -15. # Yeah, but this is nonsense which *will* muck with distribution.
-            calculate_save_coeffs(fitness, outfile)
-    
-    
-    
+            suffix = method_suffixes[method] 
+            compute_dnds_coefficicents(indir, outdir, suffix)
 
 main()
 
