@@ -1,5 +1,6 @@
 # SJS
 # This script computes Jensen-Shannon divergence between inferred frequencies and true frequencies, for simulated datasets 
+# Also infers distance between pbMutSel and swMutSel, sans penalty
 
 import sys
 import numpy as np

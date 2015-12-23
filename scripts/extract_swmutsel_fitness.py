@@ -7,7 +7,7 @@ from numpy import savetxt
 new_order = [0, 14, 11, 2, 1, 13, 3, 5, 6, 7, 9, 8, 10, 4, 12, 15, 16, 18, 19, 17] # need to reorder fitnesses from tamuri's mapping to mine.
 
 
-resdir = "../results/raw_results/simulated_from_empirical/swmutsel/"
+resdir = "../results/raw_results/simulation/swmutsel/"
 mle_files = os.listdir(resdir)
 
 for file in mle_files:
