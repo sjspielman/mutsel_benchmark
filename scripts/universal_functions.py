@@ -22,6 +22,31 @@ ZERO=1e-10
 
 
 ### Compute dN/dS from MutSel parameters ###
+def extract_parameters(directory, name):
+    '''
+        Extract fitness and mutation rates from a given inference.
+    '''
+    fitness = None
+    mu_dict = None
+    if "phylobayes" in name:
+        fitness = np.loadtxt(directory + name + ".aap")
+        fitness = np.log(fitness)
+        mu_dict = parse_pbMutSel_mutation(directory + name + ".trace")
+    else:
+        fitness = np.loadtxt(directory + name + "_fitness.txt")
+        mu_dict = parse_swMutSel_mutation(directory + name + "_MLE.txt")   
+
+    assert(fitness is not None), "\n Could not retrieve fitness values."
+    assert(mu_dict is not None), "\n Could not retrieve mutation rates."
+    return fitness, mu_dict
+
+
+
+
+
+
+
+
 def dnds_from_params(site_fitness, mu_dict):
     
     # Build the MutSel matrix (assumes equal codon frequencies per amino acid) with these parameters and extract equilibrium codon frequencies
@@ -32,39 +57,6 @@ def dnds_from_params(site_fitness, mu_dict):
     c = dNdS_from_MutSel( dict(zip(g.codons, eqfreqs)), mu_dict)
     return c.compute_dnds()
  
-
-def jsd_from_params(true_codon_freqs, site_fitness, mu_dict):
-    
-    # convert codon frequencies to amino acid frequencies
-    true = np.array(codon_freqs_to_aa_freqs(true_codon_freqs)) + ZERO   # since need to log
-    
-    # inferred
-    raw_inferred  = codon_freqs_from_fitness_eigenvector(site_fitness, mu_dict)
-    inferred = np.array(codon_freqs_to_aa_freqs(raw_inferred)) + ZERO   # since need to log
-
-    # JSD between
-    return calculate_jsd( true, inferred )
-    
-
-def calc_kl(a,b):
-    return np.sum( a * np.log(a/b) ) 
-
-    
-### Compute JSD from frequency distributions ###
-def calculate_jsd(p, q):
-    '''
-        p and q are input distributions to compare, each of length 20.
-    '''
-
-    m = (p+q)/2.
-
-
-    term1 = 0.5*calc_kl(p, m)
-    term2 = 0.5*calc_kl(q, m)
-    
-    return np.sqrt( term1 + term2 )
-
-
 
 ########## Generic functions for converting among codon, amino-acid frequencies and fitnesses ###########
 

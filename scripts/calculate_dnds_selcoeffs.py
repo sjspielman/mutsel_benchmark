@@ -6,25 +6,7 @@ import numpy as np
 from universal_functions import *
 
 
-def extract_parameters(directory, name):
-    '''
-        Extract fitness and mutation rates from a given inference.
-    '''
-    fitness = None
-    mu_dict = None
-    if "phylobayes" in name:
-        fitness = np.loadtxt(directory + name + ".aap")
-        fitness = np.log(fitness)
-        mu_dict = parse_pbMutSel_mutation(directory + name + ".trace")
-    else:
-        fitness = np.loadtxt(directory + name + "_fitness.txt")
-        mu_dict = parse_swMutSel_mutation(directory + name + "_MLE.txt")   
-
-    assert(fitness is not None), "\n Could not retrieve fitness values."
-    assert(mu_dict is not None), "\n Could not retrieve mutation rates."
-    return fitness, mu_dict
-    
-    
+  
 
 def calculate_save_dnds(fitness, mu_dict, outfile):
     '''
@@ -34,7 +16,8 @@ def calculate_save_dnds(fitness, mu_dict, outfile):
     for sitefitness in fitness:
         dnds.append( dnds_from_params(sitefitness, mu_dict) )     
     with open(outfile, "w") as outf:
-        outf.write( "\n".join([str(i) for i in dnds]) )
+        outf.write("site,dnds\n")
+        outf.write( "\n".join([str(i+1)+","+str(dnds[i]) for i in range(len(dnds))]) )
     
     return dnds
 
@@ -83,17 +66,18 @@ def compute_dnds_coefficicents(input_directory, output_directory, suffix):
         prefix = None
         if file.endswith(suffix):
             prefix = file.split(suffix)[0]
+            outprefix = prefix.replace("_simulated", "")
             
-            
-            outfile_dnds   = output_directory + prefix + "_dnds.csv"
-            outfile_coeffs = output_directory + prefix + "_selcoeffs.csv"
+            outfile_dnds   = output_directory + outprefix + "_dnds.csv"
+            outfile_coeffs = output_directory + outprefix + "_selcoeffs.csv"
 
             fitness, mu_dict = extract_parameters(input_directory, prefix)                     
             
             if not os.path.exists(outfile_dnds) and not os.path.exists(outfile_coeffs):
                 print "Computing dN/dS and selection coefficients for", prefix
                 dnds = calculate_save_dnds(fitness, mu_dict, outfile_dnds)
-                calculate_save_coeffs(fitness, outfile_coeffs, dnds)
+                calculate_save_coeffs(fitness, outfile_coeffs, dnds)                
+                
 
 
 def main():

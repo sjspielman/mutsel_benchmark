@@ -2,15 +2,119 @@ require(cowplot)
 require(dplyr)
 require(tidyr)
 require(readr)
+require(grid)
 
-sim.dat <- read.csv("../../results/summarized_results/simulation_derived_dnds.csv")
+
+repr_sim <- "1B4T_A"
+
+result_directory <- "../../results/summarized_results/"
+
+jsd.results <- read_csv(paste0(result_directory, "simulation_jsd.csv"))
+
+theme_set(theme_cowplot() + theme(panel.border = element_rect(size = 0.5), panel.margin = unit(0.75, "lines"), strip.background = element_rect(fill="white"), strip.text = element_text(size=12)))
+
+#### Boxplots of Jensen-Shannon distance among methods for simulated datasets ####
+theme_set(theme_cowplot() + theme(axis.text.y = element_text(size = 15), axis.text.x = element_text(size = 13),  axis.title = element_text(size = 16)))
+
+jsd.results %>% filter(del == "strong") %>% group_by(dataset, method) %>% summarize(meanjsd = mean(jsd)) -> jsd.strong.summary
+jsd.strong.summary$method <- factor(jsd.strong.summary$method, levels = c("nopenal", "mvn100", "mvn10", "mvn1", "d0.01", "d0.1", "d1.0", "phylobayes"), labels = c("No penalty", "mvn100", "mvn10", "mvn1", "d0.01", "d0.1", "d1.0", "pbMutSel"))
+jsd.results %>% filter(del == "weak") %>% group_by(dataset, method) %>% summarize(meanjsd = mean(jsd)) -> jsd.weak.summary
+jsd.weak.summary$method <- factor(jsd.weak.summary$method, levels = c("nopenal", "mvn100", "mvn10", "mvn1", "d0.01", "d0.1", "d1.0", "phylobayes"), labels = c("No penalty", "mvn100", "mvn10", "mvn1", "d0.01", "d0.1", "d1.0", "pbMutSel"))
+jsd.results %>% filter(del == "strong", dataset == repr_sim) -> jsd.repr.sim
+jsd.repr.sim$method <- factor(jsd.repr.sim$method, levels = c("nopenal", "mvn100", "mvn10", "mvn1", "d0.01", "d0.1", "d1.0", "phylobayes"), labels = c("No penalty", "mvn100", "mvn10", "mvn1", "d0.01", "d0.1", "d1.0", "pbMutSel"))
+
+
+
+## Figure 1A 
+repr.jsd.boxplots <- ggplot(jsd.repr.sim, aes(x = method, y = jsd)) + geom_boxplot() + xlab("Inference Method") + ylab("Site JSD") + scale_y_continuous(limits = c(0, 0.3), breaks = c(0, 0.05, 0.1, 0.15, 0.2, 0.25, 0.3)) + ggtitle("JSD for representative dataset")
+## Figure 1B
+mean.jsd.strong.boxplots <- ggplot(jsd.strong.summary, aes(x = method, y = meanjsd)) + geom_boxplot() + xlab("Inference Method") + ylab("Average site JSD") + scale_y_continuous(limits = c(0, 0.3), breaks = c(0, 0.05, 0.1, 0.15, 0.2, 0.25, 0.3)) + ggtitle("Mean JSD across datasets")
+## Full Figure 1
+fig1 <- plot_grid(repr.jsd.boxplots, mean.jsd.strong.boxplots, nrow=2, labels=c("A", "B"), scale=0.95)
+
+
+
+#### SI weak jsd boxplots
+mean.jsd.weak.boxplots <- ggplot(jsd.weak.summary, aes(x = method, y = meanjsd)) + geom_boxplot() + xlab("Inference Method") + ylab("Average JSD") + scale_y_continuous(limits = c(0, 0.25), breaks = c(0, 0.05, 0.1, 0.15, 0.2, 0.25))
+
+
+
+##### Figures 2,3: dN/dS scatterplots and boxplots for simulated datasets #####
+sim.dat <- read.csv(paste0(result_directory, "simulation_derived_dnds.csv"))
 sim.dat %>% spread(method,dnds) %>% gather(method, dnds, d0.01, d0.1, d1.0, mvn1, mvn10, mvn100, nopenal, phylobayes) %>% select(dataset, del, site, true, dnds, method)-> dnds
-sim.dat$method <- factor(sim.dat$method, levels=c("nopenal", "phylobayes", "mvn1", "mvn10", "mvn100", "d1.0", "d0.1", "d0.01"))
 
-dnds.strong <- dnds %>% filter(dataset == "1B4T_A", del == "strong")
-dnds.strong$method <- factor(dnds.strong$method, levels=c("nopenal", "phylobayes", "mvn1", "mvn10", "mvn100", "d1.0", "d0.1", "d0.01"))
-dnds.weak <- dnds %>% filter(dataset == "1B4T_A", del == "weak")
-dnds.weak$method <- factor(dnds.weak$method, levels=c("nopenal", "phylobayes", "mvn1", "mvn10", "mvn100", "d1.0", "d0.1", "d0.01"))
+dnds.repr.strong <- dnds %>% filter(dataset == repr_sim, del == "strong")
+dnds.repr.strong$method <- factor(dnds.repr.strong$method, levels = c("nopenal", "mvn100", "mvn10", "mvn1", "d0.01", "d0.1", "d1.0", "phylobayes"), labels = c("No penalty", "mvn100", "mvn10", "mvn1", "d0.01", "d0.1", "d1.0", "pbMutSel"))
+dnds.repr.weak <- dnds %>% filter(dataset == repr_sim, del == "weak")
+dnds.repr.weak$method <- factor(dnds.repr.weak$method, levels = c("nopenal", "mvn100", "mvn10", "mvn1", "d0.01", "d0.1", "d1.0", "phylobayes"), labels = c("No penalty", "mvn100", "mvn10", "mvn1", "d0.01", "d0.1", "d1.0", "pbMutSel"))
+dnds %>% group_by(dataset, del, method) %>% do(rraw = cor(.$true, .$dnds), braw = glm(dnds ~ offset(true), dat=.)) %>% mutate(r = rraw[1], r2 = r^2, b = summary(braw)$coeff[1]) %>% select(-rraw, -braw) %>% ungroup() -> sim.dat.r.b
+sim.dat.r.b$method <- factor(sim.dat.r.b$method, levels = c("nopenal", "mvn100", "mvn10", "mvn1", "d0.01", "d0.1", "d1.0", "phylobayes"), labels = c("No penalty", "mvn100", "mvn10", "mvn1", "d0.01", "d0.1", "d1.0", "pbMutSel"))
+
+## Figure 2
+fig2 <- ggplot(dnds.repr.strong, aes(x = true, y = dnds)) + geom_point() + geom_abline(slope = 1, intercept = 0, color="red") + xlab("True dN/dS") + ylab("Predicted dN/dS") + scale_y_continuous(limits=c(0,0.8)) + scale_x_continuous(limits=c(0,0.8)) + facet_grid(~method) + theme(axis.text = element_text(size = 12), axis.title = element_text(size = 16))
+
+
+## Figure 3A
+sim.dat.r.b %>% filter(del == "strong") %>% ggplot(aes(x = method, y = r2)) + geom_boxplot() + xlab("Inference Method") + ylab("Variance Explained") +  theme(axis.text = element_text(size = 11), axis.title = element_text(size = 16))-> boxplot.sim.r2
+## Figure 3B
+sim.dat.r.b %>% filter(del == "strong") %>% ggplot(aes(x = method, y = b)) + geom_boxplot() + xlab("Inference Method") + ylab("Estimator Bias") + geom_hline(yintercept=0 ) +  theme(axis.text = element_text(size = 11), axis.title = element_text(size = 16)) -> boxplot.sim.b
+## Full Figure 3
+fig3 <- plot_grid(boxplot.sim.r2, boxplot.sim.b, nrow=2, labels=c("A", "B"), scale = 0.95)
+
+# #code if we want to combine figs2,3
+# ggdraw() +
+#   draw_plot(scatter.dnds.repr.strong, 0, 0.53, 1, 0.48) +
+#   draw_plot(boxplot.sim.r2, 0, 0, 0.48, 0.48) +
+#   draw_plot(boxplot.sim.b, 0.52, 0, 0.48, 0.48) +
+#   draw_plot_label(c("A", "B", "C"), c(0, 0, 0.52), c(1, 0.5, 0.5), size = 17) ->p
+# 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+####################### NOOOOOOOOOOOO!!!!!!!!!!!!!! ########################
+
+
+
+
 
 
 sc.strong.raw <- read_csv(paste0("../../results/summarized_results/1B4T_A_delstrong_selection_coefficients.csv"))
