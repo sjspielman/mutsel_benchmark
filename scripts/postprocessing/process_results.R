@@ -75,25 +75,6 @@ for (name in sim.datasets)
 write.csv(sim.dat, paste0(outdir, "simulation_derived_dnds.csv"), row.names=FALSE, quote=FALSE)
 
 
-print("Processing dN/dS for empirical datasets")
-# dN/dS for empirical datasets #
-emp.dat <- data.frame("dataset" = character(), 
-                      "site"    = numeric(), 
-                      "dnds"    = numeric(),
-                      "method"  = factor())
-datadir <- paste0(datadir_parent, "empirical/")
-for (name in emp.datasets)
-{    
-    for (meth in c(methods, "phylobayes")){    
-        dat <- read.csv(paste0(datadir, "derived_dnds_coeffs/", name, "_", meth, "_dnds.csv"))
-        temp <- data.frame("dataset" = name, "site" = dat$site, "dnds" = dat$dnds , "method" = meth)
-        emp.dat <- rbind(emp.dat, temp)
-    }
-}
-write.csv(emp.dat, paste0(outdir, "empirical_derived_dnds.csv"), row.names=FALSE, quote=FALSE)
-
-
-
 
 print("Processing coefficients for simulated datasets")
 # Selection coefficients for simulated datasets #
@@ -118,27 +99,51 @@ for (dataset in sim.datasets)
             temp <- data.frame("dataset" = dataset, "method" = m, "dummy" = 1:nrow(dat), "del" = del, "binnedcoeff" = dat$binnedcoeff, "realcoeff" = dat$realcoeff)
             sim.selcoeffs <- rbind(sim.selcoeffs, temp)
         }
-        write.csv(sim.selcoeffs, paste0(outdir, full_dataset, "_selection_coefficients.csv"), row.names=FALSE, quote=FALSE)
     }
+    write.csv(sim.selcoeffs, paste0(outdir, full_dataset, "_selection_coefficients.csv"), row.names=FALSE, quote=FALSE)
 }
 
 
 
-print("Processing coefficients for empirical datasets")
-# Selection coefficients for empirical datasets #
-directory <- paste0(datadir_parent, "empirical/derived_dnds_coeffs/")
-for (dataset in emp.datasets)
-{
-    emp.selcoeffs <- data.frame("dataset" = character(), "method" = character(), "dummy" = numeric(), "binnedcoeff" = numeric(), "realcoeff" = numeric())
-    for (m in c(methods, "phylobayes")){    
-    {   
-        dat <- read.csv(paste0(directory, dataset, "_", m, "_selcoeffs.csv"))
-        temp <- data.frame("dataset" = dataset, "method" = m, "dummy" = 1:nrow(dat), "binnedcoeff" = dat$binnedcoeff, "realcoeff" = dat$realcoeff)
-        emp.selcoeffs <- rbind(emp.selcoeffs, temp)
-    }
-    write.csv(emp.selcoeffs, paste0(outdir, dataset, "_selection_coefficients.csv"), row.names=FALSE, quote=FALSE)
-    }
-}
 
+
+
+
+# print("Processing dN/dS for empirical datasets")
+# # dN/dS for empirical datasets #
+# emp.dat <- data.frame("dataset" = character(), 
+#                       "site"    = numeric(), 
+#                       "dnds"    = numeric(),
+#                       "method"  = factor())
+# datadir <- paste0(datadir_parent, "empirical/")
+# for (name in emp.datasets)
+# {    
+#     for (meth in c(methods, "phylobayes")){    
+#         dat <- read.csv(paste0(datadir, "derived_dnds_coeffs/", name, "_", meth, "_dnds.csv"))
+#         temp <- data.frame("dataset" = name, "site" = dat$site, "dnds" = dat$dnds , "method" = meth)
+#         emp.dat <- rbind(emp.dat, temp)
+#     }
+# }
+# write.csv(emp.dat, paste0(outdir, "empirical_derived_dnds.csv"), row.names=FALSE, quote=FALSE)
+# 
+# 
+# 
+# 
+# print("Processing coefficients for empirical datasets")
+# # Selection coefficients for empirical datasets #
+# directory <- paste0(datadir_parent, "empirical/derived_dnds_coeffs/")
+# for (dataset in emp.datasets)
+# {
+#     emp.selcoeffs <- data.frame("dataset" = character(), "method" = character(), "dummy" = numeric(), "binnedcoeff" = numeric(), "realcoeff" = numeric())
+#     for (m in c(methods, "phylobayes")){    
+#     {   
+#         dat <- read.csv(paste0(directory, dataset, "_", m, "_selcoeffs.csv"))
+#         temp <- data.frame("dataset" = dataset, "method" = m, "dummy" = 1:nrow(dat), "binnedcoeff" = dat$binnedcoeff, "realcoeff" = dat$realcoeff)
+#         emp.selcoeffs <- rbind(emp.selcoeffs, temp)
+#     }
+#     write.csv(emp.selcoeffs, paste0(outdir, dataset, "_selection_coefficients.csv"), row.names=FALSE, quote=FALSE)
+#     }
+# }
+# 
 
 
