@@ -5,8 +5,8 @@
 function submit_swmutsel {
     DATA=$1
     TREE=$2
-    # nopenal mvn1 mvn10 mvn100 d0.01 d0.1 d1.0
-    for M in nopenal; do
+    
+    for M in mvn1 mvn10 mvn100 d1.0 d0.1 d0.01 nopenal; do
         sed -i "s/-N JOB/-N sw_${DATA}_${M}/" swmutsel/swmutsel.qsub
         qsub swmutsel/swmutsel.qsub $TOPDIR $DATA $TREE $M
         sed -i "s/-N sw_${DATA}_${M}/-N JOB/" swmutsel/swmutsel.qsub
@@ -29,8 +29,8 @@ for NAME in 1B4T_A 1G58_B 1GV3_A 1IBS_A 1R6M_A 1RII_A 1V9S_B 1W7W_B 2BCG_Y 2CFE_
         
         DATA=${NAME}_del${DEL}
         
-        submit_swmutsel $DATA $TREE
         submit_pbmutsel $DATA $TREE
+        submit_swmutsel $DATA $TREE
 
     done
 done
