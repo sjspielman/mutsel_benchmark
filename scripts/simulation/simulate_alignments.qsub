@@ -10,9 +10,9 @@ source ~/.bashrc
 DATA=$1
 TREEFILE=n512_bl0.5.tre
 
-REPODIR=$HOME/mutsel_benchmark/
+REPODIR=$HOME/mutsel_benchmark
 SCRIPTDIR=$REPODIR/scripts/simulation
-OUTDIR=$REPODIR/data/simulation_weakstrong
+OUTDIR=$REPODIR/data
 
 # create and enter working directory
 WDIR=/state/partition1/sjs3495/$JOB_NAME-$JOB_ID
