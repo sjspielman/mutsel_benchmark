@@ -84,14 +84,13 @@ def main():
     
     method_suffixes = {"swmutsel":"_MLE.txt", "phylobayes":".aap"}
     
-    for datatype in ["simulation", "empirical"]:
-        rawdir = "../results/raw_results/" + datatype + "/"
-        outdir = rawdir + "derived_dnds_coeffs/"
+    rawdir = "../results/raw_results/"
+    outdir = rawdir + "derived_dnds_coeffs/"
     
-        for method in method_suffixes:
-            indir = rawdir + method + "/"
-            suffix = method_suffixes[method] 
-            compute_dnds_coefficicents(indir, outdir, suffix)
+    for method in method_suffixes:
+        indir = rawdir + method + "/"
+        suffix = method_suffixes[method] 
+        compute_dnds_coefficicents(indir, outdir, suffix)
 
 main()
 

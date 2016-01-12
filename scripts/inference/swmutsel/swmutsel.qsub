@@ -9,10 +9,9 @@ source ~/.bashrc
 
 # define files, variables used in analysis
 CPU=16
-DATADIR=$1
-ALN=$2
-TREE=$3
-METHOD=$4
+ALN=$1
+TREE=$2
+METHOD=$3
 
 SWEXEC=$HOME/bin/swmutsel-alpha_jdk1.6.jar
 REPODIR=$HOME/mutsel_benchmark
@@ -23,8 +22,8 @@ mkdir -p $WDIR
 cd $WDIR
 
 # copy files, executables here
-cp $DATADIR/$ALN.phy .
-cp $DATADIR/$TREE .
+cp $REPODIR/data/$ALN.phy .
+cp $REPODIR/data/$TREE .
 cp $REPODIR/scripts/inference/swmutsel/* .
 cp $SWEXEC swmutsel.jar
 ls

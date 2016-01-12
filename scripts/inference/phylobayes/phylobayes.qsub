@@ -9,9 +9,8 @@ source ~/.bashrc
 
 # define files, variables used in analysis
 CPU=16
-DATADIR=$1
-DATA=$2
-TREE=$3
+DATA=$1
+TREE=$2
 REPODIR=$HOME/mutsel_benchmark
 
 PBEXEC=$HOME/bin/pb_mpi1.5a/data/pb_mpi
@@ -23,8 +22,8 @@ mkdir -p $WDIR
 cd $WDIR
 
 # copy files, executables here
-cp $DATADIR/$DATA.phy .
-cp $DATADIR/$TREE .
+cp $REPODIR/data/$DATA.phy .
+cp $REPODIR/data/$TREE .
 cp $REPODIR/scripts/inference/phylobayes/run_phylobayes.py .
 cp $PBEXEC .
 cp $READPBEXEC .

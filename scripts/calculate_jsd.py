@@ -55,7 +55,7 @@ def main():
     
     method_suffixes = {"swmutsel":"_MLE.txt", "phylobayes":".aap"}
     
-    rawdir = "../results/raw_results/simulation/"
+    rawdir = "../results/raw_results/"
     outdir = rawdir + "derived_dnds_coeffs/"
     
     truedir = "simulation/true_simulation_parameters/"
