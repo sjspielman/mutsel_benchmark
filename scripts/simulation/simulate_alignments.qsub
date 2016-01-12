@@ -22,14 +22,14 @@ cd $WDIR
 # copy files
 cp $OUTDIR/$TREEFILE .
 cp $SCRIPTDIR/true_simulation_parameters/${DATA}_true_aa_fitness.txt fitfile.txt
-cp $SCRIPTDIR/simulate_yeast_alignments.py .
+cp $SCRIPTDIR/simulate_alignments.py .
 
 # python
 module load python
 export PYTHONPATH=$HOME/bin/lib/python2.7/site-packages
 
 # Simulate
-python simulate_yeast_alignments.py $DATA fitfile.txt $TREEFILE 
+python simulate_alignments.py $DATA fitfile.txt $TREEFILE 
 
 # Save, cleanup
 mkdir -r $OUTDIR
