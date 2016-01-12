@@ -31,9 +31,9 @@ def main():
     # Phylobayes is run to chain length 5500, sampling every 5 to yield 1100. Later, burnin of 100 is removed to get a final posterior n=1000
     if not restart:
         # Rewrite tree to create trifurcating root, as needed by phylobayes mpi
-        tree = Tree.get_from_path(treefile, "newick", rooted = False)
+        tree = Tree.get_from_path(treefile, "newick", rooting = "force-unrooted")
         tree.resolve_polytomies() # in case of polytomies.
-        tree.update_splits() # this will create a trifurcating root on an unrooted tree
+        tree.update_bipartitions() # this will create a trifurcating root on an unrooted tree
         tstring = str(tree).replace('[&U] ', '')
         with open('temp.tre', 'w') as tf:
             tf.write(tstring + ';\n')
