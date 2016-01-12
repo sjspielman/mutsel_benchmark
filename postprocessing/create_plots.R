@@ -140,18 +140,14 @@ sc <- rbind(strong.sc, weak.sc)
 sc$method <- factor(sc$method, levels=c("true", "nopenal", "phylobayes"))
 spread.dnds$del <- factor(spread.dnds$del, levels=c("strong", "weak"), labels = c("Highly deleterious", "Weakly deleterious"))
 
-##fig6a
-spread.dnds %>% filter(dataset == repr_sim, method == "nopenal") %>% ggplot(aes(x = true, y = dnds)) + geom_point() + geom_abline(slope = 1, intercept = 0, color="red") + facet_grid(~del) + xlab("True dN/dS") + ylab("swMutSel dN/dS") + scale_x_continuous(limits = c(0,0.8)) + scale_y_continuous(limits=c(0, 0.8)) -> fig6a_1
-sc %>% filter(method %in% c("true","nopenal")) %>% ggplot(aes(x = binnedcoeff, fill = method)) + geom_density() + facet_grid(~del) + scale_fill_manual(values =c("grey40", rgb(1, 1, 0, 0.4))) + ylab("Density") + xlab("Scaled Selection Coefficients") + theme(strip.text = element_blank()) -> fig6a_2
-fig6a <- plot_grid(fig6a_1, fig6a_2, nrow=2)
 
-##fig6b
-spread.dnds %>% filter(dataset == repr_sim, method == "phylobayes") %>% ggplot(aes(x = true, y = dnds)) + geom_point() + geom_abline(slope = 1, intercept = 0, color="red") + facet_grid(~del) + xlab("True dN/dS") + ylab("pbMutSel dN/dS") + scale_x_continuous(limits = c(0,0.8)) + scale_y_continuous(limits=c(0, 0.8)) -> fig6b_1
-sc %>% filter(method %in% c("true","phylobayes")) %>% ggplot(aes(x = binnedcoeff, fill = method)) + geom_density() + facet_grid(~del) + scale_fill_manual(values = c("grey40", rgb(1, 1, 0, 0.4))) + ylab("Density") + xlab("Scaled Selection Coefficients") + theme(strip.text = element_blank()) -> fig6b_2
-fig6b <- plot_grid(fig6b_1, fig6b_2, nrow=2)
+fig6a <- spread.dnds %>% filter(dataset == repr_sim, method == "nopenal") %>% ggplot(aes(x = true, y = dnds)) + geom_point() + geom_abline(slope = 1, intercept = 0, color="red") + facet_grid(~del) + xlab("True dN/dS") + ylab("swMutSel dN/dS") + scale_x_continuous(limits = c(0,0.8)) + scale_y_continuous(limits=c(0, 0.8))
+fig6b <- sc %>% filter(method %in% c("true","nopenal")) %>% ggplot(aes(x = binnedcoeff, fill = method)) + geom_density() + facet_grid(~del) + scale_fill_manual(values =c("grey40", rgb(1, 1, 0, 0.4))) + ylab("Density") + xlab("Scaled Selection Coefficients") + theme(strip.text = element_blank())
+fig6c <- spread.dnds %>% filter(dataset == repr_sim, method == "phylobayes") %>% ggplot(aes(x = true, y = dnds)) + geom_point() + geom_abline(slope = 1, intercept = 0, color="red") + facet_grid(~del) + xlab("True dN/dS") + ylab("pbMutSel dN/dS") + scale_x_continuous(limits = c(0,0.8)) + scale_y_continuous(limits=c(0, 0.8))
+fig6d <- sc %>% filter(method %in% c("true","phylobayes")) %>% ggplot(aes(x = binnedcoeff, fill = method)) + geom_density() + facet_grid(~del) + scale_fill_manual(values = c("grey40", rgb(1, 1, 0, 0.4))) + ylab("Density") + xlab("Scaled Selection Coefficients") + theme(strip.text = element_blank())
 
 ## Figure6
-fig6 <- plot_grid(fig6a, fig6b, nrow=1, labels=c("A", "B"), label_size = 15, scale=0.95)
+fig6 <- plot_grid(fig6a, fig6b, fig6c, fig6d, nrow=1, labels=c("A", "B", "C", "D"), label_size = 15, scale=0.95)
 ggsave(paste0(plot_directory, "dnds_sc_weakstrong_raw.pdf"), fig6, width=10, height=5)
 
 
