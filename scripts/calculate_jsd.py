@@ -72,16 +72,14 @@ def main():
             if file.endswith(suffix):
                 prefix = file.split(suffix)[0]
                 simprefix = "_".join( prefix.split("_")[:-1] )
-                outprefix = prefix.replace("_simulated", "")
-                simprefix = simprefix.replace("_simulated","")
                 
-                outfile = outdir + outprefix + "_jsd.csv"
+                outfile = outdir + prefix + "_jsd.csv"
     
                 inf_fitnesses, mu_dict = extract_parameters(indir, prefix)                     
                 true_codon_frequencies = np.loadtxt(truedir + simprefix + "_true_codon_frequencies.txt")
                 
                 if not os.path.exists(outfile):
-                    print "Computing JSD for", outprefix
+                    print "Computing JSD for", prefix
                     calculate_save_jsd(true_codon_frequencies, inf_fitnesses, mu_dict, outfile)
 
 main()      

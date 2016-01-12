@@ -66,10 +66,9 @@ def compute_dnds_coefficicents(input_directory, output_directory, suffix):
         prefix = None
         if file.endswith(suffix):
             prefix = file.split(suffix)[0]
-            outprefix = prefix.replace("_simulated", "")
             
-            outfile_dnds   = output_directory + outprefix + "_dnds.csv"
-            outfile_coeffs = output_directory + outprefix + "_selcoeffs.csv"
+            outfile_dnds   = output_directory + prefix + "_dnds.csv"
+            outfile_coeffs = output_directory + prefix + "_selcoeffs.csv"
 
             fitness, mu_dict = extract_parameters(input_directory, prefix)                     
             

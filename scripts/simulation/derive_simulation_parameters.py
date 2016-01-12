@@ -64,9 +64,10 @@ output_directory = "true_simulation_parameters/"
 yeast_directory = "ramsey2011_yeast_alignments/" # From github repository: protein_design_and_site_variability/project_files/sequences/duncan_sequences/
 taxa_threshold = 150
 
-mu_dict = {'AC':1.,  'CA':1.,  'AG':1.,  'GA':1.,  'AT':1.,  'TA':1.,  'CG':1.,  'GC':1.,  'CT':1.,  'TC':1.,  'GT':1.,  'TG':1.}
-strong_freq = 1e-9
-weak_fit    = -6
+mu_dict        = {'AC':1.,  'CA':1.,  'AG':1.,  'GA':1.,  'AT':1.,  'TA':1.,  'CG':1.,  'GC':1.,  'CT':1.,  'TC':1.,  'GT':1.,  'TG':1.}
+strong_freq    = 1e-9
+weak_fit       = [-6.0, -4.5] # Lowest fitness, highest fitness   
+weak_threshold = -10 # Any fitness below here gets increased to an interval in weak_fit
 
 yeastfiles = os.listdir(yeast_directory)
 for file in yeastfiles:
@@ -113,7 +114,8 @@ for file in yeastfiles:
                     omegas_strong.append(dnds)
                     
                     #### Weakly deleterious ####
-                    aa_fitness[aa_fitness <= -10] = -6
+                    random_fit = np.random.uniform(low = weak_fit[0], high = weak_fit[1], size = np.sum(aafit <= weak_threshold))
+                    aa_fitness[aa_fitness <= weak_threshold] = random_fit  
                     codon_freqs = codon_freqs_from_fitness_eigenvector(aa_fitness, mu_dict)
                     c = dNdS_from_MutSel(codon_freqs)
                     dnds = c.compute_dnds()
