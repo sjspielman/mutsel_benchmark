@@ -103,44 +103,13 @@ for (dataset in sim.datasets)
 
 
 
-
-
-
-# print("Processing dN/dS for empirical datasets")
-# # dN/dS for empirical datasets #
-# emp.dat <- data.frame("dataset" = character(), 
-#                       "site"    = numeric(), 
-#                       "dnds"    = numeric(),
-#                       "method"  = factor())
-# datadir <- paste0(datadir_parent, "empirical/")
-# for (name in emp.datasets)
-# {    
-#     for (meth in c(methods, "phylobayes")){    
-#         dat <- read.csv(paste0(datadir, "derived_dnds_coeffs/", name, "_", meth, "_dnds.csv"))
-#         temp <- data.frame("dataset" = name, "site" = dat$site, "dnds" = dat$dnds , "method" = meth)
-#         emp.dat <- rbind(emp.dat, temp)
-#     }
+# sim.datasets   <- c("1B4T_A", "1RII_A", "1V9S_B", "1G58_B", "1W7W_B", "2BCG_Y", "2CFE_A", "1R6M_A", "2FLI_A", "1GV3_A", "1IBS_A")
+# r2 <- c()
+# for (d in sim.datasets){
+#     strong <- read.csv(paste0(true_directory, d, "_delstrong_true_dnds.csv"))
+#     weakweak <- read.csv(paste0(true_directory, d, "_delweakweak_true_dnds.csv"))
+#     hi <- cor(strong$dnds, weakweak$dnds)^2
+#     r2 <- c(r2,hi)
 # }
-# write.csv(emp.dat, paste0(outdir, "empirical_derived_dnds.csv"), row.names=FALSE, quote=FALSE)
-# 
-# 
-# 
-# 
-# print("Processing coefficients for empirical datasets")
-# # Selection coefficients for empirical datasets #
-# directory <- paste0(datadir_parent, "empirical/derived_dnds_coeffs/")
-# for (dataset in emp.datasets)
-# {
-#     emp.selcoeffs <- data.frame("dataset" = character(), "method" = character(), "dummy" = numeric(), "binnedcoeff" = numeric(), "realcoeff" = numeric())
-#     for (m in c(methods, "phylobayes")){    
-#     {   
-#         dat <- read.csv(paste0(directory, dataset, "_", m, "_selcoeffs.csv"))
-#         temp <- data.frame("dataset" = dataset, "method" = m, "dummy" = 1:nrow(dat), "binnedcoeff" = dat$binnedcoeff, "realcoeff" = dat$realcoeff)
-#         emp.selcoeffs <- rbind(emp.selcoeffs, temp)
-#     }
-#     write.csv(emp.selcoeffs, paste0(outdir, dataset, "_selection_coefficients.csv"), row.names=FALSE, quote=FALSE)
-#     }
-# }
-# 
 
 
