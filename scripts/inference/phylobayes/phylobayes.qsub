@@ -35,7 +35,6 @@ python run_phylobayes.py 0 $CPU ${DATA}_phylobayes $DATA.phy $TREE
 
 FINALDIR=$REPODIR/results
 mkdir -p $FINALDIR
-cp *dnds.txt $FINALDIR
 cp *.aap $FINALDIR
 cp *.trace $FINALDIR
 
