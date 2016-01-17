@@ -120,7 +120,7 @@ def compute_values(input_directory, output_directory, true_directory, suffix):
             outfile_coeffs = output_directory + prefix + "_selcoeffs.csv"
             outfile_jsd    = output_directory + prefix + "_jsd.csv"
 
-            fitness, mu_dict = extract_parameters(input_directory, prefix)                     
+            fitness, mu_dict = extract_parameters(input_directory, prefix)                         
             
             # dN/dS and coefficients calculated together, in same if block, because coefficient distributions are saved w/ dnds indicated per-site.
             if not os.path.exists(outfile_dnds) and not os.path.exists(outfile_coeffs):
@@ -151,7 +151,7 @@ def main():
     for method in method_suffixes:
         indir = rawdir + method + "/"
         suffix = method_suffixes[method] 
-        compute_dnds_coefficicents(indir, outdir, truedir, suffix)
+        compute_values(indir, outdir, truedir, suffix)
 
 main()
 
