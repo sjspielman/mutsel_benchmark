@@ -147,7 +147,7 @@ def main():
     
     truedir = "simulation/true_simulation_parameters/"
     rawdir  = "../results/raw_results/"
-    outdir  = rawdir + "derived_dnds_coeffs/"
+    outdir  = rawdir + "dnds_coeffs_jsd/"
     
     for method in method_suffixes:
         indir = rawdir + method + "/"
