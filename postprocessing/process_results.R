@@ -1,17 +1,17 @@
 # SJS
-# Script to merge dN/dS predictions from swMutSel and Phylobayes into a single data frame, one for simulated and empirical data.
+# Script to merge JSD, dN/dS, and selection coefficient inferences from swMutSel and Phylobayes into concise single data frame(s).
 
 require(dplyr)
 require(tidyr)
 
-results_dir    <- "../results/"
-truedir        <- "../scripts/simulation/true_simulation_parameters/"
-datadir_parent <- paste0(results_dir, "raw_results/")
-outdir         <- paste0(results_dir, "summarized_results/")
-sim.datasets   <- c("1B4T_A", "1RII_A", "1V9S_B", "1G58_B", "1W7W_B", "2BCG_Y", "2CFE_A", "1R6M_A", "2FLI_A", "1GV3_A", "1IBS_A")
-deltypes       <- c("weak", "strong")
-emp.datasets   <- c("PF00106", "PF00149", "PF00188", "PF00300", "PF00512", "PF00753", "PF01261", "PF01551", "PF01636", "PF03144", "PF00141", "PF00158", "PF00226", "PF00482", "PF00520", "PF01061", "PF01546", "PF01584", "PF02775", "PF04542", "PF00168", "PF00486", "PF00535", "PF01590", "PF03466", "PF00271", "PF00501", "PF00571", "PF00593", "PF00126", "PF01266", "PF01336", "PF01926", "PF02518", "PF04055", "PF07715")
-methods        <- c("nopenal", "d0.01", "d0.1", "d1.0", "mvn1", "mvn10", "mvn100" , "phylobayes")
+resdir       <- "../results/"
+truedir      <- "../scripts/simulation/true_simulation_parameters/"
+datadir      <- paste0(resdir, "raw_results/dnds_coeffs_jsd/")
+outdir       <- paste0(resdir, "summarized_results/")
+
+sim.datasets <- c("1B4T_A", "1RII_A", "1V9S_B", "1G58_B", "1W7W_B", "2BCG_Y", "2CFE_A", "1R6M_A", "2FLI_A", "1GV3_A", "1IBS_A")
+deltypes     <- c("weak", "strong")
+methods      <- c("nopenal", "d0.01", "d0.1", "d1.0", "mvn1", "mvn10", "mvn100" , "phylobayes")
 
 
 print("Processing JSD")
@@ -20,14 +20,13 @@ jsd <- data.frame("dataset" = character(),
                   "site"    = numeric(), 
                   "jsd"     = numeric(),
                   "method"  = factor())
-datadir <- paste0(datadir_parent, "simulation/")
 for (name in sim.datasets)
 {    
     for (deltype in deltypes)
     { 
         for (meth in methods)
         {  
-            dat <- read.csv(paste0(datadir, "derived_dnds_coeffs/", name, "_del", deltype, "_",  meth, "_jsd.csv"))
+            dat <- read.csv(paste0(datadir, name, "_del", deltype, "_",  meth, "_jsd.csv"))
             l <- nrow(dat)
             temp <- data.frame("dataset" = name, "del" = deltype, "site" = dat$site, "jsd" = dat$jsd, "method" = meth)
             jsd <- rbind(jsd, temp)
@@ -47,7 +46,6 @@ sim.dat <- data.frame("dataset" = character(),
                       "site"    = numeric(), 
                       "dnds"    = numeric(),
                       "method"  = factor())
-datadir <- paste0(datadir_parent, "simulation/")
 for (name in sim.datasets)
 {    
     for (deltype in deltypes)
@@ -63,7 +61,7 @@ for (name in sim.datasets)
             }
             else
             {
-                dat <- read.csv(paste0(datadir, "derived_dnds_coeffs/", name, "_del", deltype, "_",  meth, "_dnds.csv"))
+                dat <- read.csv(paste0(datadir, name, "_del", deltype, "_",  meth, "_dnds.csv"))
             }
             temp <- data.frame("dataset" = name, "del" = deltype, "site" = dat$site, "dnds" = dat$dnds , "method" = meth)
             sim.dat <- rbind(sim.dat, temp)
@@ -80,16 +78,15 @@ for (dataset in sim.datasets)
     for (del in deltypes){
         sim.selcoeffs <- data.frame("dataset" = character(), "method" = character(), "dummy" = numeric(), "del" = character(), "binnedcoeff" = numeric(), "realcoeff" = numeric())
         full_dataset <- paste0(dataset, "_del", del)
-        print(full_dataset)
         for (m in c("true", methods))
         {
             if (m == "true")
             {
-                directory <- "../simulation/true_simulation_parameters/"
+                directory <- truedir
             }
             else
             {
-                directory <- paste0(datadir_parent, "simulation/derived_dnds_coeffs/")
+                directory <- datadir
             }
             
             dat <- read.csv(paste0(directory, full_dataset, "_", m, "_selcoeffs.csv"))
