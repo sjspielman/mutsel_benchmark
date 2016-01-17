@@ -131,7 +131,8 @@ def compute_values(input_directory, output_directory, true_directory, suffix):
             
             if not os.path.exists(outfile_jsd):
                 print "Computing JSD for", prefix
-                true_codon_frequencies = np.loadtxt(truedir + prefix + "_true_codon_frequencies.txt")
+                simprefix = "_".join(prefix.split("_")[0:3])
+                true_codon_frequencies = np.loadtxt(true_directory + simprefix + "_true_codon_frequencies.txt")
                 calculate_save_jsd(true_codon_frequencies, fitness, mu_dict, outfile_jsd)
 
                 
