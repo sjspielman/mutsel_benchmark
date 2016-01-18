@@ -9,12 +9,12 @@ source ~/.bashrc
 
 # define files, variables used in analysis
 CPU=16
-ALN=$1
+DATA=$1
 TREE=$2
-METHOD=$3
-
-SWEXEC=$HOME/bin/swmutsel-alpha_jdk1.6.jar
 REPODIR=$HOME/mutsel_benchmark
+
+PBEXEC=$HOME/bin/pb_mpi1.5a/data/pb_mpi
+READPBEXEC=$HOME/bin/pb_mpi1.5a/data/readpb_mpi
 
 # create and enter working directory
 WDIR=/state/partition1/sjs3495/$JOB_NAME-$JOB_ID
@@ -22,21 +22,23 @@ mkdir -p $WDIR
 cd $WDIR
 
 # copy files, executables here
-cp $REPODIR/data/$ALN.phy .
+cp $REPODIR/data/$DATA.phy .
 cp $REPODIR/data/$TREE .
-cp $REPODIR/scripts/inference/swmutsel/* .
-cp $SWEXEC swmutsel.jar
-ls
+cp $REPODIR/inference/run_phylobayes.py .
+cp $PBEXEC .
+cp $READPBEXEC .
 
 # run analysis
-module load java
 module load python
-export PYTHONPATH=$HOME/bin/lib/python2.7/site-packages # to get biopython behaving w/ phylip-relaxed
-python run_swmutsel.py $ALN $TREE $METHOD $CPU
+export PYTHONPATH=$HOME/bin/lib/python2.7/site-packages # to get biopython behaving w/ phylip-relaxed and to get dendropy
+python run_phylobayes.py $CPU ${DATA}_phylobayes $DATA.phy $TREE
 
 FINALDIR=$REPODIR/results
 mkdir -p $FINALDIR
-cp *MLE.txt $FINALDIR
-cp *fitness.txt $FINALDIR
+cp *.aap $FINALDIR
+cp *.trace $FINALDIR
 
 rm -r $WDIR
+
+
+

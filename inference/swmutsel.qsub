@@ -1,0 +1,42 @@
+#$ -N JOB
+#$ -e e_$JOB_NAME
+#$ -o o_$JOB_NAME
+#$ -S /bin/bash
+#$ -q wilke
+#$ -m beas
+#$ -pe serial 16
+source ~/.bashrc
+
+# define files, variables used in analysis
+CPU=16
+ALN=$1
+TREE=$2
+METHOD=$3
+
+SWEXEC=$HOME/bin/swmutsel-alpha_jdk1.6.jar
+REPODIR=$HOME/mutsel_benchmark
+
+# create and enter working directory
+WDIR=/state/partition1/sjs3495/$JOB_NAME-$JOB_ID
+mkdir -p $WDIR
+cd $WDIR
+
+# copy files, executables here
+cp $REPODIR/data/$ALN.phy .
+cp $REPODIR/data/$TREE .
+cp $REPODIR/inference/run_swmutsel.py .
+cp $SWEXEC swmutsel.jar
+ls
+
+# run analysis
+module load java
+module load python
+export PYTHONPATH=$HOME/bin/lib/python2.7/site-packages # to get biopython behaving w/ phylip-relaxed
+python run_swmutsel.py $ALN $TREE $METHOD $CPU
+
+FINALDIR=$REPODIR/results
+mkdir -p $FINALDIR
+cp *MLE.txt $FINALDIR
+cp *fitness.txt $FINALDIR
+
+rm -r $WDIR

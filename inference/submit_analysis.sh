@@ -7,9 +7,9 @@ function submit_swmutsel {
     TREE=$2
     
     for M in mvn1 mvn10 mvn100 d1.0 d0.1 d0.01 nopenal; do
-        sed -i "s/-N JOB/-N sw_${DATA}_${M}/" swmutsel/swmutsel.qsub
-        qsub swmutsel/swmutsel.qsub $TOPDIR $DATA $TREE $M
-        sed -i "s/-N sw_${DATA}_${M}/-N JOB/" swmutsel/swmutsel.qsub
+        sed -i "s/-N JOB/-N sw_${DATA}_${M}/" swmutsel.qsub
+        qsub swmutsel.qsub $TOPDIR $DATA $TREE $M
+        sed -i "s/-N sw_${DATA}_${M}/-N JOB/" swmutsel.qsub
     done
 }
 
@@ -17,9 +17,9 @@ function submit_pbmutsel {
     DATA=$1
     TREE=$2
 
-    sed -i "s/-N JOB/-N pb_${DATA}/" phylobayes/phylobayes.qsub
-    qsub phylobayes/phylobayes.qsub $DATA $TREE
-    sed -i "s/-N pb_${DATA}/-N JOB/" phylobayes/phylobayes.qsub
+    sed -i "s/-N JOB/-N pb_${DATA}/" phylobayes.qsub
+    qsub phylobayes.qsub $DATA $TREE
+    sed -i "s/-N pb_${DATA}/-N JOB/" phylobayes.qsub
 }
 
  

@@ -6,11 +6,13 @@
 
 import os
 import sys
-sys.path.append("../")
 import numpy as np
 from Bio import AlignIO
-from universal_functions import *
 from pyvolve import Genetics, state_freqs
+
+sys.path.append("../")
+from universal_functions import *
+
 ZERO=1e-8
 g = Genetics()
 

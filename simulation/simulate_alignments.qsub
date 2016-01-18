@@ -11,7 +11,7 @@ DATA=$1
 TREEFILE=n512_bl0.5.tre
 
 REPODIR=$HOME/mutsel_benchmark
-SCRIPTDIR=$REPODIR/scripts/simulation
+SCRIPTDIR=$REPODIR/simulation
 OUTDIR=$REPODIR/data
 
 # create and enter working directory

@@ -3,6 +3,8 @@
 
 import sys
 import numpy as np
+
+sys.path.append("../")
 from universal_functions import *
 
 
@@ -145,7 +147,7 @@ def main():
     
     method_suffixes = {"swmutsel":"_MLE.txt", "phylobayes":".aap"}
     
-    truedir = "simulation/true_simulation_parameters/"
+    truedir = "../simulation/true_simulation_parameters/"
     rawdir  = "../results/raw_results/"
     outdir  = rawdir + "dnds_coeffs_jsd/"
     

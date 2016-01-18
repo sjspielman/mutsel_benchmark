@@ -9,39 +9,33 @@
 
 import sys
 import subprocess
-from dendropy import Tree
+from dendropy import Tree ## VERSION 4!!!!
  
 
 def main():
     
-    restart = bool(int(sys.argv[1]))
-    cpu = sys.argv[2]
-    job_name = sys.argv[3]
+    cpu = sys.argv[1]
+    job_name = sys.argv[2]
     
     try:
-        alnfile = sys.argv[4]
+        alnfile = sys.argv[3]
     except:
         assert(restart is True), "Specified alignment file does not exist. Path?"
     try:
-        treefile = sys.argv[5]
+        treefile = sys.argv[4]
     except:
         assert(restart is True), "Specified tree file does not exist. Path?"
     
-    # Run phylobayes, either from scratch or restarting a previous chain
-    # Phylobayes is run to chain length 5500, sampling every 5 to yield 1100. Later, burnin of 100 is removed to get a final posterior n=1000
-    if not restart:
-        # Rewrite tree to create trifurcating root, as needed by phylobayes mpi
-        tree = Tree.get_from_path(treefile, "newick", rooting = "force-unrooted")
-        tree.resolve_polytomies() # in case of polytomies.
-        tree.update_bipartitions() # this will create a trifurcating root on an unrooted tree
-        tstring = str(tree).replace('[&U] ', '')
-        with open('temp.tre', 'w') as tf:
-            tf.write(tstring + ';\n')
-            
-        pb_call = "mpirun -np " + str(cpu) + " ./pb_mpi -mutsel -cat -d " + alnfile + " -T temp.tre -x 5 1100 " + job_name
-    
-    else:
-        pb_call = "mpirun -np " + str(cpu) + " ./pb_mpi " + job_name    
+    # Rewrite tree to create trifurcating root, as needed by phylobayes mpi
+    tree = Tree.get_from_path(treefile, "newick", rooting = "force-unrooted")
+    tree.resolve_polytomies() # in case of polytomies.
+    tree.update_bipartitions() # this will create a trifurcating root on an unrooted tree
+    tstring = str(tree).replace('[&U] ', '')
+    with open('temp.tre', 'w') as tf:
+        tf.write(tstring + ';\n')
+        
+    # Phylobayes is run to chain length 5500, sampling every 5 to yield 1100. Later, burnin of 100 is removed to get a final posterior n=1000 (same procedure as Rodrigue 2013 Genetics)
+    pb_call = "mpirun -np " + str(cpu) + " ./pb_mpi -mutsel -cat -d " + alnfile + " -T temp.tre -x 5 1100 " + job_name
     
     run_pb_call = subprocess.call(pb_call, shell = True)
     assert( run_pb_call == 0 ), "pb_mpi didn't run!"
