@@ -9,32 +9,34 @@ repr_sim <- "1IBS_A" # Selected because this dataset has the most codon columns 
 
 result_directory <- "../results/summarized_results/"
 true_directory   <- "../scripts/simulation/true_simulation_parameters/"
-plot_directory   <- "plots/"
+maintext_plot_directory   <- "plots/maintext/"
+si_plot_directory   <- "plots/SI/"
 
 jsd.results <- read.csv(paste0(result_directory, "simulation_jsd.csv"))
 sim.dnds <- read.csv(paste0(result_directory, "simulation_derived_dnds.csv"))
 sim.dnds %>% spread(method,dnds) %>% gather(method, dnds, d0.01, d0.1, d1.0, mvn1, mvn10, mvn100, nopenal, phylobayes) %>% select(dataset, del, site, true, dnds, method)-> spread.dnds
 methods_levels <- c("nopenal", "mvn100", "mvn10", "mvn1", "d0.01", "d0.1", "d1.0", "phylobayes")
 methods_labels <- c("Unpenalized", "mvn100", "mvn10", "mvn1", "d0.01", "d0.1", "d1.0", "pbMutSel")
+sim.datasets <- unique(sim.dnds$dataset)
 
-#emp.dnds <- read.csv(paste0(result_directory, "empirical_derived_dnds.csv"))
 
-theme_set(theme_cowplot() + theme(panel.border = element_rect(size = 0.5), panel.margin = unit(0.75, "lines"), strip.background = element_rect(fill="white"), strip.text = element_text(size=12)))
-
+##########################################################################################
+################################ Main text plots #########################################
+##########################################################################################
 
 
 
 ##### selection coefficients across methods ####
 theme_set(theme_cowplot() + theme(axis.text.y = element_text(size=12), axis.text.x = element_text(size=10), axis.title = element_text(size=13), panel.border = element_rect(size = 0.5), strip.text = element_text(size = 11), panel.margin = unit(0.75, "lines"), strip.background = element_rect(fill="white"), legend.position="none"))
-
+strong.sc.full <- read_csv(paste0(result_directory, repr_sim, "_delstrong_selection_coefficients.csv"))
 true.sc <- read_csv(paste0(true_directory, repr_sim, "_delstrong_true_selcoeffs.csv"))
 strong.sc.full %>% filter(method != "true") -> strong.sc.full
 strong.sc.full$true.binned <- true.sc$binnedcoeff
 strong.sc.full$true.real <- true.sc$realcoeff
 strong.sc.full$method <- factor(strong.sc.full$method, levels = methods_levels, labels = methods_labels)
 
-figsc <- ggplot(strong.sc.full, aes(x = binnedcoeffF)) + geom_density(aes(x = true.binned), fill = "grey40") + geom_density(fill = "yellow", alpha = 0.4) + facet_grid(~method) + xlab("Scaled Selection Coefficients") + ylab("Density")
-ggsave(paste0(plot_directory, "sc_across_methods_raw.pdf"), figsc, width=12, height=2.5)
+figsc <- ggplot(strong.sc.full, aes(x = binnedcoeff)) + geom_density(aes(x = true.binned), fill = "grey40") + geom_density(fill = "yellow", alpha = 0.4) + facet_grid(~method) + xlab("Scaled Selection Coefficients") + ylab("Density")
+save_plot(paste0(maintext_plot_directory, "sc_across_methods_raw.pdf"), figsc, base_width=12, base_height=2.5)
 
 
 
@@ -54,11 +56,11 @@ mean.jsd.strong.boxplots <- ggplot(jsd.strong.summary, aes(x = method, y = meanj
 ## Full Figure 2
 fig2 <- plot_grid(repr.jsd.boxplots, mean.jsd.strong.boxplots, nrow=2, labels=c("A", "B"), label_size = 17, scale=0.925)
 
-ggsave(paste0(plot_directory, "jsd_maintext.pdf"), fig2, width = 7, height = 6) 
+save_plot(paste0(maintext_plot_directory, "jsd_maintext.pdf"), fig2, base_width = 7, base_height = 6) 
 
 #### SI weak jsd boxplots
 mean.jsd.weak.boxplots <- ggplot(jsd.weak.summary, aes(x = method, y = meanjsd)) + geom_boxplot() + xlab("Inference Method") + ylab("Average JSD") + scale_y_continuous(limits = c(0, 0.25), breaks = c(0, 0.05, 0.1, 0.15, 0.2, 0.25))
-ggsave(paste0(plot_directory, "jsd_weak_SI.pdf"), mean.jsd.weak.boxplots, width = 6.5, height = 4) 
+save_plot(paste0(maintext_plot_directory, "jsd_weak_SI.pdf"), mean.jsd.weak.boxplots, base_width = 6.5, base_height = 4) 
 
 
 
@@ -75,7 +77,7 @@ sim.dnds.r.b$method <- factor(sim.dnds.r.b$method, levels = methods_levels, labe
 ## Figure 3
 theme_set(theme_cowplot() + theme(axis.text.x = element_text(size = 9), axis.text.y = element_text(size = 10), axis.title = element_text(size = 12), panel.border = element_rect(size = 0.5), panel.margin = unit(0.75, "lines"), strip.background = element_rect(fill="white"), strip.text = element_text(size=12)))
 fig3 <- ggplot(dnds.repr.strong, aes(x = true, y = dnds)) + geom_point(size=1) + geom_abline(slope = 1, intercept = 0, color="red") + xlab("True dN/dS") + ylab("Predicted dN/dS") + scale_y_continuous(limits=c(0,0.85)) + scale_x_continuous(limits=c(0,0.85)) + facet_grid(~method) 
-ggsave(paste0(plot_directory, "repr_dnds_scatter.pdf"), fig3, width=10, height=2)
+save_plot(paste0(maintext_plot_directory, "repr_dnds_scatter.pdf"), fig3, base_width=10, base_height=2)
 
 
 ## Figure 4A
@@ -85,21 +87,10 @@ sim.dnds.r.b %>% ggplot(aes(x = method, y = r2)) + geom_boxplot() + xlab("Infere
 sim.dnds.r.b %>%  ggplot(aes(x = method, y = b)) + geom_boxplot() + xlab("Inference Method") + ylab("Estimator Bias") + geom_hline(yintercept=0 ) -> boxplot.sim.b
 ## Full Figure 4
 fig4 <- plot_grid(boxplot.sim.r2, boxplot.sim.b, nrow=2, labels=c("A", "B"), label_size=17, scale=0.925)
-ggsave(paste0(plot_directory, "r2_bias.pdf"), fig4, width=7, height=6)
-
-# #code if we want to combine figs2,3
-# ggdraw() +
-#   draw_plot(scatter.dnds.repr.strong, 0, 0.53, 1, 0.48) +
-#   draw_plot(boxplot.sim.r2, 0, 0, 0.48, 0.48) +
-#   draw_plot(boxplot.sim.b, 0.52, 0, 0.48, 0.48) +
-#   draw_plot_label(c("A", "B", "C"), c(0, 0, 0.52), c(1, 0.5, 0.5), size = 17) ->p
-# 
+save_plot(paste0(maintext_plot_directory, "r2_bias.pdf"), fig4, base_width=7, base_height=6)
 
 
-
-
-## Figure 5
-
+#### dnds, jsd scatter and slope 
 # function to return pvalue from an lm object
 lmp <- function (modelobject) {
     if (class(modelobject) != "lm") stop("Not an object of class 'lm' ")
@@ -109,27 +100,22 @@ lmp <- function (modelobject) {
     return(p)
 }
 
-
-## Figure 5A
 true.jsd <- sim.dnds %>% filter(method=="true") %>% mutate(truednds = dnds) %>% select(-method,-dnds) %>% left_join(jsd.results)
 strong <- true.jsd %>% filter(del == "strong", dataset == repr_sim)
 strong$method <- factor(strong$method, levels = methods_levels, labels = methods_labels)
 fig5a <- ggplot(strong, aes(x = truednds, y = jsd)) + geom_point(size=1) + facet_grid(~method) + geom_smooth(method="lm", color="red") + scale_y_continuous(limits=c(0, 0.42)) + xlab("True dN/dS") + ylab("Site JSD") + theme(axis.text.x = element_text(size = 8), axis.text.y = element_text(size = 10), axis.title = element_text(size = 13), panel.border = element_rect(size = 0.5), panel.margin = unit(0.75, "lines"), strip.background = element_rect(fill="white"), strip.text = element_text(size=10))
 
-
-## Figure 5B
 alpha <- 0.01/length(methods_levels) #  Bonferroni correction.
 true.jsd %>% filter(del == "strong") %>% group_by(dataset,method) %>% do(fit=lm(jsd~truednds, data=.)) %>% mutate(slope = round(fit[[1]][[2]],3), pvalue = lmp(fit), sig = pvalue < alpha) %>% select(-fit) -> jsd.true.slope.p
 jsd.true.slope.p$method <- factor(jsd.true.slope.p$method, levels = methods_levels, labels = methods_labels)
 fig5b <- ggplot(jsd.true.slope.p, aes(x = method, y = slope, shape=sig)) + geom_point(position = position_jitter(w = 0.28)) + scale_shape_manual(values=c(1,19)) + geom_hline(yintercept=0) + theme(legend.position="none") + xlab("Inference Method") + ylab("Slope")+ theme(axis.text.x = element_text(size = 11), axis.text.y = element_text(size = 10), axis.title = element_text(size = 13))
 
-## Full figure 5
 fig5 <- plot_grid(fig5a, fig5b, nrow=2, labels=c("A", "B"), label_size=17)
-ggsave(paste0(plot_directory, "jsd_dnds.pdf"), fig5, width=9, height=4)
+save_plot(paste0(maintext_plot_directory, "jsd_dnds.pdf"), fig5, base_width=9, base_height=4)
 
 
 
-## Figure 5: weak and strong dnds, selection coefficients
+## weak and strong dnds, selection coefficients
 theme_set(theme_cowplot() + theme(axis.text = element_text(size=11), axis.title = element_text(size=12), panel.border = element_rect(size = 0.5), strip.text = element_text(size = 10), panel.margin = unit(0.75, "lines"), strip.background = element_rect(fill="white"), legend.position="none"))
 
 strong.sc.full <- read_csv(paste0(result_directory, repr_sim, "_delstrong_selection_coefficients.csv"))
@@ -138,165 +124,121 @@ strong.sc <- filter(strong.sc.full, method %in% c("true", "nopenal", "phylobayes
 weak.sc <- filter(weak.sc.full, method %in% c("true", "nopenal", "phylobayes"))
 sc <- rbind(strong.sc, weak.sc)
 sc$method <- factor(sc$method, levels=c("true", "nopenal", "phylobayes"))
-spread.dnds$del <- factor(spread.dnds$del, levels=c("strong", "weak"), labels = c("Highly deleterious", "Weakly deleterious"))
+spread.dnds.named <- spread.dnds
+spread.dnds.named$del <- factor(spread.dnds.named$del, levels=c("strong", "weak"), labels = c("Strongly deleterious", "Weakly deleterious"))
 
-
-fig6a <- spread.dnds %>% filter(dataset == repr_sim, method == "nopenal") %>% ggplot(aes(x = true, y = dnds)) + geom_point() + geom_abline(slope = 1, intercept = 0, color="red") + facet_grid(~del) + xlab("True dN/dS") + ylab("swMutSel dN/dS") + scale_x_continuous(limits = c(0,0.8)) + scale_y_continuous(limits=c(0, 0.8))
+fig6a <- spread.dnds.named %>% filter(dataset == repr_sim, method == "nopenal") %>% ggplot(aes(x = true, y = dnds)) + geom_point() + geom_abline(slope = 1, intercept = 0, color="red") + facet_grid(~del) + xlab("True dN/dS") + ylab("swMutSel dN/dS") + scale_x_continuous(limits = c(0,0.8)) + scale_y_continuous(limits=c(0, 0.8))
 fig6b <- sc %>% filter(method %in% c("true","nopenal")) %>% ggplot(aes(x = binnedcoeff, fill = method)) + geom_density() + facet_grid(~del) + scale_fill_manual(values =c("grey40", rgb(1, 1, 0, 0.4))) + ylab("Density") + xlab("Scaled Selection Coefficients") + theme(strip.text = element_blank())
-fig6c <- spread.dnds %>% filter(dataset == repr_sim, method == "phylobayes") %>% ggplot(aes(x = true, y = dnds)) + geom_point() + geom_abline(slope = 1, intercept = 0, color="red") + facet_grid(~del) + xlab("True dN/dS") + ylab("pbMutSel dN/dS") + scale_x_continuous(limits = c(0,0.8)) + scale_y_continuous(limits=c(0, 0.8))
+fig6c <- spread.dnds.named %>% filter(dataset == repr_sim, method == "phylobayes") %>% ggplot(aes(x = true, y = dnds)) + geom_point() + geom_abline(slope = 1, intercept = 0, color="red") + facet_grid(~del) + xlab("True dN/dS") + ylab("pbMutSel dN/dS") + scale_x_continuous(limits = c(0,0.8)) + scale_y_continuous(limits=c(0, 0.8))
 fig6d <- sc %>% filter(method %in% c("true","phylobayes")) %>% ggplot(aes(x = binnedcoeff, fill = method)) + geom_density() + facet_grid(~del) + scale_fill_manual(values = c("grey40", rgb(1, 1, 0, 0.4))) + ylab("Density") + xlab("Scaled Selection Coefficients") + theme(strip.text = element_blank())
 
-## Figure6
-fig6 <- plot_grid(fig6a, fig6b, fig6c, fig6d, nrow=1, labels=c("A", "B", "C", "D"), label_size = 15, scale=0.95)
-ggsave(paste0(plot_directory, "dnds_sc_weakstrong_raw.pdf"), fig6, width=10, height=5)
+fig6 <- plot_grid(fig6a, fig6c, fig6b, fig6d, nrow=2, labels=c("A", "B", "C", "D"), label_size = 15, scale=0.95)
+save_plot(paste0(maintext_plot_directory, "dnds_sc_weakstrong_raw.pdf"), fig6, base_width=10, base_height=5)
 
 
 
 
 
 
+##########################################################################################
+################################### SI plots #############################################
+##########################################################################################
+
+# dN/dS scatterplots for other datasets
+theme_set(theme_cowplot() + theme(plot.title = element_text(vjust = -8, hjust=1.08), plot.margin = unit(c(0.1,2.2,0.1,0.1),"cm"), axis.text = element_text(size = 11), axis.title.x = element_text(size = 13), axis.title.y = element_text(size = 11), panel.border = element_rect(size = 0.5), panel.margin = unit(0.75, "lines"), strip.background = element_rect(fill="white"), strip.text = element_text(size=13)))
+scatters_strong <- list()
+scatters_weak <- list()
+i <- 1
+for (d in sim.datasets){
+    if (d == repr_sim) next
+    subdat <- spread.dnds %>% filter(dataset == d)
+    subdat$method <- factor(subdat$method, levels = methods_levels, labels = methods_labels)
+
+    pstrong <- subdat %>% filter(del == "strong") %>% ggplot(aes(x = true, y = dnds)) + geom_point(size=1.5) + geom_abline(slope = 1, intercept = 0, color="red") + xlab("True dN/dS") + ylab("Predicted dN/dS") + scale_y_continuous(limits=c(0,0.85)) + scale_x_continuous(limits=c(0,0.85)) + facet_grid(~method) + ggtitle(d)
+    pweak   <- subdat %>% filter(del == "weak") %>% ggplot(aes(x = true, y = dnds)) + geom_point(size=1.5) + geom_abline(slope = 1, intercept = 0, color="red") + xlab("True dN/dS") + ylab("Predicted dN/dS") + scale_y_continuous(limits=c(0,0.85)) + scale_x_continuous(limits=c(0,0.85)) + facet_grid(~method) + ggtitle(d)
+
+    scatters_strong[[i]] <- pstrong
+    scatters_weak[[i]] <- pweak
+    i <- i+1
+}
+grid_strong <- plot_grid(plotlist = scatters_strong, nrow=10, labels = c("A", "B", "C", "D", "E", "F", "G", "H", "I", "J"), scale=0.98)
+save_plot(paste0(plot_directory, "strong_dnds_scatter_SI.pdf"), grid_strong, base_width = 14, base_height=20)
+grid_weak <- plot_grid(plotlist = scatters_weak, nrow=10, labels = c("A", "B", "C", "D", "E", "F", "G", "H", "I", "J"), scale=0.98)
+save_plot(paste0(si_plot_directory, "weak_dnds_scatter_SI.pdf"), grid_weak, base_width = 14, base_height=20)
+
+
+# selection coefficient distributions for all datasets across all methods
+theme_set(theme_cowplot() + theme(plot.title = element_text(vjust = -10, hjust=1.085, size=8), plot.margin = unit(c(0.1,2.6,0.1,0.1),"cm"), axis.text = element_text(size=11), axis.title = element_text(size=12), panel.border = element_rect(size = 0.5), strip.text = element_text(size = 11), panel.margin = unit(0.75, "lines"), strip.background = element_rect(fill="white"), legend.position="none"))
+sc_strong <- list()
+sc_weak <- list()
+i <- 1
+for (d in sim.datasets){
+    print(d)
+    strong.sc <- read_csv(paste0(result_directory, d, "_delstrong_selection_coefficients.csv"))
+    strong.sc <- strong.sc %>% filter(method != "true")
+    strong.sc$method <- factor(strong.sc$method, levels = methods_levels, labels = methods_labels)
+    strong.sc.true <- read_csv(paste0(true_directory, d, "_delstrong_true_selcoeffs.csv"))
+
+    weak.sc <- read_csv(paste0(result_directory, d, "_delweak_selection_coefficients.csv"))
+    weak.sc <- weak.sc %>% filter(method != "true")
+    weak.sc$method <- factor(weak.sc$method, levels = methods_levels, labels = methods_labels)
+    weak.sc.true <- read_csv(paste0(true_directory, d, "_delweak_true_selcoeffs.csv"))
+    
+    pstrong <- ggplot(NULL) + geom_density(data = strong.sc.true, aes(x = binnedcoeff), fill = "grey40") + geom_density(data = strong.sc, aes(x = binnedcoeff), fill = "yellow", alpha = 0.4) + facet_grid(~method) + xlab("Scaled Selection Coefficients") + ylab("Density") + ggtitle(d)
+    pweak <- ggplot(NULL) + geom_density(data = weak.sc.true, aes(x = binnedcoeff), fill = "grey40") + geom_density(data = weak.sc, aes(x = binnedcoeff), fill = "yellow", alpha = 0.4) + facet_grid(~method) + xlab("Scaled Selection Coefficients") + ylab("Density") + ggtitle(d) 
+
+    sc_strong[[i]] <- pstrong
+    sc_weak[[i]] <- pweak
+    i <- i+1
+}
+grid_strong <- plot_grid(plotlist = sc_strong, nrow=11, labels = c("A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K"))
+save_plot(paste0(si_plot_directory, "selcoeffs_strong_SI.pdf"), grid_strong, base_width = 12, base_height=18)
+grid_weak <- plot_grid(plotlist = sc_weak, nrow=11, labels = c("A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K"))
+save_plot(paste0(si_plot_directory, "selcoeffs_weak_SI.pdf"), grid_weak, base_width = 12, base_height=18)
 
 
 
 
+# r2, bias boxplots for weakly deleterious datasets
+theme_set(theme_cowplot() + theme(axis.text.x = element_text(size = 10), axis.text.y = element_text(size = 12), axis.title = element_text(size = 14)))
+
+spread.dnds %>% filter(del == "weak") %>% group_by(dataset, method) %>% do(rraw = cor(.$true, .$dnds), braw = glm(dnds ~ offset(true), dat=.)) %>% mutate(r = rraw[1], r2 = r^2, b = summary(braw)$coeff[1]) %>% select(-rraw, -braw) %>% ungroup() -> sim.dnds.r.b
+sim.dnds.r.b$method <- factor(sim.dnds.r.b$method, levels = methods_levels, labels = methods_labels)
+sim.dnds.r.b %>% ggplot(aes(x = method, y = r2)) + geom_boxplot() + xlab("Inference Method") + ylab("Variance Explained") -> boxplot.sim.r2
+sim.dnds.r.b %>%  ggplot(aes(x = method, y = b)) + geom_boxplot() + xlab("Inference Method") + ylab("Estimator Bias") + geom_hline(yintercept=0 ) -> boxplot.sim.b
+r2.b.weak <- plot_grid(boxplot.sim.r2, boxplot.sim.b, nrow=2, labels=c("A", "B"), label_size=17, scale=0.925)
+save_plot(paste0(si_plot_directory, "weak_r2_bias_SI.pdf"), r2.b.weak, base_width=7, base_height=6)
 
 
 
 
-############################################################################################
-############################################################################################
-############################################################################################
-############################################################################################
-################################# NOOOOOOOOOOOO!!!!!!!!!!!!!! ##############################
-############################################################################################
-############################################################################################
-############################################################################################
-############################################################################################
-############################################################################################
+# JSD boxplots for weakly deleterious datasets
+theme_set(theme_cowplot() + theme(axis.text = element_text(size=11), axis.title = element_text(size=12), panel.border = element_rect(size = 0.5)))
+
+jsd.results %>% filter(del == "weak") %>% group_by(dataset, method) %>% summarize(meanjsd = mean(jsd)) -> jsd.weak.summary
+jsd.weak.summary$method <- factor(jsd.weak.summary$method, levels = methods_levels, labels = methods_labels)
+mean.jsd.weak.boxplots <- ggplot(jsd.weak.summary, aes(x = method, y = meanjsd)) + geom_boxplot() + xlab("Inference Method") + ylab("Average JSD") + scale_y_continuous(limits = c(0, 0.3), breaks = c(0, 0.05, 0.1, 0.15, 0.2, 0.25))
+save_plot(paste0(si_plot_directory, "jsd_weak_SI.pdf"), mean.jsd.weak.boxplots, base_width = 7, base_height = 4) 
 
 
 
-# 
-# ## Figure 6
-# # Something to do with empirical datasets.
-# # We can plot pbmutsel against nopenalty for a simulated and for an empirical. Then show violin plots for r2 and bias between pbmutsel and nopenalty, for both simulation and empirical
-# sim.dnds %>% filter(del == "strong") %>% select(-del) %>% spread(method,dnds) %>% select(dataset,site,nopenal,phylobayes) %>% mutate(type = "Simulation")  -> sim
-# emp.dnds %>% unique() %>% filter(method %in% c("nopenal", "phylobayes")) %>% spread(method,dnds) %>% select(dataset, site, nopenal, phylobayes) %>% mutate(type = "Empirical") %>% rbind(sim)-> sim.emp.dnds
-# sim.emp.dnds %>% group_by(dataset, type) %>% do(rraw = cor(.$nopenal, .$phylobayes), braw = glm(nopenal ~ offset(phylobayes), dat=.)) %>% mutate(r = rraw[1], r2 = r^2, b = summary(braw)$coeff[1]) %>% select(-rraw, -braw) -> hmm
-# ggplot(hmm, aes(x = type, y = r)) + geom_boxplot() + xlab("Dataset") + ylab("Pearson Correlation")  -> r #NS
-# ggplot(hmm, aes(x = type, y = b)) + geom_boxplot()  + xlab("Dataset") + ylab("swMutSel > pbMutsel") -> b     # P=2.167e-05,   mean of x : -0.08040115 mean of y : -0.10315696
-#  
-# rb <- plot_grid(r, b, nrow=1)
-# ggsave(paste0(plot_directory, "figure6.pdf"), rb, width=7, height=4)
-# 
-# 
-# 
+# Show the behavior of fitness values for a representative dataset
+theme_set(theme_cowplot() + theme(axis.text = element_text(size=11), axis.title = element_text(size=12), panel.border = element_rect(size = 0.5), strip.text = element_text(size = 10), panel.margin = unit(0.75, "lines"), strip.background = element_rect(fill="white"), legend.position="none"))
+
+dat <- read.csv(paste0(repr_sim, "_delweak_rescaled_fitness_across_methods.txt"))
+dat$truefit <- rep(dat$fitness[dat$method == "true"], 9)
+dat %>% filter(method!="true") -> dat
+dat$method <- factor(dat$method, levels = methods_levels, labels = methods_labels)
+weak.fit.scatter <- ggplot(dat, aes(x = truefit, y = fitness))+geom_point(alpha=0.3) +facet_grid(~method)+geom_abline(slope=1, intercept=0, color="red", size=1) + xlab("True fitness") + ylab("Inferred fitness")
+save_plot(paste0(si_plot_directory, "weak_fitness_scatter_SI.pdf"), weak.fit.scatter, base_width = 8, base_height=3)
+
+
+dat <- read.csv(paste0(repr_sim, "_delstrong_rescaled_fitness_across_methods.txt"))
+dat$truefit <- rep(dat$fitness[dat$method == "true"], 9)
+dat %>% filter(method!="true") -> dat
+dat$method <- factor(dat$method, levels = methods_levels, labels = methods_labels)
+strong.fit.scatter <- ggplot(dat, aes(x = truefit, y = fitness))+geom_point(alpha=0.3) +facet_grid(~method)+geom_abline(slope=1, intercept=0, color="red", size=1) + xlab("True fitness") + ylab("Inferred fitness")
+save_plot(paste0(si_plot_directory, "strong_fitness_scatter_SI.pdf"), strong.fit.scatter, base_width = 8, base_height=3)
 
 
 
-
-# 
-# 
-# sc.strong.raw <- read_csv(paste0("../../results/summarized_results/1B4T_A_delstrong_selection_coefficients.csv"))
-# sc.strong.raw %>% filter(dataset == "1B4T_A", del == "strong") %>% select(-realcoeff) %>% spread(method, binnedcoeff) %>% gather(method, binnedcoeff, d0.01, d0.1, d1.0, mvn1, mvn10, mvn100, nopenal, phylobayes) %>% select(dataset, del, dummy, true, method, binnedcoeff) -> sc.strong.binned
-# sc.strong.raw %>% filter(dataset == "1B4T_A", del == "strong") %>% select(-binnedcoeff) %>% spread(method, realcoeff) %>% gather(method, realcoeff, d0.01, d0.1, d1.0, mvn1, mvn10, mvn100, nopenal, phylobayes) %>% select(dataset, del, dummy, true, method, realcoeff) -> sc.strong.real
-# 
-# sc.weak.raw <- read_csv(paste0("../../results/summarized_results/1B4T_A_delweak_selection_coefficients.csv"))
-# sc.weak.raw %>% filter(dataset == "1B4T_A", del == "weak") %>% select(-realcoeff) %>% spread(method, binnedcoeff) %>% gather(method, binnedcoeff, d0.01, d0.1, d1.0, mvn1, mvn10, mvn100, nopenal, phylobayes) %>% select(dataset, del, dummy, true, method, binnedcoeff) -> sc.weak.binned
-# sc.weak.raw %>% filter(dataset == "1B4T_A", del == "weak") %>% select(-binnedcoeff) %>% spread(method, realcoeff) %>% gather(method, realcoeff, d0.01, d0.1, d1.0, mvn1, mvn10, mvn100, nopenal, phylobayes) %>% select(dataset, del, dummy, true, method, realcoeff) -> sc.weak.real
-# 
-# sc.strong.binned$method <- factor(sc.strong.binned$method, levels=c("nopenal", "phylobayes", "mvn1", "mvn10", "mvn100", "d1.0", "d0.1", "d0.01"))
-# sc.weak.binned$method <- factor(sc.weak.binned$method, levels=c("nopenal", "phylobayes", "mvn1", "mvn10", "mvn100", "d1.0", "d0.1", "d0.01"))
-# sc.strong.real$method <- factor(sc.strong.real$method, levels=c("nopenal", "phylobayes", "mvn1", "mvn10", "mvn100", "d1.0", "d0.1", "d0.01"))
-# sc.weak.real$method <- factor(sc.weak.real$method, levels=c("nopenal", "phylobayes", "mvn1", "mvn10", "mvn100", "d1.0", "d0.1", "d0.01"))
-# 
-# 
-# plot.dnds.strong <- ggplot(dnds.strong, aes(x = true, y = dnds)) + geom_point() + geom_abline(slope=1, intercept=0) + facet_grid(~method)
-# plot.dnds.weak <- ggplot(dnds.weak, aes(x = true, y = dnds)) + geom_point() + geom_abline(slope=1, intercept=0) + facet_grid(~method)
-# 
-# plot.sc.strong.binned <- ggplot(sc.strong.binned, aes(x = binnedcoeff)) + geom_density(alpha = 0.8,fill="blue", color="blue",aes(x=true)) + geom_density(alpha = 0.7, fill = "orange", color="orange") + facet_grid(~method)
-# plot.sc.weak.binned <- ggplot(sc.weak.binned, aes(x = binnedcoeff)) + geom_density(fill="blue", color="blue", aes(x=true)) + geom_density(alpha = 0.7, fill = "orange", color="orange") + facet_grid(~method)
-# 
-# 
-# strong.grid <- plot_grid(plot.dnds.strong, plot.sc.strong.binned, nrow=2)
-# weak.grid   <- plot_grid(plot.dnds.weak, plot.sc.weak.binned, nrow=2)
-# 
-# 
-# 
-# 
-# 
-# 
-# methods <- c("nopenal", "phylobayes", "mvn1", "mvn10", "mvn100", "d1.0", "d0.1", "d0.01")
-# for (name in sim.dndsasets){
-#     for (del in c("weak", "strong")){
-#         fullname <- paste0(name, "_del",del)
-#         sc <- read_csv(paste0("../../results/summarized_results/", name, "_selection_coefficients.csv"))
-#         sc$method <- factor(sc$method, levels=c("true", "nopenal", "phylobayes", "mvn1", "mvn10", "mvn100", "d1.0", "d0.1", "d0.01"))
-# 
-#         a <- dnds %>% filter(dataset == name) %>% ggplot(aes(x = true, y = dnds)) + facet_grid(~method) + geom_point(alpha=0.7) + geom_abline(slope=1, intercept=0)
-#         b <- sc %>% ggplot(aes(x=binnedcoeff, fill=method)) + geom_density(alpha = 0.5) + scale_fill_manual(values=c("navy", "yellow"))
-#         p <- plot_grid(a,b,nrow=2)
-#         print(p)
-#         readline()
-#     }
-# }    
-# 
-# 
-# 
-# 
-# dnds_raw <- read.csv("../../results/summarized_results/empirical_derived_dnds.csv")
-# dnds_raw %>% spread(method,dnds) -> dnds
-# 
-# for (name in emp.datasets){
-#     print(name)
-#     sc <- read_csv(paste0("../../results/", name, "_selection_coefficients.csv"))
-#     sc$method <- factor(sc$method, levels=c("nopenal", "phylobayes", "mvn1", "mvn10", "mvn100", "d1.0", "d0.1", "d0.01"))
-# 
-#     a <- dnds %>% filter(dataset == name) %>% ggplot(aes(x = nopenal, y = phylobayes)) + geom_point(alpha=0.7) + geom_abline(slope=1, intercept=0)
-#     b <- sc %>% filter(method %in% c("nopenal", "phylobayes")) %>% ggplot(aes(x=binnedcoeff, fill=method)) + geom_density(alpha = 0.5) + scale_fill_manual(values=c("navy", "yellow"))
-#     p <- plot_grid(a,b,nrow=2)
-#     print(p)
-#     readline()
-# }    
-# 
-#     
-# #     a <- dnds %>% filter(dataset == dataset) %>% ggplot(aes(x = nopenal, y = d0.01)) + geom_point(alpha=0.7) + geom_abline(slope=1, intercept=0) + ggtitle("d0.01")
-# #     b <- dnds %>% filter(dataset == dataset) %>%ggplot(aes(x = nopenal, y = d0.1)) + geom_point(alpha=0.7) + geom_abline(slope=1, intercept=0) + ggtitle("d0.1")
-# #     cc <- dnds %>% filter(dataset == dataset) %>%ggplot(aes(x = nopenal, y = d1.0)) + geom_point(alpha=0.7) + geom_abline(slope=1, intercept=0) + ggtitle("d1.0")
-# #     
-# # 
-# #     d <- sc %>% filter(method %in% c("nopenal", "d0.01")) %>% ggplot(aes(x=realcoeff, fill=method)) + geom_density(alpha = 0.5) + scale_fill_manual(values=c("navy", "yellow"))
-# #     e <- sc %>% filter(method %in% c("nopenal", "d0.1")) %>% ggplot(aes(x=realcoeff, fill=method)) + geom_density(alpha = 0.5) + scale_fill_manual(values=c("navy", "yellow"))
-# #     f <- sc %>% filter(method %in% c("nopenal", "d1.0")) %>% ggplot(aes(x=realcoeff, fill=method)) + geom_density(alpha = 0.5) + scale_fill_manual(values=c("navy", "yellow"))
-#     
-#     plotgrid <- plot_grid(a,b,cc,d,e,f,nrow=2)
-#     print(plotgrid)
-#     readline()
-# }
-# 
-# 
-# 
-# 
-# # Some possibly useful code, REQUIRES PHYLOBAYES TO BE DONE! # 
-# extract_corr_bias <- function(df, type)
-# {
-#     df %>% spread(method,dnds) %>% 
-#            group_by(dataset) %>% 
-#            do(rraw = cor(.$nopenal, .$phylobayes), braw = lm(phylobayes ~ offset(nopenal), data=.)) %>% 
-#            mutate(r = rraw[1], b = summary(braw)$coeff[1]) %>% select(-rraw, -braw) %>% arrange(b,r) -> newdf
-#     newdf$type <- type
-#     newdf
-# }
-# 
-# 
-# dnds.sim <- read.csv("../../results/summarized_results/simulation_derived_dnds.csv")
-# dnds.sim %>% filter(del == "weak") %>% extract_corr_bias("weak") -> sim.weak.r.b
-# dnds.sim %>% filter(del == "strong") %>% extract_corr_bias("strong") -> sim.strong.r.b
-# dnds.emp <- read.csv("../../results/summarized_results/empirical_derived_dnds.csv")
-# emp.r.b <- extract_corr_bias(dnds.emp, "empirical")
-# full.r.b <- rbind(sim.weak.r.b, sim.strong.r.b, emp.r.b)
-# full.r.b$type <- factor(full.r.b$type, levels=c("strong", "weak", "empirical"), labels=c("Simulated, strong", "Simulated, weak", "Empirical"))
-# rplot_swpb <- ggplot(full.r.b, aes(x = type, y = r, group = type, fill=type)) + geom_boxplot() + scale_fill_manual(values=c("orangered2", "royalblue3")) + xlab("Data type") + ylab("swMutSel-pbMutSel Correlation")
-# bplot_swpb <- ggplot(full.r.b, aes(x = type, y = b, group = type, fill=type)) + geom_boxplot() + scale_fill_manual(values=c("orangered2", "royalblue3")) + xlab("Data type") + ylab("Average swMutSel > pbMutSel")
-# rb <- plot_grid(rplot, bplot, nrow=1)
-# 

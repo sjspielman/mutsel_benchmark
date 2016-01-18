@@ -96,17 +96,3 @@ for (dataset in sim.datasets)
         write.csv(sim.selcoeffs, paste0(outdir, full_dataset, "_selection_coefficients.csv"), row.names=FALSE, quote=FALSE)
     }
 }
-
-
-
-
-# sim.datasets   <- c("1B4T_A", "1RII_A", "1V9S_B", "1G58_B", "1W7W_B", "2BCG_Y", "2CFE_A", "1R6M_A", "2FLI_A", "1GV3_A", "1IBS_A")
-# r2 <- c()
-# for (d in sim.datasets){
-#     strong <- read.csv(paste0(true_directory, d, "_delstrong_true_dnds.csv"))
-#     weakweak <- read.csv(paste0(true_directory, d, "_delweakweak_true_dnds.csv"))
-#     hi <- cor(strong$dnds, weakweak$dnds)^2
-#     r2 <- c(r2,hi)
-# }
-
-
