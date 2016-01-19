@@ -35,7 +35,11 @@ strong.sc.full$true.binned <- true.sc$binnedcoeff
 strong.sc.full$true.real <- true.sc$realcoeff
 strong.sc.full$method <- factor(strong.sc.full$method, levels = methods_levels, labels = methods_labels)
 
-figsc <- ggplot(strong.sc.full, aes(x = binnedcoeff)) + geom_density(aes(x = true.binned), fill = "grey40") + geom_density(fill = "yellow", alpha = 0.4) + facet_grid(~method) + xlab("Scaled Selection Coefficients") + ylab("Density")
+figsc <- ggplot(strong.sc.full, aes(x = binnedcoeff)) + 
+         geom_density(aes(x = true.binned), fill = "grey40") + 
+         geom_density(fill = "yellow", alpha = 0.4) + 
+         facet_grid(~method) + 
+         xlab("Scaled Selection Coefficients") + ylab("Density")
 save_plot(paste0(maintext_plot_directory, "sc_across_methods_raw.pdf"), figsc, base_width=12, base_height=2.5)
 
 
@@ -50,19 +54,16 @@ jsd.repr.sim$method <- factor(jsd.repr.sim$method, levels = methods_levels, labe
 
 theme_set(theme_cowplot() + theme(axis.text.x = element_text(size = 10), axis.text.y = element_text(size = 12), axis.title = element_text(size = 13)))
 ## Figure 2A 
-repr.jsd.boxplots <- ggplot(jsd.repr.sim, aes(x = method, y = jsd)) + geom_boxplot() + xlab("Inference Method") + ylab("Site JSD") + scale_y_continuous(limits = c(0, 0.4), breaks = c(0, 0.1, 0.2, 0.3, 0.4)) #+ ggtitle("JSD for representative dataset")
-## Figure 2B
-mean.jsd.strong.boxplots <- ggplot(jsd.strong.summary, aes(x = method, y = meanjsd)) + geom_boxplot() + xlab("Inference Method") + ylab("Average JSD") + scale_y_continuous(limits = c(0, 0.25), breaks = c(0, 0.05, 0.1, 0.15, 0.2, 0.25)) #+ ggtitle("Mean JSD across datasets")
-## Full Figure 2
+ggplot(jsd.repr.sim, aes(x = method, y = jsd)) + 
+       geom_boxplot() + 
+       xlab("Inference Method") + ylab("Site JSD") + 
+       scale_y_continuous(limits = c(0, 0.4), breaks = c(0, 0.1, 0.2, 0.3, 0.4)) -> repr.jsd.boxplots
+ggplot(jsd.strong.summary, aes(x = method, y = meanjsd)) + 
+       geom_boxplot() + 
+       xlab("Inference Method") + ylab("Average JSD") + 
+       scale_y_continuous(limits = c(0, 0.25), breaks = c(0, 0.05, 0.1, 0.15, 0.2, 0.25)) -> mean.jsd.strong.boxplots
 fig2 <- plot_grid(repr.jsd.boxplots, mean.jsd.strong.boxplots, nrow=2, labels=c("A", "B"), label_size = 17, scale=0.925)
-
 save_plot(paste0(maintext_plot_directory, "jsd_maintext.pdf"), fig2, base_width = 7, base_height = 6) 
-
-#### SI weak jsd boxplots
-mean.jsd.weak.boxplots <- ggplot(jsd.weak.summary, aes(x = method, y = meanjsd)) + geom_boxplot() + xlab("Inference Method") + ylab("Average JSD") + scale_y_continuous(limits = c(0, 0.25), breaks = c(0, 0.05, 0.1, 0.15, 0.2, 0.25))
-save_plot(paste0(maintext_plot_directory, "jsd_weak_SI.pdf"), mean.jsd.weak.boxplots, base_width = 6.5, base_height = 4) 
-
-
 
 
 ##### Figures 3,4: dN/dS scatterplots and boxplots for simulated datasets #####
@@ -71,23 +72,36 @@ dnds.repr.strong$method <- factor(dnds.repr.strong$method, levels = methods_leve
 dnds.repr.weak <- spread.dnds %>% filter(dataset == repr_sim, del == "weak")
 dnds.repr.weak$method <- factor(dnds.repr.weak$method, levels = methods_levels, labels = methods_labels)
 
-spread.dnds %>% filter(del == "strong") %>% group_by(dataset, method) %>% do(rraw = cor(.$true, .$dnds), braw = glm(dnds ~ offset(true), dat=.)) %>% mutate(r = rraw[1], r2 = r^2, b = summary(braw)$coeff[1]) %>% select(-rraw, -braw) %>% ungroup() -> sim.dnds.r.b
+spread.dnds %>% filter(del == "strong") %>% 
+                group_by(dataset, method) %>% 
+                do(rraw = cor(.$true, .$dnds), braw = glm(dnds ~ offset(true), dat=.)) %>% 
+                mutate(r = rraw[1], b = summary(braw)$coeff[1]) %>% 
+                select(-rraw, -braw) %>% ungroup() -> sim.dnds.r.b
 sim.dnds.r.b$method <- factor(sim.dnds.r.b$method, levels = methods_levels, labels = methods_labels)
 
 ## Figure 3
 theme_set(theme_cowplot() + theme(axis.text.x = element_text(size = 9), axis.text.y = element_text(size = 10), axis.title = element_text(size = 12), panel.border = element_rect(size = 0.5), panel.margin = unit(0.75, "lines"), strip.background = element_rect(fill="white"), strip.text = element_text(size=12)))
-fig3 <- ggplot(dnds.repr.strong, aes(x = true, y = dnds)) + geom_point(size=1) + geom_abline(slope = 1, intercept = 0, color="red") + xlab("True dN/dS") + ylab("Predicted dN/dS") + scale_y_continuous(limits=c(0,0.85)) + scale_x_continuous(limits=c(0,0.85)) + facet_grid(~method) 
+fig3 <- ggplot(dnds.repr.strong, aes(x = true, y = dnds)) + 
+        geom_point(size=1) + geom_abline(slope = 1, intercept = 0, color="red") + 
+        xlab("True dN/dS") + ylab("Predicted dN/dS") + 
+        scale_y_continuous(limits=c(0,0.85)) + scale_x_continuous(limits=c(0,0.85)) + 
+        facet_grid(~method) 
 save_plot(paste0(maintext_plot_directory, "repr_dnds_scatter.pdf"), fig3, base_width=10, base_height=2)
 
 
 ## Figure 4A
 theme_set(theme_cowplot() + theme(axis.text.x = element_text(size = 10), axis.text.y = element_text(size = 12), axis.title = element_text(size = 14)))
-sim.dnds.r.b %>% ggplot(aes(x = method, y = r2)) + geom_boxplot() + xlab("Inference Method") + ylab("Variance Explained") -> boxplot.sim.r2
-## Figure 4B
-sim.dnds.r.b %>%  ggplot(aes(x = method, y = b)) + geom_boxplot() + xlab("Inference Method") + ylab("Estimator Bias") + geom_hline(yintercept=0 ) -> boxplot.sim.b
-## Full Figure 4
-fig4 <- plot_grid(boxplot.sim.r2, boxplot.sim.b, nrow=2, labels=c("A", "B"), label_size=17, scale=0.925)
-save_plot(paste0(maintext_plot_directory, "r2_bias.pdf"), fig4, base_width=7, base_height=6)
+ggplot(sim.dnds.r.b, aes(x = method, y = r)) + 
+       geom_boxplot() + 
+       xlab("Inference Method") + ylab("Pearson Correlation") +
+       scale_y_continuous(limits=c(0.7, 1.0)) -> boxplot.sim.r
+
+ggplot(sim.dnds.r.b, aes(x = method, y = b)) + 
+       geom_boxplot() + 
+       xlab("Inference Method") + ylab("Estimator Bias") + 
+       geom_hline(yintercept=0 ) -> boxplot.sim.b
+fig4 <- plot_grid(boxplot.sim.r, boxplot.sim.b, nrow=2, labels=c("A", "B"), label_size=17, scale=0.925)
+save_plot(paste0(maintext_plot_directory, "strong_r_bias.pdf"), fig4, base_width=7, base_height=6)
 
 
 #### dnds, jsd scatter and slope 
@@ -103,12 +117,29 @@ lmp <- function (modelobject) {
 true.jsd <- sim.dnds %>% filter(method=="true") %>% mutate(truednds = dnds) %>% select(-method,-dnds) %>% left_join(jsd.results)
 strong <- true.jsd %>% filter(del == "strong", dataset == repr_sim)
 strong$method <- factor(strong$method, levels = methods_levels, labels = methods_labels)
-fig5a <- ggplot(strong, aes(x = truednds, y = jsd)) + geom_point(size=1) + facet_grid(~method) + geom_smooth(method="lm", color="red") + scale_y_continuous(limits=c(0, 0.42)) + xlab("True dN/dS") + ylab("Site JSD") + theme(axis.text.x = element_text(size = 8), axis.text.y = element_text(size = 10), axis.title = element_text(size = 13), panel.border = element_rect(size = 0.5), panel.margin = unit(0.75, "lines"), strip.background = element_rect(fill="white"), strip.text = element_text(size=10))
+fig5a <- ggplot(strong, aes(x = truednds, y = jsd)) + 
+         geom_point(size=1) + 
+         facet_grid(~method) + 
+         geom_smooth(method="lm", color="red") + 
+         scale_y_continuous(limits=c(0, 0.42)) + 
+         xlab("True dN/dS") + ylab("Site JSD") +
+         theme(axis.text.x = element_text(size = 8), axis.text.y = element_text(size = 10), axis.title = element_text(size = 13), panel.border = element_rect(size = 0.5), panel.margin = unit(0.75, "lines"), strip.background = element_rect(fill="white"), strip.text = element_text(size=10))
+
 
 alpha <- 0.01/length(methods_levels) #  Bonferroni correction.
-true.jsd %>% filter(del == "strong") %>% group_by(dataset,method) %>% do(fit=lm(jsd~truednds, data=.)) %>% mutate(slope = round(fit[[1]][[2]],3), pvalue = lmp(fit), sig = pvalue < alpha) %>% select(-fit) -> jsd.true.slope.p
+true.jsd %>% filter(del == "strong") %>% 
+             group_by(dataset,method) %>% 
+             do(fit=lm(jsd~truednds, data=.)) %>% 
+             mutate(slope = round(fit[[1]][[2]],3), pvalue = lmp(fit), sig = pvalue < alpha) %>% 
+             select(-fit) -> jsd.true.slope.p
 jsd.true.slope.p$method <- factor(jsd.true.slope.p$method, levels = methods_levels, labels = methods_labels)
-fig5b <- ggplot(jsd.true.slope.p, aes(x = method, y = slope, shape=sig)) + geom_point(position = position_jitter(w = 0.28)) + scale_shape_manual(values=c(1,19)) + geom_hline(yintercept=0) + theme(legend.position="none") + xlab("Inference Method") + ylab("Slope")+ theme(axis.text.x = element_text(size = 11), axis.text.y = element_text(size = 10), axis.title = element_text(size = 13))
+fig5b <- ggplot(jsd.true.slope.p, aes(x = method, y = slope, shape=sig)) + 
+                geom_point(position = position_jitter(w = 0.28)) + 
+                scale_shape_manual(values=c(1,19)) + 
+                geom_hline(yintercept=0) + 
+                theme(legend.position="none") + 
+                xlab("Inference Method") + ylab("Slope")+ 
+                theme(axis.text.x = element_text(size = 11), axis.text.y = element_text(size = 10), axis.title = element_text(size = 13))
 
 fig5 <- plot_grid(fig5a, fig5b, nrow=2, labels=c("A", "B"), label_size=17)
 save_plot(paste0(maintext_plot_directory, "jsd_dnds.pdf"), fig5, base_width=9, base_height=4)
@@ -127,10 +158,33 @@ sc$method <- factor(sc$method, levels=c("true", "nopenal", "phylobayes"))
 spread.dnds.named <- spread.dnds
 spread.dnds.named$del <- factor(spread.dnds.named$del, levels=c("strong", "weak"), labels = c("Strongly deleterious", "Weakly deleterious"))
 
-fig6a <- spread.dnds.named %>% filter(dataset == repr_sim, method == "nopenal") %>% ggplot(aes(x = true, y = dnds)) + geom_point() + geom_abline(slope = 1, intercept = 0, color="red") + facet_grid(~del) + xlab("True dN/dS") + ylab("swMutSel dN/dS") + scale_x_continuous(limits = c(0,0.8)) + scale_y_continuous(limits=c(0, 0.8))
-fig6b <- sc %>% filter(method %in% c("true","nopenal")) %>% ggplot(aes(x = binnedcoeff, fill = method)) + geom_density() + facet_grid(~del) + scale_fill_manual(values =c("grey40", rgb(1, 1, 0, 0.4))) + ylab("Density") + xlab("Scaled Selection Coefficients") + theme(strip.text = element_blank())
-fig6c <- spread.dnds.named %>% filter(dataset == repr_sim, method == "phylobayes") %>% ggplot(aes(x = true, y = dnds)) + geom_point() + geom_abline(slope = 1, intercept = 0, color="red") + facet_grid(~del) + xlab("True dN/dS") + ylab("pbMutSel dN/dS") + scale_x_continuous(limits = c(0,0.8)) + scale_y_continuous(limits=c(0, 0.8))
-fig6d <- sc %>% filter(method %in% c("true","phylobayes")) %>% ggplot(aes(x = binnedcoeff, fill = method)) + geom_density() + facet_grid(~del) + scale_fill_manual(values = c("grey40", rgb(1, 1, 0, 0.4))) + ylab("Density") + xlab("Scaled Selection Coefficients") + theme(strip.text = element_blank())
+fig6a <- spread.dnds.named %>% filter(dataset == repr_sim, method == "nopenal") %>% 
+         ggplot(aes(x = true, y = dnds)) + 
+         geom_point() + geom_abline(slope = 1, intercept = 0, color="red") + 
+         facet_grid(~del) + 
+         xlab("True dN/dS") + ylab("swMutSel dN/dS") + 
+         scale_x_continuous(limits = c(0,0.8)) + 
+         scale_y_continuous(limits=c(0, 0.8))
+         
+fig6b <- sc %>% filter(method %in% c("true","nopenal")) %>% 
+                ggplot(aes(x = binnedcoeff, fill = method)) + 
+                geom_density() + facet_grid(~del) + 
+                scale_fill_manual(values =c("grey40", rgb(1, 1, 0, 0.4))) + 
+                ylab("Density") + xlab("Scaled Selection Coefficients") + 
+                theme(strip.text = element_blank())
+                
+fig6c <- spread.dnds.named %>% filter(dataset == repr_sim, method == "phylobayes") %>% 
+         ggplot(aes(x = true, y = dnds)) + 
+         geom_point() + geom_abline(slope = 1, intercept = 0, color="red") + 
+         facet_grid(~del) + xlab("True dN/dS") + ylab("pbMutSel dN/dS") + 
+         scale_x_continuous(limits = c(0,0.8)) + scale_y_continuous(limits=c(0, 0.8))
+         
+fig6d <- sc %>% filter(method %in% c("true","phylobayes")) %>% 
+                ggplot(aes(x = binnedcoeff, fill = method)) + 
+                geom_density() + facet_grid(~del) + 
+                scale_fill_manual(values = c("grey40", rgb(1, 1, 0, 0.4))) + 
+                ylab("Density") + xlab("Scaled Selection Coefficients") + 
+                theme(strip.text = element_blank())
 
 fig6 <- plot_grid(fig6a, fig6c, fig6b, fig6d, nrow=2, labels=c("A", "B", "C", "D"), label_size = 15, scale=0.95)
 save_plot(paste0(maintext_plot_directory, "dnds_sc_weakstrong_raw.pdf"), fig6, base_width=10, base_height=5)
@@ -199,16 +253,45 @@ save_plot(paste0(si_plot_directory, "selcoeffs_weak_SI.pdf"), grid_weak, base_wi
 
 
 
-# r2, bias boxplots for weakly deleterious datasets
-theme_set(theme_cowplot() + theme(axis.text.x = element_text(size = 10), axis.text.y = element_text(size = 12), axis.title = element_text(size = 14)))
+# r2, bias correlations between strong, weak
+theme_set(theme_cowplot() + theme(axis.text = element_text(size=10), axis.title = element_text(size = 11), legend.title = element_text(size = 10), legend.text = element_text(size=9)))
 
-spread.dnds %>% filter(del == "weak") %>% group_by(dataset, method) %>% do(rraw = cor(.$true, .$dnds), braw = glm(dnds ~ offset(true), dat=.)) %>% mutate(r = rraw[1], r2 = r^2, b = summary(braw)$coeff[1]) %>% select(-rraw, -braw) %>% ungroup() -> sim.dnds.r.b
-sim.dnds.r.b$method <- factor(sim.dnds.r.b$method, levels = methods_levels, labels = methods_labels)
-sim.dnds.r.b %>% ggplot(aes(x = method, y = r2)) + geom_boxplot() + xlab("Inference Method") + ylab("Variance Explained") -> boxplot.sim.r2
-sim.dnds.r.b %>%  ggplot(aes(x = method, y = b)) + geom_boxplot() + xlab("Inference Method") + ylab("Estimator Bias") + geom_hline(yintercept=0 ) -> boxplot.sim.b
-r2.b.weak <- plot_grid(boxplot.sim.r2, boxplot.sim.b, nrow=2, labels=c("A", "B"), label_size=17, scale=0.925)
-save_plot(paste0(si_plot_directory, "weak_r2_bias_SI.pdf"), r2.b.weak, base_width=7, base_height=6)
+sim.dnds %>% spread(method,dnds) %>%
+             gather(method, dnds, d0.01, d0.1, d1.0, mvn1, mvn10, mvn100, nopenal, phylobayes) %>% 
+             select(dataset, del, site, true, dnds, method) %>% group_by(dataset, del, method) %>%
+             do(rraw = cor(.$true, .$dnds)) %>% mutate(r = rraw[[1]]) %>% select(-rraw) %>% spread(del,r) -> all.corrs
 
+sim.dnds %>% spread(method,dnds) %>%
+             gather(method, dnds, d0.01, d0.1, d1.0, mvn1, mvn10, mvn100, nopenal, phylobayes) %>% 
+             select(dataset, del, site, true, dnds, method) %>% group_by(dataset, del, method) %>%
+             do(braw = glm(dnds ~ offset(true), dat=.)) %>% mutate(b = summary(braw)$coeff[1]) %>% select(-braw) %>% spread(del,b) -> all.estbias
+
+all.corrs$method <- factor(all.corrs$method, levels = methods_levels, labels = methods_labels)
+all.estbias$method <- factor(all.estbias$method, levels = methods_levels, labels = methods_labels)
+p1 <- ggplot(all.corrs, aes(x = strong, y = weak, color = method)) + 
+      geom_point() + geom_abline(slope=1, intercept=0) + 
+      xlab("Strongly deleterious correlation") + 
+      ylab("Weakly deleterious\ncorrelation") + 
+      scale_x_continuous(limits=c(0.7, 1.0)) + 
+      scale_y_continuous(limits=c(0.7, 1.0)) + 
+      scale_color_brewer(palette = "Dark2", name= "Inference Method")
+      
+p2 <- ggplot(all.estbias, aes(x = strong, y = weak, color = method)) + 
+      geom_point() + geom_abline(slope=1, intercept=0) + 
+      xlab("Strongly deleterious estimator bias") + 
+      ylab("Weakly deleterious\nestimator bias" )+ 
+      scale_y_continuous(limits=c(-0.05, 0.32)) +
+      scale_x_continuous(limits=c(-0.05, 0.32)) +
+      scale_color_brewer(palette = "Dark2", name= "Inference Method") +
+      geom_hline(yintercept=0, color="grey50") +
+      geom_vline(xintercept=0, color="grey50") +
+      theme(legend.position = "none")  #background_grid() +
+
+grobs <- ggplotGrob(p1)$grobs
+legend <- grobs[[which(sapply(grobs, function(x) x$name) == "guide-box")]]
+prow <- plot_grid(p1 + theme(legend.position = "none") ,p2, labels=c("A", "B"))
+strong.weak.r.b <- plot_grid(prow, legend, rel_widths = c(2, .5))
+save_plot(paste0(maintext_plot_directory, "scatter_strong_weak_rb.pdf"), strong.weak.r.b, base_width=8, base_height=2.75)
 
 
 
@@ -219,6 +302,9 @@ jsd.results %>% filter(del == "weak") %>% group_by(dataset, method) %>% summariz
 jsd.weak.summary$method <- factor(jsd.weak.summary$method, levels = methods_levels, labels = methods_labels)
 mean.jsd.weak.boxplots <- ggplot(jsd.weak.summary, aes(x = method, y = meanjsd)) + geom_boxplot() + xlab("Inference Method") + ylab("Average JSD") + scale_y_continuous(limits = c(0, 0.3), breaks = c(0, 0.05, 0.1, 0.15, 0.2, 0.25))
 save_plot(paste0(si_plot_directory, "jsd_weak_SI.pdf"), mean.jsd.weak.boxplots, base_width = 7, base_height = 4) 
+
+
+
 
 
 
