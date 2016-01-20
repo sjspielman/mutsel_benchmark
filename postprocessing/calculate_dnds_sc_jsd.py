@@ -148,7 +148,7 @@ def main():
     method_suffixes = {"swmutsel":"_MLE.txt", "phylobayes":".aap"}
     
     truedir = "../simulation/true_simulation_parameters/"
-    rawdir  = "../results/raw_results/"
+    rawdir  = "../results/"
     outdir  = rawdir + "dnds_coeffs_jsd/"
     
     for method in method_suffixes:

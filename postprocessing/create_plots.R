@@ -8,7 +8,7 @@ require(grid)
 repr_sim <- "1IBS_A" # Selected because this dataset has the most codon columns (291)
 
 result_directory <- "../results/summarized_results/"
-true_directory   <- "../scripts/simulation/true_simulation_parameters/"
+true_directory   <- "../simulation/true_simulation_parameters/"
 maintext_plot_directory   <- "plots/maintext/"
 si_plot_directory   <- "plots/SI/"
 
@@ -304,6 +304,34 @@ mean.jsd.weak.boxplots <- ggplot(jsd.weak.summary, aes(x = method, y = meanjsd))
 save_plot(paste0(si_plot_directory, "jsd_weak_SI.pdf"), mean.jsd.weak.boxplots, base_width = 7, base_height = 4) 
 
 
+
+#### dnds, jsd scatter and slope 
+# function to return pvalue from an lm object
+lmp <- function (modelobject) {
+    if (class(modelobject) != "lm") stop("Not an object of class 'lm' ")
+    f <- summary(modelobject)$fstatistic
+    p <- pf(f[1],f[2],f[3],lower.tail=F)
+    attributes(p) <- NULL
+    return(p)
+}
+
+
+true.jsd %>% filter(del == "weak") %>% 
+             group_by(dataset,method) %>% 
+             do(fit=lm(jsd~truednds, data=.)) %>% 
+             mutate(slope = round(fit[[1]][[2]],3), pvalue = lmp(fit), sig = pvalue < alpha) %>% 
+             select(-fit) -> jsd.true.slope.p
+jsd.true.slope.p$method <- factor(jsd.true.slope.p$method, levels = methods_levels, labels = methods_labels)
+p <- ggplot(jsd.true.slope.p, aes(x = method, y = slope, shape=sig)) + 
+                geom_point(position = position_jitter(w = 0.28)) + 
+                scale_shape_manual(values=c(1,19)) + 
+                geom_hline(yintercept=0) + 
+                scale_y_continuous(limits=c(-0.25, 0.1)) +
+                theme(legend.position="none") + 
+                xlab("Inference Method") + ylab("Slope")+ 
+                theme(axis.text.x = element_text(size = 11), axis.text.y = element_text(size = 10), axis.title = element_text(size = 13))
+
+save_plot(paste0(si_plot_directory, "weak_jsd_dnds_SI.pdf"), p, base_width=9, base_height=2)
 
 
 

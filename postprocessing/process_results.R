@@ -5,8 +5,8 @@ require(dplyr)
 require(tidyr)
 
 resdir       <- "../results/"
-truedir      <- "../scripts/simulation/true_simulation_parameters/"
-datadir      <- paste0(resdir, "raw_results/dnds_coeffs_jsd/")
+truedir      <- "../simulation/true_simulation_parameters/"
+datadir      <- paste0(resdir, "dnds_coeffs_jsd/")
 outdir       <- paste0(resdir, "summarized_results/")
 
 sim.datasets <- c("1B4T_A", "1RII_A", "1V9S_B", "1G58_B", "1W7W_B", "2BCG_Y", "2CFE_A", "1R6M_A", "2FLI_A", "1GV3_A", "1IBS_A")

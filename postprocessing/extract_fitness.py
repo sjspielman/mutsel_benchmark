@@ -4,7 +4,7 @@
 
 import sys
 import numpy as np
-sys.path.append("../scripts/")
+sys.path.append("../")
 from universal_functions import *
 
 
@@ -13,8 +13,8 @@ for deltype in ["strong", "weak"]:
     name = dataset + "_del" + deltype
     outfile = name + "_rescaled_fitness_across_methods.txt" 
     
-    inference_directory = "../results/raw_results/"
-    true_directory      = "../scripts/simulation/true_simulation_parameters/"
+    inference_directory = "../results/"
+    true_directory      = "../simulation/true_simulation_parameters/"
     
     
     # swMutSel
