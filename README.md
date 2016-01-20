@@ -1,6 +1,6 @@
-##### Repository for *mutsel model benchmark paper of TBD name*, by SJS\* and COW. 
+### Repository for *mutsel model benchmark paper of TBD name*, by SJS\* and COW. 
 
-##### Contents of respository:
+### Contents of repository:
 
 - `data/` contains all simulated alignments, and the 512-taxon balanced tree used during simulation.
 
