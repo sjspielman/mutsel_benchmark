@@ -5,15 +5,15 @@
 - `data/` contains all simulated alignments, and the 512-taxon balanced tree used during simulation.
 
 - `results/` contains all inference results.
-    - `swmutsel/` contains all inference results with swMutSel for a variety of penalizations, indicated in file name.
-    - `phylobayes/** contains all inference results with PhyloBayes
-    - `dnds_coeffs_jsd/` contains all *dN/dS*, selection coefficients, and JSD (Jensen-Shannon distance) values calculated from mutation-selection model inferences.
-    - `summarized_results/` contains summary csv files for data in `dnds_coeffs_jsd`. These files were created with [`process_results.R`](../postprocessing/process_results.R).
+    - [`swmutsel/`](./results/swmutsel/) contains all inference results with swMutSel for a variety of penalizations, indicated in file name.
+    - [`phylobayes/`](./results/phylobayes/) contains all inference results with PhyloBayes
+    - [`dnds_coeffs_jsd/`](./results/dnds_coeffs_jsd/) contains all *dN/dS*, selection coefficients, and JSD (Jensen-Shannon distance) values calculated from mutation-selection model inferences.
+    - `summarized_results/` contains summary csv files for data in [`dnds_coeffs_jsd/`](./results/dnds_coeffs_jsd/). These files were created with [`process_results.R`](../postprocessing/process_results.R).
 
 - `simulation` contains all code used for simulating sequences, as well as simulating parameters for use in sequence simulation. 
-    - `ramsey2011_yeast_alignments` contains all sequence alignments from [Ramsey et al. (2011)](http://www.genetics.org/cgi/pmidlookup?view=long&pmid=21467571). 
-    - `derive_simulation_parameters.py` derives parameters for sequence simulation, using alignments in `ramsey2011_yeast_alignments`. Resulting parameters are saved in `true_simulation_parameters`.
-    - `simulate_alignments.py` simulates a sequence alignment, specifically on UT's PhyloCluster. This script is run in conjuction with submission scripts `simulate_alignments.qsub` and `submit_simulations.sh`.
+    - [`ramsey2011_yeast_alignments`](./simulation/ramsey2011_yeast_alignments) contains all sequence alignments from [Ramsey et al. (2011)](http://www.genetics.org/cgi/pmidlookup?view=long&pmid=21467571). 
+    - [`derive_simulation_parameters.py`](./simulation/derive_simulation_parameters.py) derives parameters for sequence simulation, using alignments in [`ramsey2011_yeast_alignments`](./simulation/ramsey2011_yeast_alignments). Resulting parameters (including true *dN/dS*, amino-acid fitness, codon frequencies, and selection coefficients) are saved in [`true_simulation_parameters`](./simulation/true_simulation_parameters).
+    - [`simulate_alignments.py`](./simulation/simulate_alignments.py) simulates a sequence alignment, specifically on UT's PhyloCluster. This script is run in conjuction with submission scripts `simulate_alignments.qsub` and `submit_simulations.sh`.
     
 - `inference` contains all code used for mutation-selection model inference. All scripts named `*.sh` and `*.qsub` are used for submitting jobs to UT's Phylocluster, and all `*.py` scripts conduct and process inferences. 
 
