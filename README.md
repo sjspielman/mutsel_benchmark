@@ -26,4 +26,4 @@
 - `universal_functions.py` is simply a python module containing various functions used throughout the repository.
 
 
-\*This repository is maintained by SJS. Please file any questions/comments in [Issues](https://github.com/sjspielman/mutsel_benchmark/issues/).
+**\*This repository is maintained by SJS. Please file any questions/comments in [Issues](https://github.com/sjspielman/mutsel_benchmark/issues/).**
