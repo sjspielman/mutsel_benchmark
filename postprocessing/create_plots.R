@@ -12,8 +12,8 @@ true_directory   <- "../simulation/true_simulation_parameters/"
 maintext_plot_directory   <- "plots/maintext/"
 si_plot_directory   <- "plots/SI/"
 
-jsd.results <- read.csv(paste0(result_directory, "simulation_jsd.csv"))
-sim.dnds <- read.csv(paste0(result_directory, "simulation_derived_dnds.csv"))
+jsd.results <- read.csv(paste0(result_directory, "jsd.csv"))
+sim.dnds <- read.csv(paste0(result_directory, "dnds.csv"))
 sim.dnds %>% spread(method,dnds) %>% gather(method, dnds, d0.01, d0.1, d1.0, mvn1, mvn10, mvn100, nopenal, phylobayes) %>% select(dataset, del, site, true, dnds, method)-> spread.dnds
 methods_levels <- c("nopenal", "mvn100", "mvn10", "mvn1", "d0.01", "d0.1", "d1.0", "phylobayes")
 methods_labels <- c("Unpenalized", "mvn100", "mvn10", "mvn1", "d0.01", "d0.1", "d1.0", "pbMutSel")

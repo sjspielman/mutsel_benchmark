@@ -33,7 +33,7 @@ for (name in sim.datasets)
         }
     }
 }
-write.csv(jsd, paste0(outdir, "simulation_jsd.csv"), row.names=FALSE, quote=FALSE)
+write.csv(jsd, paste0(outdir, "jsd.csv"), row.names=FALSE, quote=FALSE)
 
 
 
@@ -68,7 +68,7 @@ for (name in sim.datasets)
         }
     }
 }
-write.csv(sim.dat, paste0(outdir, "simulation_derived_dnds.csv"), row.names=FALSE, quote=FALSE)
+write.csv(sim.dat, paste0(outdir, "dnds.csv"), row.names=FALSE, quote=FALSE)
 
 
 

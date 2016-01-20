@@ -1,5 +1,5 @@
 # SJS
-# Statistical analysis
+# Statistical analyses, in no particular order..... :)
 
 require(lme4)
 require(lmerTest)
@@ -9,9 +9,30 @@ require(tidyr)
 require(readr)
 
 result_directory <- "../results/summarized_results/"
-true_directory   <- "../scripts/simulation/true_simulation_parameters/"
-jsd.dat  <- read.csv(paste0(result_directory, "simulation_jsd.csv"))
-sim.dnds <- read.csv(paste0(result_directory, "simulation_derived_dnds.csv"))
+true_directory   <- "../simulation/true_simulation_parameters/"
+jsd.dat  <- read.csv(paste0(result_directory, "jsd.csv"))
+sim.dnds <- read.csv(paste0(result_directory, "dnds.csv"))
+sim.datasets   <- c("1B4T_A", "1RII_A", "1V9S_B", "1G58_B", "1W7W_B", "2BCG_Y", "2CFE_A", "1R6M_A", "2FLI_A", "1GV3_A", "1IBS_A")
+deltypes       <- c("strong", "weak")
+
+# Proportion of highly changes across data 
+prop <- data.frame("dataset" = character(), "del" = character(), "prop" = numeric())
+for (d in sim.datasets){
+    for (del in deltypes){
+        
+        dat <- read_csv(paste0(true_directory, d, "_del", del, "_true_selcoeffs.csv"))
+        total <- nrow(dat)
+        big <- sum(dat$binnedcoeff == 10 | dat$binnedcoeff == -10)
+        propor <- big/total
+        temp <- data.frame("dataset" = d, "del" = del, "prop" = propor)
+        prop <- rbind(temp,prop)
+    }
+}
+prop %>% group_by(del) %>% summarize(minprop = min(prop), maxprop = max(prop), meanprop = mean(prop), sdprop = sd(prop))
+#      del   minprop   maxprop  meanprop     sdprop
+#   (fctr)     (dbl)     (dbl)     (dbl)      (dbl)
+# 1   weak 0.0000000 0.0000000 0.0000000 0.00000000
+# 2 strong 0.3892646 0.4302033 0.4059725 0.01346862
 
 
 
