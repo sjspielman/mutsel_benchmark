@@ -25,9 +25,9 @@ sim.datasets <- unique(sim.dnds$dataset)
 ##########################################################################################
 
 
-
 ##### selection coefficients across methods ####
-theme_set(theme_cowplot() + theme(axis.text.y = element_text(size=12), axis.text.x = element_text(size=10), axis.title = element_text(size=13), panel.border = element_rect(size = 0.5), strip.text = element_text(size = 11), panel.margin = unit(0.75, "lines"), strip.background = element_rect(fill="white"), legend.position="none"))
+theme_set(theme_cowplot() + theme(axis.text.y = element_text(size=12), axis.text.x = element_text(size=10), axis.title = element_text(size=13, face="bold"), panel.border = element_rect(size = 0.5), strip.text = element_text(size = 11), panel.margin = unit(0.75, "lines"), strip.background = element_rect(fill="white")))
+
 strong.sc.full <- read_csv(paste0(result_directory, repr_sim, "_delstrong_selection_coefficients.csv"))
 true.sc <- read_csv(paste0(true_directory, repr_sim, "_delstrong_true_selcoeffs.csv"))
 strong.sc.full %>% filter(method != "true") -> strong.sc.full
@@ -35,12 +35,20 @@ strong.sc.full$true.binned <- true.sc$binnedcoeff
 strong.sc.full$true.real <- true.sc$realcoeff
 strong.sc.full$method <- factor(strong.sc.full$method, levels = methods_levels, labels = methods_labels)
 
+plot_for_legend <- strong.sc.full %>% filter(method %in% c("mvn1", "mvn100")) %>%
+                   ggplot(aes(x = binnedcoeff, fill=method)) + geom_density() + 
+                   theme(legend.position=c(1, 0), legend.margin = unit(0, "cm")), legend.text = element_text(size=9), legend.key.size = unit(0.4, "cm")) + 
+                   scale_fill_manual(name = "", labels = c("True", "Inferred"), values =c("grey40", rgb(1, 1, 0, 0.4)))
+grobs <- ggplotGrob(plot_for_legend)$grobs
+legend <- grobs[[which(sapply(grobs, function(x) x$name) == "guide-box")]]
+
 figsc <- ggplot(strong.sc.full, aes(x = binnedcoeff)) + 
          geom_density(aes(x = true.binned), fill = "grey40") + 
          geom_density(fill = "yellow", alpha = 0.4) + 
          facet_grid(~method) + 
          xlab("Scaled Selection Coefficients") + ylab("Density")
-save_plot(paste0(maintext_plot_directory, "sc_across_methods_raw.pdf"), figsc, base_width=12, base_height=2.5)
+figsc_with_legend <- plot_grid(figsc, legend, ncol=1, rel_heights=c(1,0.1))
+save_plot(paste0(maintext_plot_directory, "sc_across_methods.pdf"), figsc_with_legend, base_width=12, base_height=2.5)
 
 
 
@@ -147,7 +155,6 @@ save_plot(paste0(maintext_plot_directory, "jsd_dnds.pdf"), fig5, base_width=9, b
 
 
 ## weak and strong dnds, selection coefficients
-theme_set(theme_cowplot() + theme(axis.text = element_text(size=11), axis.title = element_text(size=12), panel.border = element_rect(size = 0.5), strip.text = element_text(size = 10), panel.margin = unit(0.75, "lines"), strip.background = element_rect(fill="white"), legend.position="none"))
 
 strong.sc.full <- read_csv(paste0(result_directory, repr_sim, "_delstrong_selection_coefficients.csv"))
 weak.sc.full <- read_csv(paste0(result_directory, repr_sim, "_delweak_selection_coefficients.csv"))
@@ -158,6 +165,7 @@ sc$method <- factor(sc$method, levels=c("true", "nopenal", "phylobayes"))
 spread.dnds.named <- spread.dnds
 spread.dnds.named$del <- factor(spread.dnds.named$del, levels=c("strong", "weak"), labels = c("Strongly deleterious", "Weakly deleterious"))
 
+theme_set(theme_cowplot() + theme(axis.text = element_text(size=11), axis.title = element_text(size=12, face = "bold"), panel.border = element_rect(size = 0.5), strip.text = element_text(size = 11), panel.margin = unit(0.75, "lines"), strip.background = element_rect(fill="white"), legend.position="bottom", legend.text = element_text(size=9), legend.key.size = unit(0.4, "cm")))
 fig6a <- spread.dnds.named %>% filter(dataset == repr_sim, method == "nopenal") %>% 
          ggplot(aes(x = true, y = dnds)) + 
          geom_point() + geom_abline(slope = 1, intercept = 0, color="red") + 
@@ -166,28 +174,28 @@ fig6a <- spread.dnds.named %>% filter(dataset == repr_sim, method == "nopenal") 
          scale_x_continuous(limits = c(0,0.8)) + 
          scale_y_continuous(limits=c(0, 0.8))
          
-fig6b <- sc %>% filter(method %in% c("true","nopenal")) %>% 
-                ggplot(aes(x = binnedcoeff, fill = method)) + 
-                geom_density() + facet_grid(~del) + 
-                scale_fill_manual(values =c("grey40", rgb(1, 1, 0, 0.4))) + 
-                ylab("Density") + xlab("Scaled Selection Coefficients") + 
-                theme(strip.text = element_blank())
-                
-fig6c <- spread.dnds.named %>% filter(dataset == repr_sim, method == "phylobayes") %>% 
+fig6b <- spread.dnds.named %>% filter(dataset == repr_sim, method == "phylobayes") %>% 
          ggplot(aes(x = true, y = dnds)) + 
          geom_point() + geom_abline(slope = 1, intercept = 0, color="red") + 
          facet_grid(~del) + xlab("True dN/dS") + ylab("pbMutSel dN/dS") + 
          scale_x_continuous(limits = c(0,0.8)) + scale_y_continuous(limits=c(0, 0.8))
-         
+
+fig6c <- sc %>% filter(method %in% c("true","nopenal")) %>% 
+                ggplot(aes(x = binnedcoeff, fill = method)) + 
+                geom_density() + facet_grid(~del) + 
+                scale_fill_manual(name = "", labels = c("True", "Inferred"), values =c("grey40", rgb(1, 1, 0, 0.4))) + 
+                ylab("Density") + xlab("Scaled Selection Coefficients") + 
+                theme(strip.text = element_blank())
+                         
 fig6d <- sc %>% filter(method %in% c("true","phylobayes")) %>% 
                 ggplot(aes(x = binnedcoeff, fill = method)) + 
                 geom_density() + facet_grid(~del) + 
-                scale_fill_manual(values = c("grey40", rgb(1, 1, 0, 0.4))) + 
+                scale_fill_manual(name = "", labels = c("True", "Inferred"), values = c("grey40", rgb(1, 1, 0, 0.4))) + 
                 ylab("Density") + xlab("Scaled Selection Coefficients") + 
                 theme(strip.text = element_blank())
 
-fig6 <- plot_grid(fig6a, fig6c, fig6b, fig6d, nrow=2, labels=c("A", "B", "C", "D"), label_size = 15, scale=0.95)
-save_plot(paste0(maintext_plot_directory, "dnds_sc_weakstrong_raw.pdf"), fig6, base_width=10, base_height=5)
+fig6 <- plot_grid(fig6a, fig6b, fig6c, fig6d, nrow=2, labels=c("A", "B", "C", "D"), label_size = 15, scale=0.95)
+save_plot(paste0(maintext_plot_directory, "dnds_sc_weakstrong.pdf"), fig6, base_width=10, base_height=5)
 
 
 
@@ -253,8 +261,8 @@ save_plot(paste0(si_plot_directory, "selcoeffs_weak_SI.pdf"), grid_weak, base_wi
 
 
 
-# r2, bias correlations between strong, weak
-theme_set(theme_cowplot() + theme(axis.text = element_text(size=10), axis.title = element_text(size = 11), legend.title = element_text(size = 10), legend.text = element_text(size=9)))
+# r, bias correlations between strong, weak
+theme_set(theme_cowplot() + theme(axis.text = element_text(size=10), axis.title = element_text(size = 10, face="bold"), legend.title = element_text(size = 10), legend.text = element_text(size=9)))
 
 sim.dnds %>% spread(method,dnds) %>%
              gather(method, dnds, d0.01, d0.1, d1.0, mvn1, mvn10, mvn100, nopenal, phylobayes) %>% 
@@ -271,15 +279,15 @@ all.estbias$method <- factor(all.estbias$method, levels = methods_levels, labels
 p1 <- ggplot(all.corrs, aes(x = strong, y = weak, color = method)) + 
       geom_point() + geom_abline(slope=1, intercept=0) + 
       xlab("Strongly deleterious correlation") + 
-      ylab("Weakly deleterious\ncorrelation") + 
+      ylab("Weakly deleterious correlation  ") + 
       scale_x_continuous(limits=c(0.7, 1.0)) + 
       scale_y_continuous(limits=c(0.7, 1.0)) + 
       scale_color_brewer(palette = "Dark2", name= "Inference Method")
       
 p2 <- ggplot(all.estbias, aes(x = strong, y = weak, color = method)) + 
       geom_point() + geom_abline(slope=1, intercept=0) + 
-      xlab("Strongly deleterious estimator bias") + 
-      ylab("Weakly deleterious\nestimator bias" )+ 
+      xlab("Strongly deleterious bias") + 
+      ylab("Weakly deleterious bias" )+ 
       scale_y_continuous(limits=c(-0.05, 0.32)) +
       scale_x_continuous(limits=c(-0.05, 0.32)) +
       scale_color_brewer(palette = "Dark2", name= "Inference Method") +
@@ -289,7 +297,7 @@ p2 <- ggplot(all.estbias, aes(x = strong, y = weak, color = method)) +
 
 grobs <- ggplotGrob(p1)$grobs
 legend <- grobs[[which(sapply(grobs, function(x) x$name) == "guide-box")]]
-prow <- plot_grid(p1 + theme(legend.position = "none") ,p2, labels=c("A", "B"))
+prow <- plot_grid(p1 + theme(legend.position = "none") ,p2, labels=c("A", "B"), vjust=0.7, scale=0.98)
 strong.weak.r.b <- plot_grid(prow, legend, rel_widths = c(2, .5))
 save_plot(paste0(maintext_plot_directory, "scatter_strong_weak_rb.pdf"), strong.weak.r.b, base_width=8, base_height=2.75)
 
