@@ -88,7 +88,7 @@ spread.dnds %>% filter(del == "strong") %>%
 sim.dnds.r.b$method <- factor(sim.dnds.r.b$method, levels = methods_levels, labels = methods_labels)
 
 ## Figure 3
-theme_set(theme_cowplot() + theme(axis.text.x = element_text(size = 9), axis.text.y = element_text(size = 10), axis.title = element_text(size = 12), panel.border = element_rect(size = 0.5), panel.margin = unit(0.75, "lines"), strip.background = element_rect(fill="white"), strip.text = element_text(size=12)))
+theme_set(theme_cowplot() + theme(axis.text.x = element_text(size = 9), axis.text.y = element_text(size = 10), axis.title = element_text(size = 12, face = "bold"), panel.border = element_rect(size = 0.5), panel.margin = unit(0.75, "lines"), strip.background = element_rect(fill="white"), strip.text = element_text(size=12)))
 fig3 <- ggplot(dnds.repr.strong, aes(x = true, y = dnds)) + 
         geom_point(size=1) + geom_abline(slope = 1, intercept = 0, color="red") + 
         xlab("True dN/dS") + ylab("Predicted dN/dS") + 
@@ -98,7 +98,7 @@ save_plot(paste0(maintext_plot_directory, "repr_dnds_scatter.pdf"), fig3, base_w
 
 
 ## Figure 4A
-theme_set(theme_cowplot() + theme(axis.text.x = element_text(size = 10), axis.text.y = element_text(size = 12), axis.title = element_text(size = 14)))
+theme_set(theme_cowplot() + theme(axis.text.x = element_text(size = 10), axis.text.y = element_text(size = 12), axis.title = element_text(size = 14, face="bold")))
 ggplot(sim.dnds.r.b, aes(x = method, y = r)) + 
        geom_boxplot() + 
        xlab("Inference Method") + ylab("Pearson Correlation") +
