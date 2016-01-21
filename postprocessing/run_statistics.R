@@ -103,101 +103,62 @@ summary(fit1.mc.del)
 #                     Estimate Std. Error z value Pr(>|z|)
 # weak - strong == 0 -0.0218335  0.0006216  -35.12   <2e-16 ***  # weakly deleterious has slightly lower JSD then highly deleterious
 
+# Correlation between sw, pb dN/dS
+sim.dnds %>% filter(method %in% c("nopenal", "phylobayes")) %>% 
+             spread(method,dnds) %>% group_by(dataset, del) %>% 
+             do(rraw = cor(.$nopenal, .$phylobayes)) %>% 
+             mutate(r.sw.pb = rraw[[1]]) %>% select(-rraw) %>% 
+             ungroup() %>% group_by(del) %>% summarize(meanr = mean(r.sw.pb))
+#      del     meanr
+#   (fctr)     (dbl)
+# 1 strong 0.8917910
+# 2   weak 0.8983336
 
-
-
-sim.dnds %>% spread(method,dnds) %>% filter(del == "strong") %>% 
-             gather(method, dnds, d0.01, d0.1, d1.0, mvn1, mvn10, mvn100, nopenal, phylobayes) %>% 
-             select(dataset, del, site, true, dnds, method) %>% group_by(dataset, method) %>%
-             do(rraw = cor(.$true, .$dnds)) %>% mutate(r2 = rraw[[1]]^2) %>% select(-rraw) -> strong.corrs
-
-sim.dnds %>% spread(method,dnds) %>% filter(del == "weak") %>% 
-             gather(method, dnds, d0.01, d0.1, d1.0, mvn1, mvn10, mvn100, nopenal, phylobayes) %>% 
-             select(dataset, del, site, true, dnds, method) %>% group_by(dataset, method) %>%
-             do(rraw = cor(.$true, .$dnds)) %>% mutate(r2 = rraw[[1]]^2) %>% select(-rraw) -> weak.corrs
-             
+         
 sim.dnds %>% spread(method,dnds) %>%
              gather(method, dnds, d0.01, d0.1, d1.0, mvn1, mvn10, mvn100, nopenal, phylobayes) %>% 
              select(dataset, del, site, true, dnds, method) %>% group_by(dataset, del, method) %>%
-             do(rraw = cor(.$true, .$dnds)) %>% mutate(r2 = rraw[[1]]^2) %>% select(-rraw) -> all.corrs
+             do(rraw = cor(.$true, .$dnds)) %>% mutate(r = rraw[[1]]) %>% select(-rraw) -> all.corrs
 
 sim.dnds %>% spread(method,dnds) %>%
              gather(method, dnds, d0.01, d0.1, d1.0, mvn1, mvn10, mvn100, nopenal, phylobayes) %>% 
              select(dataset, del, site, true, dnds, method) %>% group_by(dataset, del, method) %>%
              do(braw = glm(dnds ~ offset(true), dat=.)) %>% mutate(b = summary(braw)$coeff[1]) %>% select(-braw) -> all.estbias
 
-fit2 <- lmer(r2 ~ method  + (1|dataset), data = strong.corrs)
-fit2.mc.method <- glht(fit2, linfct=mcp(method='Tukey')) # dN/dS r^2 among methods
-summary(fit2.mc.method)
-# Linear Hypotheses:
-#                             Estimate Std. Error z value Pr(>|z|)    
-# d0.1 - d0.01 == 0         -1.260e-01  1.471e-02  -8.561   <0.001 ***
-# d1.0 - d0.01 == 0         -2.799e-01  1.471e-02 -19.024   <0.001 ***
-# mvn1 - d0.01 == 0         -2.911e-02  1.471e-02  -1.979   0.4964     mvn1    = d0.01
-# mvn10 - d0.01 == 0         8.989e-03  1.471e-02   0.611   0.9988     mvn10   = d0.01
-# mvn100 - d0.01 == 0        8.063e-03  1.471e-02   0.548   0.9994     mvn100  = d0.01
-# nopenal - d0.01 == 0       8.053e-03  1.471e-02   0.547   0.9994     nopenal = d0.01
-# phylobayes - d0.01 == 0   -1.777e-01  1.471e-02 -12.078   <0.001 ***
-# d1.0 - d0.1 == 0          -1.539e-01  1.471e-02 -10.463   <0.001 ***
-# mvn1 - d0.1 == 0           9.684e-02  1.471e-02   6.582   <0.001 ***
-# mvn10 - d0.1 == 0          1.349e-01  1.471e-02   9.172   <0.001 ***
-# mvn100 - d0.1 == 0         1.340e-01  1.471e-02   9.109   <0.001 ***
-# nopenal - d0.1 == 0        1.340e-01  1.471e-02   9.108   <0.001 ***
-# phylobayes - d0.1 == 0    -5.175e-02  1.471e-02  -3.517   0.0101 *  
-# mvn1 - d1.0 == 0           2.508e-01  1.471e-02  17.045   <0.001 ***
-# mvn10 - d1.0 == 0          2.889e-01  1.471e-02  19.635   <0.001 ***
-# mvn100 - d1.0 == 0         2.880e-01  1.471e-02  19.572   <0.001 ***
-# nopenal - d1.0 == 0        2.880e-01  1.471e-02  19.571   <0.001 ***
-# phylobayes - d1.0 == 0     1.022e-01  1.471e-02   6.946   <0.001 ***
-# mvn10 - mvn1 == 0          3.810e-02  1.471e-02   2.590   0.1594      mvn10  = mvn1
-# mvn100 - mvn1 == 0         3.717e-02  1.471e-02   2.527   0.1839      mvn100 = mvn1
-# nopenal - mvn1 == 0        3.717e-02  1.471e-02   2.526   0.1846      nopenal = mvn1
-# phylobayes - mvn1 == 0    -1.486e-01  1.471e-02 -10.099   <0.001 ***
-# mvn100 - mvn10 == 0       -9.268e-04  1.471e-02  -0.063   1.0000      mvn100 = mvn10
-# nopenal - mvn10 == 0      -9.366e-04  1.471e-02  -0.064   1.0000      nopenal = mvn10
-# phylobayes - mvn10 == 0   -1.867e-01  1.471e-02 -12.689   <0.001 ***
-# nopenal - mvn100 == 0     -9.804e-06  1.471e-02  -0.001   1.0000      nopenal = mvn100
-# phylobayes - mvn100 == 0  -1.858e-01  1.471e-02 -12.626   <0.001 ***
-# phylobayes - nopenal == 0 -1.858e-01  1.471e-02 -12.625   <0.001 ***
+pvalues <- c()
+diffmean <- c()
+for (m in c("nopenal", "mvn100", "mvn10", "mvn1", "d0.01", "d0.1", "d1.0", "phylobayes")){
+    all.corrs %>% filter(method == m) %>% spread(del, r) -> temp.r
+    p <- t.test(abs(temp.r$strong), abs(temp.r$weak), paired=T)$p.value * 8
+    dmean <- t.test(abs(temp.r$strong), abs(temp.r$weak), paired=T)$estimate[[1]]
+    pvalues <- c(pvalues,p)
+    diffmean <- c(dmean, diffmean)
+}
+# > pvalues
+# [1] 0.0150789084 0.0155418391 0.0212969244 0.6450600799 0.0415408126
+# [6] 0.0006251165 0.1961793653 0.1819832238
+# > diffmean
+# [1] -0.02929473 -0.03439345 -0.04075960  0.02077548  0.01290726  0.02391741
+# [7]  0.02578794  0.02587353
 
 
-fit2 <- lmer(r2 ~ method  + del +  (1|dataset), data = all.corrs)
-fit2.mc.method <- glht(fit2, linfct=mcp(del='Tukey')) # dnds correlations between strong, weak deleterious (controlling for method and dataset) are the same.
-summary(fit2.mc.method)
-#Linear Hypotheses:
-#                    Estimate Std. Error z value Pr(>|z|)
-#weak - strong == 0 -0.003217   0.006420  -0.501    0.616
-
-
-fit2 <- lmer(b ~ method * del +  (1|dataset), data = all.estbias)
-summary(fit2)
-#                           Estimate Std. Error         df t value Pr(>|t|)    
-# (Intercept)              -4.479e-03  2.814e-03  3.071e+01  -1.592  0.12167    
-# methodd0.1                6.161e-02  2.728e-03  1.501e+02  22.580  < 2e-16 ***
-# methodd1.0                2.638e-01  2.728e-03  1.501e+02  96.700  < 2e-16 ***
-# methodmvn1                1.408e-01  2.728e-03  1.501e+02  51.613  < 2e-16 ***
-# methodmvn10              -7.543e-03  2.728e-03  1.501e+02  -2.765  0.00641 ** 
-# methodmvn100             -1.247e-02  2.728e-03  1.501e+02  -4.569 1.02e-05 ***
-# methodnopenal            -1.266e-02  2.728e-03  1.501e+02  -4.640 7.52e-06 ***
-# methodphylobayes          9.050e-02  2.728e-03  1.501e+02  33.168  < 2e-16 ***
-# delweak                  -2.159e-02  2.728e-03  1.501e+02  -7.912 5.13e-13 ***
-# methodd0.1:delweak       -1.825e-02  3.858e-03  1.501e+02  -4.729 5.15e-06 ***
-# methodd1.0:delweak       -2.264e-02  3.858e-03  1.501e+02  -5.867 2.73e-08 ***
-# methodmvn1:delweak        3.408e-04  3.858e-03  1.501e+02   0.088  0.92975    
-# methodmvn10:delweak       7.291e-03  3.858e-03  1.501e+02   1.890  0.06075 .  
-# methodmvn100:delweak      6.508e-03  3.858e-03  1.501e+02   1.687  0.09375 .  
-# methodnopenal:delweak     6.474e-03  3.858e-03  1.501e+02   1.678  0.09545 .  
-# methodphylobayes:delweak  1.896e-02  3.858e-03  1.501e+02   4.913 2.32e-06 ***
 
 pvalues <- c()
 diffmean <- c()
 for (m in c("nopenal", "mvn100", "mvn10", "mvn1", "d0.01", "d0.1", "d1.0", "phylobayes")){
     all.estbias %>% filter(method == m) %>% spread(del, b) -> temp.estbias
-    p <- t.test(abs(temp.estbias$strong), abs(temp.estbias$weak), paired=T)$p.value * 8
+    p <- t.test(temp.estbias$strong - temp.estbias$weak)$p.value * 8
     dmean <- t.test(abs(temp.estbias$strong), abs(temp.estbias$weak), paired=T)$estimate[[1]]
     pvalues <- c(pvalues,p)
     diffmean <- c(dmean, diffmean)
 }
+#> pvalues
+#[1] 3.979519e-05 4.144619e-05 7.405707e-05 7.619535e-06 1.071930e-06
+#[6] 5.478385e-08 1.459229e-08 3.663218e+00
+#> diffmean
+#[1]  0.002629202  0.044226363  0.039835633 -0.019426738  0.021247262
+#[6] -0.014297121 -0.015080059 -0.015113860
+
 # all.estbias %>% group_by(method,del) %>% summarize(mean(b))
 #        method    del      mean(b)
 #        (fctr) (fctr)        (dbl)
