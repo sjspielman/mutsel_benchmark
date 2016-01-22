@@ -20,7 +20,7 @@
 - `postprocessing/` contains all code used to process, analyze, and plot data (mostly `R` scripts). All generated plots are also in this directory. **Note**: R code requires the packages cowplot, dplyr, tidyr, readr, lme4, multcomp, and lmerTest.
     - [`calculate_dnds_sc_jsd.py`](./postprocessing/calculate_dnds_sc_jsd.py) calculates *dN/dS*, selection coefficient distribitions, and JSD for inferences in `results/`.
     - [`process_results.R`](./postprocessing/process_results.R) processes inference results in [`dnds_coeffs_jsd/`](./results/dnds_coeffs_jsd/) to create csv files in [`summarized_results/`](./results/summarized_results).
-    - [`create_plots.R`](./postprocessing/create_plots.R) makes all the figures in the manuscript. Plots are saved in the subdirectory [`plots/`](./postprocessing/plots/)
+    - [`plot_figures.R`](./postprocessing/plot_figures.R) makes all the figures in the manuscript. Figures are saved in the subdirectory [`figures/`](./postprocessing/figures/)
     - [`run_statistics.R`](./postprocessing/run_statistics.R) performs some statistical analyses on the results. All stats output is commented out in this script itself.
 
 - `universal_functions.py` is simply a python module containing various functions used throughout the repository.
