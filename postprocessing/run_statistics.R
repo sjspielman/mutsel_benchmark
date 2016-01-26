@@ -123,7 +123,7 @@ sim.dnds %>% spread(method,dnds) %>%
 sim.dnds %>% spread(method,dnds) %>%
              gather(method, dnds, d0.01, d0.1, d1.0, mvn1, mvn10, mvn100, nopenal, phylobayes) %>% 
              select(dataset, del, site, true, dnds, method) %>% group_by(dataset, del, method) %>%
-             do(braw = glm(dnds ~ offset(true), dat=.)) %>% mutate(b = summary(braw)$coeff[1]) %>% select(-braw) -> all.estbias
+             do(braw = glm(dnds ~ offset(true), dat=.)) %>% mutate(b = summary(braw)$coeff[1], p = summary(braw)$coeff[4]*8, sig = p<=0.01) %>% select(-braw) -> all.estbias
 
 pvalues <- c()
 diffmean <- c()
@@ -140,7 +140,8 @@ for (m in c("nopenal", "mvn100", "mvn10", "mvn1", "d0.01", "d0.1", "d1.0", "phyl
 # > diffmean
 # [1] -0.02929473 -0.03439345 -0.04075960  0.02077548  0.01290726  0.02391741
 # [7]  0.02578794  0.02587353
-
+  
+    
 
 
 pvalues <- c()
