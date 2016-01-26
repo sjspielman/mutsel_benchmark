@@ -474,7 +474,7 @@ for (d in datasets){
 }
 grid_strong <- plot_grid(plotlist = sc_strong, nrow=11, labels = c("A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K"), vjust = c(2.5, rep(0.25,10)), rel_heights = c(0.105, rep(0.0895,10)))
 save_plot(paste0(si_plot_directory, "strong_selcoeffs_SI.pdf"), grid_strong, base_width = 12, base_height=18)
-grid_weak <- plot_grid(plotlist = sc_weak, nrow=11, labels = c("A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K"))
+grid_weak <- plot_grid(plotlist = sc_weak, nrow=11, labels = c("A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K"), vjust = c(2.5, rep(0.25,10)), rel_heights = c(0.105, rep(0.0895,10)))
 save_plot(paste0(si_plot_directory, "weak_selcoeffs_SI.pdf"), grid_weak, base_width = 12, base_height=18)
 
 
