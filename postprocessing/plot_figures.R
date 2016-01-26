@@ -14,6 +14,15 @@ si_plot_directory   <- "figures/SI/"
 
 jsd <- read.csv(paste0(result_directory, "jsd.csv"))
 dnds <- read.csv(paste0(result_directory, "dnds.csv"))
+
+methods_levels <- c("nopenal", "mvn100", "mvn10", "mvn1", "d0.01", "d0.1", "d1.0", "phylobayes")
+methods_labels <- c("Unpenalized", "mvn100", "mvn10", "mvn1", "d0.01", "d0.1", "d1.0", "pbMutSel")
+alpha <- 0.01 # Significance
+corrected.alpha <- alpha/length(methods_levels) #Bonferroni significance
+repr_sim <- "1IBS_A" # Selected because this dataset has the most codon columns (291)
+datasets <- unique(dnds$dataset)
+
+
 dnds %>% spread(method,dnds) %>% 
          gather(method, dnds, d0.01, d0.1, d1.0, mvn1, mvn10, mvn100, nopenal, phylobayes) %>% 
          select(dataset, del, site, true, dnds, method) -> spread.dnds
@@ -23,12 +32,10 @@ true.jsd <- dnds %>% filter(method=="true") %>%
 
 spread.dnds %>% group_by(dataset, del, method) %>%
                 do(rraw = cor(.$true, .$dnds), braw = glm(dnds ~ offset(true), dat=.)) %>% 
-                mutate(r = rraw[[1]], b = summary(braw)$coeff[1]) %>% select(-rraw, -braw) -> all.corrs.estbias
+                mutate(r = rraw[[1]], b = summary(braw)$coeff[1], b.pvalue = summary(braw)$coeff[4], sig.bias = b.pvalue<corrected.alpha) %>% 
+                select(-rraw, -braw) -> all.corrs.estbias
 
-methods_levels <- c("nopenal", "mvn100", "mvn10", "mvn1", "d0.01", "d0.1", "d1.0", "phylobayes")
-methods_labels <- c("Unpenalized", "mvn100", "mvn10", "mvn1", "d0.01", "d0.1", "d1.0", "pbMutSel")
-repr_sim <- "1IBS_A" # Selected because this dataset has the most codon columns (291)
-datasets <- unique(dnds$dataset)
+
 
 # function to return pvalue from an lm object
 lmp <- function (modelobject) {
@@ -148,29 +155,31 @@ save_plot(paste0(maintext_plot_directory, "repr_dnds_scatter.pdf"), fig3, base_w
 
 
 ##########################################################################################
-######## Figure 4: Boxplots of correlations, estimator bias for predicted dN/dS  #########
+####### Figure 4: Jitter plots of correlations, estimator bias for predicted dN/dS  ######
 ##########################################################################################
 print("Figure 4")
 
-theme_set(theme_cowplot() + theme(axis.text.x = element_text(size = 10), 
+theme_set(theme_cowplot() + theme(axis.text.x = element_text(size = 11), 
                                   axis.text.y = element_text(size = 12), 
                                   axis.title = element_text(size = 14, face="bold")))
 
 
-strong.corrs.estbias <- dnds.corrs.estbias %>% filter(del == "strong") 
+strong.corrs.estbias <- all.corrs.estbias %>% filter(del == "strong") 
 strong.corrs.estbias$method <- factor(strong.corrs.estbias$method, levels = methods_levels, labels = methods_labels)
 
-boxplot.r <- ggplot(strong.corrs.estbias, aes(x = method, y = r)) + 
-                    geom_boxplot() + 
+# all are significant, so no need for shape attribute
+jitter.r <- ggplot(strong.corrs.estbias, aes(x = method, y = r)) + 
+                    geom_jitter(w = 0.2) + 
                     xlab("Inference Method") + ylab("Pearson Correlation") +
                     scale_y_continuous(limits=c(0.7, 1.0))
 
-boxplot.b <- ggplot(strong.corrs.estbias, aes(x = method, y = b)) + 
-                    geom_boxplot() + 
+jitter.b <- ggplot(strong.corrs.estbias, aes(x = method, y = b, shape = sig.bias)) + 
+                    geom_jitter(w = 0.6) + 
+                    scale_shape_manual(values=c(1,19)) + 
                     xlab("Inference Method") + ylab("Estimator Bias") + 
-                    geom_hline(yintercept=0 )
-boxplots.r.b <- plot_grid(boxplot.r, boxplot.b, nrow=2, labels=c("A", "B"), label_size=17, scale=0.925)
-save_plot(paste0(maintext_plot_directory, "strong_r_bias.pdf"), boxplots.r.b, base_width=7, base_height=6)
+                    geom_hline(yintercept=0 ) + theme(legend.position="none")
+jitter.r.b <- plot_grid(jitter.r, jitter.b, nrow=2, labels=c("A", "B"), label_size=17, scale=0.925)
+save_plot(paste0(maintext_plot_directory, "JITTER_strong_r_bias.pdf"), jitter.r.b, base_width=7.5, base_height=6)
 
 
 
@@ -199,11 +208,10 @@ fig5a <- ggplot(strong, aes(x = truednds, y = jsd)) +
                strip.text = element_text(size=10))
 
 
-alpha <- 0.01/length(methods_levels) #  Bonferroni correction.
 true.jsd %>% filter(del == "strong") %>% 
              group_by(dataset,method) %>% 
              do(fit=lm(jsd~truednds, data=.)) %>% 
-             mutate(slope = round(fit[[1]][[2]],3), pvalue = lmp(fit), sig = pvalue < alpha) %>% 
+             mutate(slope = round(fit[[1]][[2]],3), pvalue = lmp(fit), sig = pvalue < corrected.alpha) %>% 
              select(-fit) -> jsd.true.slope.p
 jsd.true.slope.p$method <- factor(jsd.true.slope.p$method, levels = methods_levels, labels = methods_labels)
 fig5b <- ggplot(jsd.true.slope.p, aes(x = method, y = slope, shape=sig)) + 
@@ -453,11 +461,10 @@ save_plot(paste0(si_plot_directory, "weak_selcoeffs_SI.pdf"), grid_weak, base_wi
 ##########################################################################################
 print("Figure S5")
 
-alpha = 0.01/length(methods_levels)
 true.jsd %>% filter(del == "weak") %>% 
             group_by(dataset,method) %>% 
             do(fit=lm(jsd~truednds, data=.)) %>% 
-            mutate(slope = round(fit[[1]][[2]],3), pvalue = lmp(fit), sig = pvalue < alpha) %>% 
+            mutate(slope = round(fit[[1]][[2]],3), pvalue = lmp(fit), sig = pvalue < corrected.alpha) %>% 
             select(-fit) -> jsd.true.slope.p
 jsd.true.slope.p$method <- factor(jsd.true.slope.p$method, levels = methods_levels, labels = methods_labels)
 
