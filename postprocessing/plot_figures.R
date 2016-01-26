@@ -242,10 +242,10 @@ sc$method <- factor(sc$method, levels=c("true", "nopenal", "phylobayes"))
 spread.dnds.named <- spread.dnds
 spread.dnds.named$del <- factor(spread.dnds.named$del, levels=c("strong", "weak"), labels = c("Strongly deleterious", "Weakly deleterious"))
 
-theme_set(theme_cowplot() + theme(plot.margin = unit(c(0.3, 0.05, 0.05, 0.2),"cm"), 
+theme_set(theme_cowplot() + theme(plot.margin = unit(c(0.3, 0.1, 0.1, 0.2),"cm"), 
                                   panel.margin = unit(0.25, "cm"),
-                                  axis.text = element_text(size=8), 
-                                  axis.title = element_text(size=10, face = "bold"), 
+                                  axis.text = element_text(size=9), 
+                                  axis.title = element_text(size=9.5, face = "bold"), 
                                   strip.background = element_rect(fill="white"),
                                   strip.text = element_text(size = 9)))
 
@@ -270,9 +270,10 @@ fig6c <- sc %>% filter(method %in% c("true","nopenal")) %>%
                 scale_fill_manual(name = "", labels = c("True", "Inferred"), values =c("grey40", rgb(1, 1, 0, 0.4))) + 
                 ylab("Density") + xlab("Scaled Selection Coefficients") + 
                 theme(strip.text = element_blank(), 
+                      legend.margin=unit(-0.05,"cm"),
                       legend.position = "bottom", 
-                      legend.text = element_text(size=9), 
-                      legend.key.size = unit(0.4, "cm"))
+                      legend.text = element_text(size=8), 
+                      legend.key.size = unit(0.3, "cm"))
                                          
 fig6d <- sc %>% filter(method %in% c("true","phylobayes")) %>% 
                 ggplot(aes(x = binnedcoeff, fill = method)) + 
@@ -280,11 +281,12 @@ fig6d <- sc %>% filter(method %in% c("true","phylobayes")) %>%
                 scale_fill_manual(name = "", labels = c("True", "Inferred"), values = c("grey40", rgb(1, 1, 0, 0.4))) + 
                 ylab("Density") + xlab("Scaled Selection Coefficients") + 
                 theme(strip.text = element_blank(), 
+                      legend.margin=unit(-0.05,"cm"),
                       legend.position = "bottom", 
-                      legend.text = element_text(size=9),
-                      legend.key.size = unit(0.4, "cm"))
+                      legend.text = element_text(size=8),
+                      legend.key.size = unit(0.3, "cm"))
 
-fig6 <- plot_grid(fig6a, fig6b, fig6c, fig6d, nrow=2, labels=c("A", "B", "C", "D"), label_size = 13, scale=0.95)
+fig6 <- plot_grid(fig6a, fig6b, fig6c, fig6d, nrow=2, labels=c("A", "B", "C", "D"), label_size = 13, scale=0.97)
 save_plot(paste0(maintext_plot_directory, "dnds_sc_weakstrong.pdf"), fig6, base_width=7, base_height=4)
 
 
@@ -296,15 +298,18 @@ save_plot(paste0(maintext_plot_directory, "dnds_sc_weakstrong.pdf"), fig6, base_
 ##########################################################################################
 print("Figure 7")
 
-theme_set(theme_cowplot() + theme(axis.text = element_text(size=10), 
-                                  axis.title = element_text(size = 10, face="bold"), 
-                                  legend.title = element_text(size = 10), 
-                                  legend.text = element_text(size=9)))
-
 all.corrs <- all.corrs.estbias %>% select(-b, -b.pvalue, -sig.bias) %>% spread(del, r)
 all.corrs$method <- factor(all.corrs$method, levels = methods_levels, labels = methods_labels)
 all.estbias <- all.corrs.estbias %>% select(-r, -b.pvalue, -sig.bias) %>% spread(del, b)
 all.estbias$method <- factor(all.estbias$method, levels = methods_levels, labels = methods_labels)
+
+
+
+theme_set(theme_cowplot() + theme(plot.margin = unit(c(1.0, 0.1, 0.1, 0.2),"cm"), 
+                                  axis.text = element_text(size=11), 
+                                  axis.title = element_text(size = 11, face="bold"), 
+                                  legend.title = element_text(size = 10), 
+                                  legend.text = element_text(size=9)))
 
 p1 <- ggplot(all.corrs, aes(x = strong, y = weak, color = method)) + 
              geom_point() + geom_abline(slope=1, intercept=0) + 
@@ -327,21 +332,9 @@ p2 <- ggplot(all.estbias, aes(x = strong, y = weak, color = method)) +
 
 grobs <- ggplotGrob(p1)$grobs
 legend <- grobs[[which(sapply(grobs, function(x) x$name) == "guide-box")]]
-prow <- plot_grid(p1 + theme(legend.position = "none"), p2, labels=c("A", "B"), vjust=0.7, scale=0.98)
+prow <- plot_grid(p1 + theme(legend.position = "none"), p2, labels=c("A", "B"), vjust=0.8, scale=0.98)
 strong.weak.r.b <- plot_grid(prow, legend, rel_widths = c(2, .5))
 save_plot(paste0(maintext_plot_directory, "scatter_strong_weak_rb.pdf"), strong.weak.r.b, base_width=8, base_height=2.75)
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
