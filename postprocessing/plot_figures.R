@@ -126,59 +126,51 @@ save_plot(paste0(maintext_plot_directory, "jsd_maintext.pdf"), fig2, base_width 
 
 
 
+
 ##########################################################################################
-####### Figure 3: Scatterplots of true, predicted dN/dS for representative dataset #######
+##### Figure 3: True vs. predicted dN/dS: repr scatter, correlation and bias jitters #####
 ##########################################################################################
 print("Figure 3")
+
 
 dnds.repr.strong <- spread.dnds %>% filter(dataset == repr_sim, del == "strong")
 dnds.repr.strong$method <- factor(dnds.repr.strong$method, levels = methods_levels, labels = methods_labels)
 dnds.repr.weak <- spread.dnds %>% filter(dataset == repr_sim, del == "weak")
 dnds.repr.weak$method <- factor(dnds.repr.weak$method, levels = methods_levels, labels = methods_labels)
 
-theme_set(theme_cowplot() + theme(axis.text = element_text(size = 8.5), 
-                                  axis.title = element_text(size = 11, face = "bold"), 
-                                  panel.border = element_rect(size = 0.5), 
-                                  panel.margin = unit(0.25, "cm"), 
-                                  strip.background = element_rect(fill="white"), 
-                                  strip.text = element_text(size=10)))
-
-fig3 <- ggplot(dnds.repr.strong, aes(x = true, y = dnds)) + 
-        geom_point(size=1) + geom_abline(slope = 1, intercept = 0, color="red") + 
-        xlab("True dN/dS") + ylab("Predicted dN/dS") + 
-        scale_y_continuous(limits=c(0,0.88)) + scale_x_continuous(limits=c(0,0.88)) + 
-        facet_grid(~method) 
-save_plot(paste0(maintext_plot_directory, "repr_dnds_scatter.pdf"), fig3, base_width=10, base_height=2)
-
-
-
-
-##########################################################################################
-####### Figure 4: Jitter plots of correlations, estimator bias for predicted dN/dS  ######
-##########################################################################################
-print("Figure 4")
-
-theme_set(theme_cowplot() + theme(axis.text.x = element_text(size = 11), 
-                                  axis.text.y = element_text(size = 12), 
-                                  axis.title = element_text(size = 14, face="bold")))
-
-
 strong.corrs.estbias <- all.corrs.estbias %>% filter(del == "strong") 
 strong.corrs.estbias$method <- factor(strong.corrs.estbias$method, levels = methods_levels, labels = methods_labels)
 
-# all are significant, so no need for shape attribute
-jitter.r <- ggplot(strong.corrs.estbias, aes(x = method, y = r)) + 
-                    geom_jitter(w = 0.2) + 
+                                  
+theme_set(theme_cowplot() + theme(axis.text = element_text(size = 15),  
+                                  axis.title.x = element_text(size = 14, face="bold"),
+                                  axis.title.y = element_text(size = 13, face="bold"),
+                                  panel.border = element_rect(size = 0.5), 
+                                  panel.margin = unit(0.25, "cm"), 
+                                  strip.background = element_rect(fill="white"), 
+                                  strip.text = element_text(size=14)))
+
+
+repr.scatter <- ggplot(dnds.repr.strong, aes(x = true, y = dnds)) + 
+                       geom_point(size=1) + geom_abline(slope = 1, intercept = 0, color="red") + 
+                       xlab("True dN/dS") + ylab("Predicted dN/dS") + 
+                       scale_y_continuous(limits=c(0,0.88)) + scale_x_continuous(limits=c(0,0.88)) + 
+                       facet_grid(~method) + 
+                       theme(axis.text.x = element_text(size = 10.25), 
+                             axis.text.y = element_text(size = 11))
+
+jitter.r <- ggplot(strong.corrs.estbias, aes(x = method, y = r)) + # all are significant, so no need for shape attribute
+                    geom_jitter(w = 0.2, size=2) +  
                     xlab("Inference Method") + ylab("Pearson Correlation") +
                     scale_y_continuous(limits=c(0.7, 1.0))
 
 jitter.b <- ggplot(strong.corrs.estbias, aes(x = method, y = b, shape = sig.bias)) + 
-                    geom_jitter(w = 0.6) + 
+                    geom_jitter(w = 0.65, size=2) + 
                     scale_shape_manual(values=c(1,19)) + 
                     xlab("Inference Method") + ylab("Estimator Bias") + 
                     geom_hline(yintercept=0 ) + theme(legend.position="none")
-jitter.r.b <- plot_grid(jitter.r, jitter.b, nrow=2, labels=c("A", "B"), label_size=17, scale=0.925)
-save_plot(paste0(maintext_plot_directory, "strong_r_bias.pdf"), jitter.r.b, base_width=7.5, base_height=6)
+dnds.plot <- plot_grid(repr.scatter, jitter.r, jitter.b, nrow=3, labels=c("A", "B", "C"), label_size=17, vjust = 0.9, hjust=-0.25, scale = 0.98, rel_heights = c(1.25,1.5,1.5) )
+save_plot(paste0(maintext_plot_directory, "true_pred_dnds.pdf"), dnds.plot, base_width=11.5, base_height=7)
 
 
 
@@ -186,9 +178,9 @@ save_plot(paste0(maintext_plot_directory, "strong_r_bias.pdf"), jitter.r.b, base
 
 
 ##########################################################################################
-##### Figure 5: JSD regressed on true dN/dS for representative, and slopes for all #######
+##### Figure 4: JSD regressed on true dN/dS for representative, and slopes for all #######
 ##########################################################################################
-print("Figure 5")
+print("Figure 4")
 
 strong <- true.jsd %>% filter(del == "strong", dataset == repr_sim)
 strong$method <- factor(strong$method, levels = methods_levels, labels = methods_labels)
@@ -198,7 +190,7 @@ theme_set(theme_cowplot() + theme(axis.text = element_text(size = 9),
                                   strip.background = element_rect(fill="white"), 
                                   strip.text = element_text(size=10)))
 
-fig5a <- ggplot(strong, aes(x = truednds, y = jsd)) + 
+fig4a <- ggplot(strong, aes(x = truednds, y = jsd)) + 
          geom_point(size=1) + 
          facet_grid(~method) + 
          geom_smooth(method="lm", color="red") + 
@@ -211,7 +203,7 @@ true.jsd %>% filter(del == "strong") %>%
              mutate(slope = round(fit[[1]][[2]],3), pvalue = lmp(fit), sig = pvalue < corrected.alpha) %>% 
              select(-fit) -> jsd.true.slope.p
 jsd.true.slope.p$method <- factor(jsd.true.slope.p$method, levels = methods_levels, labels = methods_labels)
-fig5b <- ggplot(jsd.true.slope.p, aes(x = method, y = slope, shape=sig)) + 
+fig4b <- ggplot(jsd.true.slope.p, aes(x = method, y = slope, shape=sig)) + 
                 geom_point(position = position_jitter(w = 0.4)) + 
                 scale_shape_manual(values=c(1,19)) + 
                 geom_hline(yintercept=0) + 
@@ -220,7 +212,7 @@ fig5b <- ggplot(jsd.true.slope.p, aes(x = method, y = slope, shape=sig)) +
                 theme(axis.text.x = element_text(size = 11), 
                       axis.text.y = element_text(size = 10))
 
-fig5 <- plot_grid(fig5a, fig5b, nrow=2, labels=c("A", "B"))
+fig4 <- plot_grid(fig4a, fig4b, nrow=2, labels=c("A", "B"))
 save_plot(paste0(maintext_plot_directory, "jsd_dnds.pdf"), fig5, base_width=9.5, base_height=4)
 
 
@@ -229,9 +221,9 @@ save_plot(paste0(maintext_plot_directory, "jsd_dnds.pdf"), fig5, base_width=9.5,
 
 
 ##########################################################################################
-##### Figure 6: weak vs. strong scatterplots and selection coefficient distributions #####
+##### Figure 5: weak vs. strong scatterplots and selection coefficient distributions #####
 ##########################################################################################
-print("Figure 6")
+print("Figure 5")
 
 strong.sc.full <- read_csv(paste0(result_directory, repr_sim, "_delstrong_selection_coefficients.csv"))
 weak.sc.full <- read_csv(paste0(result_directory, repr_sim, "_delweak_selection_coefficients.csv"))
@@ -249,14 +241,14 @@ theme_set(theme_cowplot() + theme(plot.margin = unit(c(0.3, 0.1, 0.1, 0.2),"cm")
                                   strip.background = element_rect(fill="white"),
                                   strip.text = element_text(size = 9)))
 
-fig6a <- spread.dnds.named %>% filter(dataset == repr_sim, method == "nopenal") %>% 
+fig5a <- spread.dnds.named %>% filter(dataset == repr_sim, method == "nopenal") %>% 
          ggplot(aes(x = true, y = dnds)) + 
          geom_point() + geom_abline(slope = 1, intercept = 0, color="red") + 
          facet_grid(~del) + xlab("True dN/dS") + ylab("swMutSel dN/dS") +   
          scale_x_continuous(limits = c(0,0.9)) + 
          scale_y_continuous(limits = c(0,0.9))
          
-fig6b <- spread.dnds.named %>% filter(dataset == repr_sim, method == "phylobayes") %>% 
+fig5b <- spread.dnds.named %>% filter(dataset == repr_sim, method == "phylobayes") %>% 
          ggplot(aes(x = true, y = dnds)) + 
          geom_point() + geom_abline(slope = 1, intercept = 0, color="red") + 
          facet_grid(~del) + xlab("True dN/dS") + ylab("pbMutSel dN/dS") + 
@@ -264,7 +256,7 @@ fig6b <- spread.dnds.named %>% filter(dataset == repr_sim, method == "phylobayes
          scale_y_continuous(limits = c(0,0.9))
                                   
                                   
-fig6c <- sc %>% filter(method %in% c("true","nopenal")) %>% 
+fig5c <- sc %>% filter(method %in% c("true","nopenal")) %>% 
                 ggplot(aes(x = binnedcoeff, fill = method)) + 
                 geom_density() + facet_grid(~del) + 
                 scale_fill_manual(name = "", labels = c("True", "Inferred"), values =c("grey40", rgb(1, 1, 0, 0.4))) + 
@@ -275,7 +267,7 @@ fig6c <- sc %>% filter(method %in% c("true","nopenal")) %>%
                       legend.text = element_text(size=8), 
                       legend.key.size = unit(0.3, "cm"))
                                          
-fig6d <- sc %>% filter(method %in% c("true","phylobayes")) %>% 
+fig5d <- sc %>% filter(method %in% c("true","phylobayes")) %>% 
                 ggplot(aes(x = binnedcoeff, fill = method)) + 
                 geom_density() + facet_grid(~del) + 
                 scale_fill_manual(name = "", labels = c("True", "Inferred"), values = c("grey40", rgb(1, 1, 0, 0.4))) + 
@@ -286,7 +278,7 @@ fig6d <- sc %>% filter(method %in% c("true","phylobayes")) %>%
                       legend.text = element_text(size=8),
                       legend.key.size = unit(0.3, "cm"))
 
-fig6 <- plot_grid(fig6a, fig6b, fig6c, fig6d, nrow=2, labels=c("A", "B", "C", "D"), label_size = 13, scale=0.97)
+fig5 <- plot_grid(fig5a, fig5b, fig5c, fig5d, nrow=2, labels=c("A", "B", "C", "D"), label_size = 13, scale=0.97)
 save_plot(paste0(maintext_plot_directory, "dnds_sc_weakstrong.pdf"), fig6, base_width=7, base_height=4)
 
 
@@ -294,9 +286,9 @@ save_plot(paste0(maintext_plot_directory, "dnds_sc_weakstrong.pdf"), fig6, base_
 
 
 ##########################################################################################
-############# Figure 7: weak vs. strong dN/dS correlation and estimator bias #############
+############# Figure 6: weak vs. strong dN/dS correlation and estimator bias #############
 ##########################################################################################
-print("Figure 7")
+print("Figure 6")
 
 all.corrs <- all.corrs.estbias %>% select(-b, -b.pvalue, -sig.bias) %>% spread(del, r)
 all.corrs$method <- factor(all.corrs$method, levels = methods_levels, labels = methods_labels)
