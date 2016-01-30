@@ -227,50 +227,61 @@ print("Figure 5")
 
 strong.sc.full <- read_csv(paste0(result_directory, repr_sim, "_delstrong_selection_coefficients.csv"))
 weak.sc.full <- read_csv(paste0(result_directory, repr_sim, "_delweak_selection_coefficients.csv"))
-strong.sc <- filter(strong.sc.full, method %in% c("true", "nopenal", "phylobayes"))
-weak.sc <- filter(weak.sc.full, method %in% c("true", "nopenal", "phylobayes"))
+strong.sc <- filter(strong.sc.full, method %in% c("true", "nopenal", "mvn1", "phylobayes"))
+weak.sc <- filter(weak.sc.full, method %in% c("true", "nopenal", "mvn1", "phylobayes"))
 sc <- rbind(strong.sc, weak.sc)
-sc$method <- factor(sc$method, levels=c("true", "nopenal", "phylobayes"))
+sc$method <- factor(sc$method, levels=c("true", "nopenal", "mvn1", "phylobayes"))
 spread.dnds.named <- spread.dnds
 spread.dnds.named$del <- factor(spread.dnds.named$del, levels=c("strong", "weak"), labels = c("Strongly deleterious", "Weakly deleterious"))
 
-theme_set(theme_cowplot() + theme(plot.margin = unit(c(0.3, 0.1, 0.1, 0.2),"cm"), 
+theme_set(theme_cowplot() + theme(plot.margin = unit(c(0.2, 0.1, 0.1, 0.2),"cm"), 
                                   panel.margin = unit(0.25, "cm"),
-                                  axis.text = element_text(size=9), 
-                                  axis.title = element_text(size=9.5, face = "bold"), 
+                                  axis.text = element_text(size=10), 
+                                  axis.title = element_text(size=10.5, face = "bold"), 
                                   strip.background = element_rect(fill="white"),
                                   strip.text = element_text(size = 9)))
 
 fig5a <- spread.dnds.named %>% filter(dataset == repr_sim, method == "nopenal") %>% 
          ggplot(aes(x = true, y = dnds)) + 
          geom_point() + geom_abline(slope = 1, intercept = 0, color="red") + 
-         facet_grid(~del) + xlab("True dN/dS") + ylab("swMutSel dN/dS") +   
+         facet_grid(~del) + xlab("True dN/dS") + ylab("Unpenalized dN/dS") +   
+         scale_x_continuous(limits = c(0,0.9)) + 
+         scale_y_continuous(limits = c(0,0.9))
+        
+                                  
+fig5b <- spread.dnds.named %>% filter(dataset == repr_sim, method == "mvn1") %>% 
+         ggplot(aes(x = true, y = dnds)) + 
+         geom_point() + geom_abline(slope = 1, intercept = 0, color="red") + 
+         facet_grid(~del) + xlab("True dN/dS") + ylab("mvn1 dN/dS") + 
          scale_x_continuous(limits = c(0,0.9)) + 
          scale_y_continuous(limits = c(0,0.9))
          
-fig5b <- spread.dnds.named %>% filter(dataset == repr_sim, method == "phylobayes") %>% 
+         
+fig5c <- spread.dnds.named %>% filter(dataset == repr_sim, method == "phylobayes") %>% 
          ggplot(aes(x = true, y = dnds)) + 
          geom_point() + geom_abline(slope = 1, intercept = 0, color="red") + 
          facet_grid(~del) + xlab("True dN/dS") + ylab("pbMutSel dN/dS") + 
          scale_x_continuous(limits = c(0,0.9)) + 
          scale_y_continuous(limits = c(0,0.9))
                                   
-                                  
-fig5c <- sc %>% filter(method %in% c("true","nopenal")) %>% 
+
+         
+fig5d <- sc %>% filter(method %in% c("true","nopenal")) %>% 
                 ggplot(aes(x = binnedcoeff, fill = method)) + 
                 geom_density() + facet_grid(~del) + 
-                scale_fill_manual(name = "", labels = c("True", "Inferred"), values =c("grey40", rgb(1, 1, 0, 0.4))) + 
+                scale_fill_manual(name = "", labels = c("True", "Unpenalized"), values =c("grey40", rgb(1, 1, 0, 0.4))) + 
                 ylab("Density") + xlab("Scaled Selection Coefficients") + 
                 theme(strip.text = element_blank(), 
                       legend.margin=unit(-0.05,"cm"),
                       legend.position = "bottom", 
                       legend.text = element_text(size=8), 
                       legend.key.size = unit(0.3, "cm"))
+                                
                                          
-fig5d <- sc %>% filter(method %in% c("true","phylobayes")) %>% 
+fig5e <- sc %>% filter(method %in% c("true","mvn1")) %>% 
                 ggplot(aes(x = binnedcoeff, fill = method)) + 
                 geom_density() + facet_grid(~del) + 
-                scale_fill_manual(name = "", labels = c("True", "Inferred"), values = c("grey40", rgb(1, 1, 0, 0.4))) + 
+                scale_fill_manual(name = "", labels = c("True", "mvn1"), values = c("grey40", rgb(1, 1, 0, 0.4))) + 
                 ylab("Density") + xlab("Scaled Selection Coefficients") + 
                 theme(strip.text = element_blank(), 
                       legend.margin=unit(-0.05,"cm"),
@@ -278,8 +289,21 @@ fig5d <- sc %>% filter(method %in% c("true","phylobayes")) %>%
                       legend.text = element_text(size=8),
                       legend.key.size = unit(0.3, "cm"))
 
-fig5 <- plot_grid(fig5a, fig5b, fig5c, fig5d, nrow=2, labels=c("A", "B", "C", "D"), label_size = 13, scale=0.97)
-save_plot(paste0(maintext_plot_directory, "dnds_sc_weakstrong.pdf"), fig6, base_width=7, base_height=4)
+
+fig5f <- sc %>% filter(method %in% c("true","phylobayes")) %>% 
+                ggplot(aes(x = binnedcoeff, fill = method)) + 
+                geom_density() + facet_grid(~del) + 
+                scale_fill_manual(name = "", labels = c("True", "pbMutSel"), values = c("grey40", rgb(1, 1, 0, 0.4))) + 
+                ylab("Density") + xlab("Scaled Selection Coefficients") + 
+                theme(strip.text = element_blank(), 
+                      legend.margin=unit(-0.05,"cm"),
+                      legend.position = "bottom", 
+                      legend.text = element_text(size=8),
+                      legend.key.size = unit(0.3, "cm"))
+
+
+fig5 <- plot_grid(fig5a, fig5b, fig5c, fig5d, fig5e, fig5f, nrow=2, labels=c("A", "B", "C", "D", "E", "F"), label_size = 14, scale=0.95)
+save_plot(paste0(maintext_plot_directory, "dnds_sc_weakstrong.pdf"), fig5, base_width=10.5, base_height=4.5)
 
 
 
