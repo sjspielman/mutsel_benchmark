@@ -1,4 +1,4 @@
-### Repository for *mutsel model benchmark paper of TBD name*, by SJS\* and COW. 
+### Repository for *Extensively-parameterized mutation–selection models reliably capture site-specific selective constraint*, by SJS\* and COW. 
 
 ### Contents of repository:
 
