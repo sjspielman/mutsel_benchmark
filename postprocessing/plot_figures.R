@@ -160,16 +160,17 @@ repr.scatter <- ggplot(dnds.repr.strong, aes(x = true, y = dnds)) +
                              axis.text.y = element_text(size = 11))
 
 jitter.r <- ggplot(strong.corrs.estbias, aes(x = method, y = r)) + # all are significant, so no need for shape attribute
-                    geom_jitter(w = 0.2, size=2) +  
+                    geom_jitter(w = 0.5, size=2) +  
                     xlab("Inference Method") + ylab("Pearson Correlation") +
                     scale_y_continuous(limits=c(0.7, 1.0))
 
 jitter.b <- ggplot(strong.corrs.estbias, aes(x = method, y = b, shape = sig.bias)) + 
-                    geom_jitter(w = 0.65, size=2) + 
+                    geom_jitter(w = 0.5, size=2) + 
                     scale_shape_manual(values=c(1,19)) + 
                     xlab("Inference Method") + ylab("Estimator Bias") + 
                     geom_hline(yintercept=0 ) + theme(legend.position="none")
-dnds.plot <- plot_grid(repr.scatter, jitter.r, jitter.b, nrow=3, labels=c("A", "B", "C"), label_size=17, vjust = 0.9, hjust=-0.25, scale = 0.98, rel_heights = c(1.25,1.5,1.5) )
+                    
+dnds.plot <- plot_grid(repr.scatter, jitter.r, jitter.b, nrow=3, labels=c("A", "B", "C"), vjust = 0.9, hjust=-0.25, label_size=17, scale = 0.98, rel_heights = c(1.3,1.5,1.5) )
 save_plot(paste0(maintext_plot_directory, "true_pred_dnds.pdf"), dnds.plot, base_width=11.5, base_height=7)
 
 
@@ -213,7 +214,7 @@ fig4b <- ggplot(jsd.true.slope.p, aes(x = method, y = slope, shape=sig)) +
                       axis.text.y = element_text(size = 10))
 
 fig4 <- plot_grid(fig4a, fig4b, nrow=2, labels=c("A", "B"))
-save_plot(paste0(maintext_plot_directory, "jsd_dnds.pdf"), fig5, base_width=9.5, base_height=4)
+save_plot(paste0(maintext_plot_directory, "jsd_dnds.pdf"), fig4, base_width=9.5, base_height=4)
 
 
 
@@ -391,7 +392,7 @@ print("Creating SI plots")
 ##########################################################################################
 print("Figures S1, S3")
 
-theme_set(theme_cowplot() + theme(plot.margin = unit(c(0.1,2.2,0.1,0.1),"cm"), 
+theme_set(theme_cowplot() + theme(plot.margin = unit(c(0.1,3,0.1,0.1),"cm"), 
                                   axis.text = element_text(size = 11), 
                                   axis.title.x = element_text(size = 13), 
                                   axis.title.y = element_text(size = 11),
@@ -403,6 +404,7 @@ scatters_strong <- list()
 scatters_weak <- list()
 i <- 1
 for (d in datasets){
+    splitd <- gsub("_", ", chain ", d)
     subdat <- spread.dnds %>% filter(dataset == d)
     subdat$method <- factor(subdat$method, levels = methods_levels, labels = methods_labels)
 
@@ -428,8 +430,8 @@ for (d in datasets){
         pstrong.raw <- pstrong.raw + theme(strip.background = element_blank(), strip.text = element_blank())
         pweak.raw <- pweak.raw + theme(strip.background = element_blank(), strip.text = element_blank())
     }
-    pstrong <- ggdraw(pstrong.raw) + draw_label(d, x = 0.97, y = 0.5, size=12)
-    pweak <- ggdraw(pweak.raw) + draw_label(d, x = 0.97, y = 0.5, size=12)
+    pstrong <- ggdraw(pstrong.raw) + draw_label(splitd, x = 0.95, y = 0.55, size=12)
+    pweak <- ggdraw(pweak.raw) + draw_label(splitd, x = 0.95, y = 0.55, size=12)
 
 
     scatters_strong[[i]] <- pstrong
@@ -450,7 +452,7 @@ save_plot(paste0(si_plot_directory, "weak_dnds_scatter_SI.pdf"), grid_weak, base
 ##########################################################################################
 print("Figures S2, S4")
 
-theme_set(theme_cowplot() + theme(plot.margin = unit(c(0.1,2.2,0.1,0.1),"cm"), 
+theme_set(theme_cowplot() + theme(plot.margin = unit(c(0.1,3,0.1,0.1),"cm"), 
                                   axis.text = element_text(size=11), 
                                   axis.title = element_text(size=12), 
                                   panel.border = element_rect(size = 0.5), 
@@ -464,6 +466,7 @@ sc_weak <- list()
 i <- 1
 for (d in datasets){
     print(d)
+    splitd <- gsub("_", ", chain ", d)
     strong.sc <- read_csv(paste0(result_directory, d, "_delstrong_selection_coefficients.csv"))
     true.strong <- strong.sc$binnedcoeff[strong.sc$method == "true"]
     strong.sc <- strong.sc %>% filter(method != "true")
@@ -491,8 +494,8 @@ for (d in datasets){
         pstrong.raw <- pstrong.raw + theme(strip.background = element_blank(), strip.text = element_blank()) 
         pweak.raw <- pweak.raw + theme(strip.background = element_blank(), strip.text = element_blank()) 
     }
-    pstrong <- ggdraw(pstrong.raw) + draw_label(d, x = 0.96, y = 0.5, size=12)
-    pweak <- ggdraw(pweak.raw) + draw_label(d, x = 0.96, y = 0.5, size=12)
+    pstrong <- ggdraw(pstrong.raw) + draw_label(splitd, x = 0.95, y = 0.5, size=12)
+    pweak <- ggdraw(pweak.raw) + draw_label(splitd, x = 0.95, y = 0.55, size=12)
 
     
     sc_strong[[i]] <- pstrong
