@@ -1,4 +1,4 @@
-### Repository for *mutsel model benchmark paper of TBD name*, by SJS\* and COW. 
+### Repository for *Extensively-parameterized mutation–selection models reliably capture site-specific selective constraint*, by SJS\* and COW. 
 
 ### Contents of repository:
 
@@ -8,7 +8,7 @@
     - [`swmutsel/`](./results/swmutsel/) contains all inference results with swMutSel for a variety of penalizations, indicated in file name.
     - [`phylobayes/`](./results/phylobayes/) contains all inference results with PhyloBayes
     - [`dnds_coeffs_jsd/`](./results/dnds_coeffs_jsd/) contains all *dN/dS*, selection coefficients, and JSD (Jensen-Shannon distance) values calculated from mutation-selection model inferences. These files were created with [`calculate_dnds_sc_jsd.py`](./postprocessing/calculate_dnds_sc_jsd.py).
-    - [`summarized_results/`](./results/summarized_results) contains summary csv files for data in [`dnds_coeffs_jsd/`](./results/dnds_coeffs_jsd/). These files were created with [`process_results.R`](./postprocessing/process_results.R).
+    - [`summarized_results/`](./results/summarized_results) contains summary .csv files for data in [`dnds_coeffs_jsd/`](./results/dnds_coeffs_jsd/). These files were created with [`process_results.R`](./postprocessing/process_results.R).
 
 - `simulation/` contains all code used for simulating sequences, as well as simulating parameters for use in sequence simulation. 
     - [`ramsey2011_yeast_alignments`](./simulation/ramsey2011_yeast_alignments) contains all sequence alignments from [Ramsey et al. (2011)](http://www.genetics.org/cgi/pmidlookup?view=long&pmid=21467571). 
@@ -21,9 +21,9 @@
     - [`calculate_dnds_sc_jsd.py`](./postprocessing/calculate_dnds_sc_jsd.py) calculates *dN/dS*, selection coefficient distribitions, and JSD for inferences in `results/`.
     - [`process_results.R`](./postprocessing/process_results.R) processes inference results in [`dnds_coeffs_jsd/`](./results/dnds_coeffs_jsd/) to create csv files in [`summarized_results/`](./results/summarized_results).
     - [`plot_figures.R`](./postprocessing/plot_figures.R) makes all the figures in the manuscript. Figures are saved in the subdirectory [`figures/`](./postprocessing/figures/)
-    - [`run_statistics.R`](./postprocessing/run_statistics.R) performs some statistical analyses on the results. All stats output is commented out in this script itself.
+    - [`run_statistics.R`](./postprocessing/run_statistics.R) performs some statistical analyses on the results. All R output is commented out in this script itself.
 
 - `universal_functions.py` is simply a python module containing various functions used throughout the repository.
 
 
-**\*This repository is maintained by SJS. Please file any questions/comments in [Issues](https://github.com/sjspielman/mutsel_benchmark/issues/).**
+**\*This repository is maintained by SJS. Please file any questions/comments in [Issues](https://github.com/sjspielman/mutsel_benchmark/issues/), or contact me at stephanie.spielman@gmail.com.**
