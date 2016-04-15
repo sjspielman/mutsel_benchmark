@@ -18,6 +18,64 @@ g = Genetics()
 ZERO=1e-10
 
 
+### Simulation constants and functions ###
+mu_dict        = {'AC':1.,  'CA':1.,  'AG':1.,  'GA':1.,  'AT':1.,  'TA':1.,  'CG':1.,  'GC':1.,  'CT':1.,  'TC':1.,  'GT':1.,  'TG':1.}
+STRONG_FREQ    = 1e-9
+WEAK_FIT       = [-6.0, -4.5] # Lowest fitness, highest fitness   
+WEAK_THRESHOLD = -10 # Any fitness below here gets increased to an interval in WEAK_FIT
+def calculate_save_coeffs(fitness, outfile):
+    '''
+        Compute and save distribution of selection coefficients.
+    '''
+    raw = []
+    binned = []
+    for site in fitness:
+        for i in range(len(site)):
+            f_i = site[i]
+            for j in range(len(site)):
+                if i == j:
+                    continue
+                else:
+                    s = f_i - site[j]
+                    raw.append(s)
+                    if s <= -10:
+                        s = -10.
+                    if s >= 10.:
+                        s = 10.
+                    binned.append(s)
+    with open(outfile, "w") as outf:
+        outf.write("realcoeff,binnedcoeff\n")
+        outf.write( "\n".join([str(raw[x])+","+str(binned[x]) for x in range(len(raw))]) )
+
+
+def apply_weakdel(fitness):
+    '''
+        Convert a fitness distribution to weakly deleterious regime.
+    ''' 
+    random_fit = np.random.uniform(low = WEAK_FIT[0], high = WEAK_FIT[1], size = np.sum(fitness <= WEAK_THRESHOLD))
+    fitness[fitness <= WEAK_THRESHOLD] = random_fit  
+    return fitness
+
+
+
+def save_simulation_info(name, frequencies, fitnesses, omegas):
+    '''
+        Save simulation parameters to files.
+    '''
+    freqfile = name + "_true_codon_frequencies.txt"
+    fitfile  = name + "_true_aa_fitness.txt"
+    selcfile = name + "_true_selcoeffs.csv"
+    dndsfile = name + "_true_dnds.csv"
+
+    np.savetxt(freqfile, frequencies)
+    np.savetxt(fitfile, fitnesses)
+    calculate_save_coeffs(fitnesses, selcfile)
+
+    with open(dndsfile, "w") as f:
+        f.write("site,dnds\n")
+        for i in range(len(omegas)):
+            f.write(str(i+1)+","+str(omegas[i])+"\n")
+
 
 
 
@@ -39,8 +97,6 @@ def extract_parameters(directory, name):
     assert(fitness is not None), "\n Could not retrieve fitness values."
     assert(mu_dict is not None), "\n Could not retrieve mutation rates."
     return fitness, mu_dict
-
-
 
 
 
