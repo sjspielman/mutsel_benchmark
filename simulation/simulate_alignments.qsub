@@ -8,11 +8,11 @@ source ~/.bashrc
 
 # define files, variables used in analysis
 DATA=$1
-TREEFILE=n512_bl0.5.tre
+TREEFILE=n512_bl0.01.tre
 
 REPODIR=$HOME/mutsel_benchmark
 SCRIPTDIR=$REPODIR/simulation
-OUTDIR=$REPODIR/data
+OUTDIR=$REPODIR/data_bl0.01
 
 # create and enter working directory
 WDIR=/state/partition1/sjs3495/$JOB_NAME-$JOB_ID

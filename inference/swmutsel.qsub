@@ -22,8 +22,8 @@ mkdir -p $WDIR
 cd $WDIR
 
 # copy files, executables here
-cp $REPODIR/data/$ALN.phy .
-cp $REPODIR/data/$TREE .
+cp $REPODIR/data_bl0.01/$ALN.phy .
+cp $REPODIR/data_bl0.01/$TREE .
 cp $REPODIR/inference/run_swmutsel.py .
 cp $SWEXEC swmutsel.jar
 ls
@@ -34,7 +34,7 @@ module load python
 export PYTHONPATH=$HOME/bin/lib/python2.7/site-packages # to get biopython behaving w/ phylip-relaxed
 python run_swmutsel.py $ALN $TREE $METHOD $CPU
 
-FINALDIR=$REPODIR/results
+FINALDIR=$REPODIR/results_bl0.01
 mkdir -p $FINALDIR
 cp *MLE.txt $FINALDIR
 cp *fitness.txt $FINALDIR
