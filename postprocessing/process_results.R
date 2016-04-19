@@ -9,71 +9,138 @@ truedir      <- "../simulation/true_simulation_parameters/"
 datadir      <- paste0(resdir, "dnds_coeffs_jsd/")
 outdir       <- paste0(resdir, "summarized_results/")
 
-sim.datasets <- c("1B4T_A", "1RII_A", "1V9S_B", "1G58_B", "1W7W_B", "2BCG_Y", "2CFE_A", "1R6M_A", "2FLI_A", "1GV3_A", "1IBS_A")
-deltypes     <- c("weak", "strong")
-methods      <- c("nopenal", "d0.01", "d0.1", "d1.0", "mvn1", "mvn10", "mvn100" , "phylobayes")
+yeast.datasets <- c("1B4T_A", "1RII_A", "1V9S_B", "1G58_B", "1W7W_B", "2BCG_Y", "2CFE_A", "1R6M_A", "2FLI_A", "1GV3_A", "1IBS_A")
+branch.lengths <- c("0.01", "0.5")
+dms.datasets   <- c("HA", "NP")
+deltypes       <- c("weak", "strong")
+methods        <- c("nopenal", "d0.01", "d0.1", "d1.0", "mvn1", "mvn10", "mvn100" , "phylobayes")
 
 
-print("Processing JSD")
+print("Processing JSD, yeast")
 jsd <- data.frame("dataset" = character(), 
                   "del"     = character(),
+                  "bl"      = numeric(),
                   "site"    = numeric(), 
                   "jsd"     = numeric(),
                   "method"  = factor())
-for (name in sim.datasets)
+for (name in yeast.datasets)
+{    
+    for (deltype in deltypes)
+    { 
+        for (bl in branch.lengths)
+        {
+            for (meth in methods)
+            {  
+                dat <- read.csv(paste0(datadir, name, "_del", deltype, "_bl", bl, "_", meth, "_jsd.csv"))
+                l <- nrow(dat)
+                temp <- data.frame("dataset" = name, "del" = deltype, "bl" = bl, "site" = dat$site, "jsd" = dat$jsd, "method" = meth)
+                jsd <- rbind(jsd, temp)
+            }
+        }
+    }
+}
+write.csv(jsd, paste0(outdir, "jsd_yeast.csv"), row.names=FALSE, quote=FALSE)
+
+print("Processing JSD, deep mutational scanning")
+jsd <- data.frame("dataset" = character(), 
+                  "site"    = numeric(), 
+                  "jsd"     = numeric(),
+                  "method"  = factor())
+for (name in dms.datasets)
 {    
     for (deltype in deltypes)
     { 
         for (meth in methods)
         {  
-            dat <- read.csv(paste0(datadir, name, "_del", deltype, "_",  meth, "_jsd.csv"))
+            dat <- read.csv(paste0(datadir, name, "_", meth, "_jsd.csv"))
             l <- nrow(dat)
-            temp <- data.frame("dataset" = name, "del" = deltype, "site" = dat$site, "jsd" = dat$jsd, "method" = meth)
+            temp <- data.frame("dataset" = name, "site" = dat$site, "jsd" = dat$jsd, "method" = meth)
             jsd <- rbind(jsd, temp)
         }
+        
     }
 }
-write.csv(jsd, paste0(outdir, "jsd.csv"), row.names=FALSE, quote=FALSE)
+write.csv(jsd, paste0(outdir, "jsd_dms.csv"), row.names=FALSE, quote=FALSE)
 
 
 
 
 
 
-print("Processing dN/dS")
+
+
+
+
+
+
+
+
+print("Processing dN/dS, yeast")
 sim.dat <- data.frame("dataset" = character(), 
                       "del"     = character(),
                       "site"    = numeric(), 
                       "dnds"    = numeric(),
                       "method"  = factor())
-for (name in sim.datasets)
+for (name in yeast.datasets)
 {    
     for (deltype in deltypes)
     { 
         true <- read.csv(paste0(truedir, name, "_del", deltype, "_true_dnds.csv"))
 
-        for (meth in c("true", methods))
-        {  
+        for (bl in branch.lengths)
+        {
+            for (meth in c("true", methods))
+            {  
         
-            if (meth == "true")
-            {
-                dat <- read.csv(paste0(truedir, name, "_del", deltype, "_true_dnds.csv"))
+                if (meth == "true")
+                {
+                    dat <- read.csv(paste0(truedir, name, "_del", deltype, "_true_dnds.csv"))
+                }
+                else
+                {
+                    dat <- read.csv(paste0(datadir, name, "_del", deltype, "_bl", bl, "_", meth, "_dnds.csv"))
+                }
+                temp <- data.frame("dataset" = name, "del" = deltype, "bl" = bl, "site" = dat$site, "dnds" = dat$dnds , "method" = meth)
+                sim.dat <- rbind(sim.dat, temp)
             }
-            else
-            {
-                dat <- read.csv(paste0(datadir, name, "_del", deltype, "_",  meth, "_dnds.csv"))
-            }
-            temp <- data.frame("dataset" = name, "del" = deltype, "site" = dat$site, "dnds" = dat$dnds , "method" = meth)
-            sim.dat <- rbind(sim.dat, temp)
         }
     }
 }
-write.csv(sim.dat, paste0(outdir, "dnds.csv"), row.names=FALSE, quote=FALSE)
+write.csv(sim.dat, paste0(outdir, "dnds_yeast.csv"), row.names=FALSE, quote=FALSE)
+
+print("Processing dN/dS, deep mutational scanning")
+dnds <- data.frame("dataset" = character(), 
+                  "site"    = numeric(), 
+                  "dnds"     = numeric(),
+                  "method"  = factor())
+for (name in dms.datasets)
+{    
+    true <- read.csv(paste0(truedir, name, "_true_dnds.csv"))
+    for (meth in c("true", methods))
+    {  
+    
+        if (meth == "true")
+        {
+            dat <- read.csv(paste0(truedir, name, "_true_dnds.csv"))
+        }
+        else
+        {
+            dat <- read.csv(paste0(datadir, name, "_", meth, "_dnds.csv"))
+        }
+        temp <- data.frame("dataset" = name, "site" = dat$site, "dnds" = dat$dnds , "method" = meth)
+        sim.dat <- rbind(sim.dat, temp)
+    }
+}
+write.csv(jsd, paste0(outdir, "dnds_dms.csv"), row.names=FALSE, quote=FALSE)
 
 
 
-print("Processing selection coefficients")
-for (dataset in sim.datasets)
+
+
+
+
+print("Processing selection coefficients, yeast")
+for (dataset in yeast.datasets)
 {
     for (del in deltypes){
         sim.selcoeffs <- data.frame("dataset" = character(), "method" = character(), "dummy" = numeric(), "del" = character(), "binnedcoeff" = numeric(), "realcoeff" = numeric())
@@ -95,4 +162,26 @@ for (dataset in sim.datasets)
         }
         write.csv(sim.selcoeffs, paste0(outdir, full_dataset, "_selection_coefficients.csv"), row.names=FALSE, quote=FALSE)
     }
+}
+
+print("Processing selection coefficients, deep mutational scanning")
+for (dataset in dms.datasets)
+{
+    sim.selcoeffs <- data.frame("dataset" = character(), "method" = character(), "dummy" = numeric(), "binnedcoeff" = numeric(), "realcoeff" = numeric())
+    for (m in c("true", methods))
+    {
+        if (m == "true")
+        {
+            directory <- truedir
+        }
+        else
+        {
+            directory <- datadir
+        }
+            
+        dat <- read.csv(paste0(directory, dataset, "_", m, "_selcoeffs.csv"))
+        temp <- data.frame("dataset" = dataset, "method" = m, "dummy" = 1:nrow(dat), "binnedcoeff" = dat$binnedcoeff, "realcoeff" = dat$realcoeff)
+        sim.selcoeffs <- rbind(sim.selcoeffs, temp)
+    }
+    write.csv(sim.selcoeffs, paste0(outdir, full_dataset, "_selection_coefficients.csv"), row.names=FALSE, quote=FALSE)
 }
