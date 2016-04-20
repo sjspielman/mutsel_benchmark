@@ -83,12 +83,13 @@ def get_eq_from_eig(m):
 
 
 mudict = {'AG':2.4e-5, 'TC':2.4e-5, 'GA':2.3e-5, 'CT':2.3e-5, 'AC':9.0e-6, 'TG':9.0e-6, 'CA':9.4e-6, 'GT':9.4e-6, 'AT':3.0e-6, 'TA':3.0e-6, 'GC':1.9e-6, 'CG':1.9e-6}
+truedir = "true_simulation_parameters/"
 
 for source in ["HA", "NP"]:
     
-    infile = source + "_preferences.txt"
-    outfile_freqs = source + "_true_codon_frequencies.txt"
-    outfile_dnds = source + "_true_dnds.csv"
+    infile = truedir + source + "_preferences.txt"
+    outfile_freqs = truedir + source + "_true_codon_frequencies.txt"
+    outfile_dnds = truedir + source + "_true_dnds.csv"
     
     raw_preferences = np.loadtxt(infile)
     nsites = len(raw_preferences)
