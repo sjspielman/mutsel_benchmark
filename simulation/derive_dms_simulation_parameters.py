@@ -115,4 +115,4 @@ for source in ["HA", "NP"]:
     with open(outfile_dnds_entropy, "w") as f:
         f.write("site,dnds,entropy\n")
         for x in range(len(final_dnds)):
-            f.write(str(x+1) + "," + str(final_dnds[x]) + "," + str(final_entropys[x]) + "\n")
+            f.write(str(x+1) + "," + str(final_dnds[x]) + "," + str(final_entropy[x]) + "\n")
