@@ -87,15 +87,16 @@ truedir = "true_simulation_parameters/"
 
 for source in ["HA", "NP"]:
     
-    infile = truedir + source + "_preferences.txt"
-    outfile_freqs = truedir + source + "_true_codon_frequencies.txt"
-    outfile_dnds = truedir + source + "_true_dnds.csv"
+    infile               = truedir + source + "_preferences.txt"
+    outfile_freqs        = truedir + source + "_true_codon_frequencies.txt"
+    outfile_dnds_entropy = truedir + source + "_true_dnds_entropy.csv"
     
     raw_preferences = np.loadtxt(infile)
     nsites = len(raw_preferences)
 
     final_codon_freqs = np.zeros([nsites, 61])
     final_dnds = np.zeros(nsites)
+    final_entropy = np.zeros(nsites)
     for i in range(nsites):
         print i
         amino_prefs_dict = dict(zip(amino_acids, raw_preferences[i])) 
@@ -108,9 +109,10 @@ for source in ["HA", "NP"]:
 
         final_codon_freqs[i] = cf
         final_dnds[i] = dnds
+        final_entropy[i] = calc_entropy( codon_freqs_to_aa_freqs(cf)) 
 
     np.savetxt(outfile_freqs, final_codon_freqs)
-    with open(outfile_dnds, "w") as f:
-        f.write("site,dnds\n")
+    with open(outfile_dnds_entropy, "w") as f:
+        f.write("site,dnds,entropy\n")
         for x in range(len(final_dnds)):
-            f.write(str(x+1) + "," + str(final_dnds[x]) + "\n")
+            f.write(str(x+1) + "," + str(final_dnds[x]) + "," + str(final_entropys[x]) + "\n")

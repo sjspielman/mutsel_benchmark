@@ -58,27 +58,33 @@ def apply_weakdel(fitness):
 
 
 
-def save_simulation_info(name, frequencies, fitnesses, omegas):
+def save_simulation_info(name, frequencies, fitnesses, omegas, entropies):
     '''
         Save simulation parameters to files.
     '''
     freqfile = name + "_true_codon_frequencies.txt"
     fitfile  = name + "_true_aa_fitness.txt"
     selcfile = name + "_true_selcoeffs.csv"
-    dndsfile = name + "_true_dnds.csv"
+    dnds_entropy_file = name + "_true_dnds_entropy.csv"
 
     np.savetxt(freqfile, frequencies)
     np.savetxt(fitfile, fitnesses)
     calculate_save_coeffs(fitnesses, selcfile)
 
-    with open(dndsfile, "w") as f:
-        f.write("site,dnds\n")
+    with open(dnds_entropy_file, "w") as f:
+        f.write("site,dnds,entropy\n")
         for i in range(len(omegas)):
-            f.write(str(i+1)+","+str(omegas[i])+"\n")
+            f.write(str(i+1)+","+str(omegas[i])+","+str(entropies[i])+"\n")
 
 
 
-
+def calc_entropy(a):
+    '''
+        Compute entropy of amino acid frequency distribution a.
+    '''
+    return -1. * np.sum ( a[a > ZERO] * np.log(a[a > ZERO]) )  
+    
+    
 ### Compute dN/dS from MutSel parameters ###
 def extract_parameters(directory, name):
     '''
