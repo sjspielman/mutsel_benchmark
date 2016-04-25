@@ -8,7 +8,7 @@ source ~/.bashrc
 
 # define files, variables used in analysis
 DATA=$1
-TREEFILE=n512_bl0.01.tre
+TREEFILE=$2
 
 REPODIR=$HOME/mutsel_benchmark
 SCRIPTDIR=$REPODIR/simulation
@@ -21,7 +21,7 @@ cd $WDIR
 
 # copy files
 cp $OUTDIR/$TREEFILE .
-cp $SCRIPTDIR/true_simulation_parameters/${DATA}_true_aa_fitness.txt fitfile.txt
+cp $SCRIPTDIR/true_simulation_parameters/${DATA}_true_codon_frequencies.txt freqfile.txt
 cp $SCRIPTDIR/simulate_alignments.py .
 
 # python
@@ -29,7 +29,7 @@ module load python
 export PYTHONPATH=$HOME/bin/lib/python2.7/site-packages
 
 # Simulate
-python simulate_alignments.py $DATA fitfile.txt $TREEFILE 
+python simulate_alignments.py $DATA freqfile.txt $TREEFILE 
 
 # Save, cleanup
 mkdir -r $OUTDIR

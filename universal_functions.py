@@ -1,31 +1,20 @@
-# SJS
-# This file contains functions which are generally used throughout analyses.
+"""
+     SJS
+     This file contains functions which are generally used throughout this repository.
+"""
 
 
-import re
-import os
-import sys
-import subprocess
 import numpy as np
-from Bio import AlignIO
-from dendropy import Tree
 from pyvolve import *
 from copy import deepcopy
-from scipy import linalg
-from random import uniform, shuffle
-
 g = Genetics()
 ZERO=1e-10
 
 
-### Simulation constants and functions ###
-mu_dict        = {'AC':1.,  'CA':1.,  'AG':1.,  'GA':1.,  'AT':1.,  'TA':1.,  'CG':1.,  'GC':1.,  'CT':1.,  'TC':1.,  'GT':1.,  'TG':1.}
-STRONG_FREQ    = 1e-9
-WEAK_FIT       = [-6.0, -4.5] # Lowest fitness, highest fitness   
-WEAK_THRESHOLD = -10 # Any fitness below here gets increased to an interval in WEAK_FIT
+
 def calculate_save_coeffs(fitness, outfile):
     '''
-        Compute and save distribution of selection coefficients.
+        Compute and save distribution of selection coefficients from a given set of fitness values.
     '''
     raw = []
     binned = []
@@ -48,98 +37,20 @@ def calculate_save_coeffs(fitness, outfile):
         outf.write( "\n".join([str(raw[x])+","+str(binned[x]) for x in range(len(raw))]) )
 
 
-def apply_weakdel(fitness):
+
+
+def calc_entropy(f):
     '''
-        Convert a fitness distribution to weakly deleterious regime.
-    ''' 
-    random_fit = np.random.uniform(low = WEAK_FIT[0], high = WEAK_FIT[1], size = np.sum(fitness <= WEAK_THRESHOLD))
-    fitness[fitness <= WEAK_THRESHOLD] = random_fit  
-    return fitness
-
-
-
-def save_simulation_info(name, frequencies, fitnesses, omegas, entropies):
+        Compute entropy of frequency distribution f.
     '''
-        Save simulation parameters to files.
-    '''
-    freqfile = name + "_true_codon_frequencies.txt"
-    fitfile  = name + "_true_aa_fitness.txt"
-    selcfile = name + "_true_selcoeffs.csv"
-    dnds_entropy_file = name + "_true_dnds_entropy.csv"
-
-    np.savetxt(freqfile, frequencies)
-    np.savetxt(fitfile, fitnesses)
-    calculate_save_coeffs(fitnesses, selcfile)
-
-    with open(dnds_entropy_file, "w") as f:
-        f.write("site,dnds,entropy\n")
-        for i in range(len(omegas)):
-            f.write(str(i+1)+","+str(omegas[i])+","+str(entropies[i])+"\n")
-
-
-
-def calc_entropy(a):
-    '''
-        Compute entropy of amino acid frequency distribution a.
-    '''
-    return -1. * np.sum ( a[a > ZERO] * np.log(a[a > ZERO]) )  
+    return -1. * np.sum ( [f > ZERO] * np.log(f[f > ZERO]) )  
     
-    
-### Compute dN/dS from MutSel parameters ###
-def extract_parameters(directory, name):
-    '''
-        Extract fitness and mutation rates from a given inference.
-    '''
-    fitness = None
-    mu_dict = None
-    if "phylobayes" in name:
-        fitness = np.loadtxt(directory + name + ".aap")
-        fitness = np.log(fitness)
-        mu_dict = parse_pbMutSel_mutation(directory + name + ".trace")
-    else:
-        fitness = np.loadtxt(directory + name + "_fitness.txt")
-        mu_dict = parse_swMutSel_mutation(directory + name + "_MLE.txt")   
 
-    assert(fitness is not None), "\n Could not retrieve fitness values."
-    assert(mu_dict is not None), "\n Could not retrieve mutation rates."
-    return fitness, mu_dict
-
-
-
-
-
-
-def dnds_from_params(site_fitness, mu_dict):
-    
-    # Build the MutSel matrix (assumes equal codon frequencies per amino acid) with these parameters and extract equilibrium codon frequencies
-    # Note that if mutation is symmetric, this gives the same results as Boltzmann distribution does anyways
-    eqfreqs = codon_freqs_from_fitness_eigenvector(site_fitness, mu_dict)
-    
-    # Derive dN/dS and return
-    c = dNdS_from_MutSel( dict(zip(g.codons, eqfreqs)), mu_dict)
-    return c.compute_dnds()
- 
-
-########## Generic functions for converting among codon, amino-acid frequencies and fitnesses ###########
-
-
-def codon_freqs_from_fitness_boltzmann(codon_fitness):
-    '''
-        Convert codon fitness to equilibrium frequencies using Boltzmann distribution (Sella and Hirsh 2005).
-    '''
-    codon_freqs = np.zeros(61)
-    count = 0
-    for codon in g.codons:
-        codon_freqs[count] = np.exp( codon_fitness[codon] )
-        count += 1
-    codon_freqs /= np.sum(codon_freqs)                   
-    assert( abs(1. - np.sum(codon_freqs)) <= ZERO), "codon_freq doesn't sum to 1 in codon_fitness_to_freqs"
-    return codon_freqs 
 
 
 def codon_freqs_from_fitness_eigenvector(fitness, mu):
     '''
-        Extract equilibrium frequencies from eigenvector of MutSel matrix.
+        Extract equilibrium frequencies from eigenvector of MutSel matrix, built from fitness values and mutation rates.
     '''
     params = {"fitness": fitness, "mu": mu}
     m = Model("mutsel", params)
@@ -165,6 +76,7 @@ def aa_freqs_to_codon_freqs(aa_freqs):
     return codon_freqs, dict(zip(g.codons, codon_freqs))
 
 
+
 def codon_freqs_to_aa_freqs(codonfreqs):
     '''
         Codon codon frequencies to amino-acid frequencies.
@@ -177,111 +89,9 @@ def codon_freqs_to_aa_freqs(codonfreqs):
             total += cf[syn]
         total /= float(len(family))
         aa_freqs.append(total)
-        
+    aa_freqs = np.array(aa_freqs)
+    assert((1. - np.sum(aa_freqs) <= ZERO), "\nImproperly converted codon to amino acid frequencies." 
     return aa_freqs
-
-
-def aa_fitness_to_codon_fitness(fitness):
-    '''
-        Convert amino-acid fitnesses to codon fitnesses.
-    '''
-    
-    d = {}
-    for i in range(20):
-        syn_codons = g.genetic_code[i]
-        for syn in syn_codons:
-            d[ syn ] = fitness[i]   
-    codon_fitness = np.zeros(61)
-    count = 0
-    for i in range(61):
-        codon_fitness[i] = d[g.codons[i]]
-    return codon_fitness
-
-
-#########################################################################################
-
-
-
-########## Parsing functions for swMutSel and pbMutSel inferences, specifically for mutation rates ###########
-def parse_swMutSel_mutation(infile, return_scaling = False):
-    '''
-        Extract kappa (line 11) and nucleotide frequencies (line 14) from a swMutSel MLE file.
-        Combine info to return a dictionary of mutation rates.
-        Argument "return_scaling" means to also return the swMutSel-inferred branch scaling factor.
-    '''
-    with open(infile, "r") as f:
-        lines = f.readlines()
-    kappa = float(lines[10].strip())
-    rawpis   = lines[13].strip().split(",")
-    pis = []
-    for pi in rawpis:
-        pis.append(float(pi)) 
-    t = pis[0]
-    c = pis[1]
-    a = pis[2]
-    g = pis[3]
-    mu = {'AG':kappa*g, 'TC':kappa*c, 'GA':kappa*a, 'CT':kappa*t, 'AC':c, 'TG':g, 'CA':a, 'GT':t, 'AT':t, 'TA':a, 'GC':c, 'CG':g}  
-    if return_scaling:
-        scaling = float(lines[16].strip())
-        return mu, scaling
-    else:
-        return mu
-
-    
-
-
-def parse_pbMutSel_mutation(file, burnin = 100):
-    ''' 
-        Parse the .trace file returned by phylobayes to obtain mutation rates
-        ORDER (starts at field 10, index from 0): fA fC fG fT nucrrAC nucrrAG nucrrAT nucrrCG nucrrCT nucrrGT
-    '''
-   
-    # Load trace file, but skip header + burnin and keep only relevant columns (mutational parameters)
-    params = np.loadtxt(file, skiprows = int(burnin) + 1, usecols = range(10,20)) 
-    post_mean = np.mean(params, axis = 0) # Posterior means for desired parameters
-    # Assign post_mean values w/ dictionaries to avoid bugs
-    raw_keys = ["A", "C", "G", "T", "AC", "AG", "AT", "CG", "CT", "GT"]
-    raw_mu   = dict(zip(raw_keys, post_mean)) 
-    keys = ["AC", "CA", "AG", "GA", "AT", "TA", "CG", "GC", "CT", "TC", "GT", "TG"]
-    mu = {}
-    for key in keys:
-        targetfreq = raw_mu[ key[1] ]
-        exch = raw_mu[ "".join(sorted(key)) ]
-        mu[key] = targetfreq * exch
-    return mu
-    
-    
-def compute_asym(mudict):
-    ''' 
-        Compute average mu_xy / mu_yx 
-    '''
-    x = 0  
-    completed = []
-    ratios = np.zeros(6) 
-    for source in ["A", "C", "G", "T"]:
-        for target in ["A", "C", "G", "T"]:
-            if source == target or source+target in completed or target+source in completed:
-                continue
-            else:
-                ratio = mudict[source + target] / mudict[target + source] 
-                if ratio >= 1.:
-                    completed.append(source + target)
-                    ratios[x] = ratio
-                else:
-                    completed.append(target + source)
-                    ratios[x] = 1./ratio
-                x+=1  
-    return np.mean(ratios)  
-
-
-
-
-
-
-
-
-
-
 
 
 
@@ -428,6 +238,74 @@ class dNdS_from_MutSel():
             else:
                 fixation_rate =  (np.log(p_mu))/(1. - (1./p_mu))
         return fixation_rate * mu_ij            
+
+
+
+
+
+
+
+
+
+##### old unused ########
+# def codon_freqs_from_fitness_boltzmann(codon_fitness):
+#     '''
+#         Convert codon fitness to equilibrium frequencies using Boltzmann distribution (Sella and Hirsh 2005).
+#     '''
+#     codon_freqs = np.zeros(61)
+#     count = 0
+#     for codon in g.codons:
+#         codon_freqs[count] = np.exp( codon_fitness[codon] )
+#         count += 1
+#     codon_freqs /= np.sum(codon_freqs)                   
+#     assert( abs(1. - np.sum(codon_freqs)) <= ZERO), "codon_freq doesn't sum to 1 in codon_fitness_to_freqs"
+#     return codon_freqs 
+# 
+# def aa_fitness_to_codon_fitness(fitness):
+#     '''
+#         Convert amino-acid fitnesses to codon fitnesses.
+#     '''
+#     
+#     d = {}
+#     for i in range(20):
+#         syn_codons = g.genetic_code[i]
+#         for syn in syn_codons:
+#             d[ syn ] = fitness[i]   
+#     codon_fitness = np.zeros(61)
+#     count = 0
+#     for i in range(61):
+#         codon_fitness[i] = d[g.codons[i]]
+#     return codon_fitness
+
+
+# 
+# ########## Parsing functions for swMutSel and pbMutSel inferences, specifically for mutation rates ###########
+#     
+#     
+# def compute_asym(mudict):
+#     ''' 
+#         Compute average mu_xy / mu_yx 
+#     '''
+#     x = 0  
+#     completed = []
+#     ratios = np.zeros(6) 
+#     for source in ["A", "C", "G", "T"]:
+#         for target in ["A", "C", "G", "T"]:
+#             if source == target or source+target in completed or target+source in completed:
+#                 continue
+#             else:
+#                 ratio = mudict[source + target] / mudict[target + source] 
+#                 if ratio >= 1.:
+#                     completed.append(source + target)
+#                     ratios[x] = ratio
+#                 else:
+#                     completed.append(target + source)
+#                     ratios[x] = 1./ratio
+#                 x+=1  
+#     return np.mean(ratios)  
+
+
+
 
 
 

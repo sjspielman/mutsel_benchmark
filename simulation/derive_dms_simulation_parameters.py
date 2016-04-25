@@ -1,20 +1,18 @@
-# SJS
-# Extract codon frequencies, dnds from deep mutational scanning AA preferences combined with experimental mutation rates. 
-# Note that these parameters, as they are experimental, are simply taken as they are, and NOT subjected to a strong/weak regime.
-
+"""
+    SJS
+    Script to extract parameters for simulation from deep mutational scanning data. Some notes..
+        Extract codon frequencies, dnds from deep mutational scanning AA preferences combined with experimental mutation rates. 
+        Note that these parameters, as they are experimental, are simply taken as they are, and NOT subjected to a strongly/weakly deleterious regime.
+"""
 
 import sys
 sys.path.append("../")
 from universal_functions import *
 import numpy as np
 from scipy import linalg
-amino_acids = ["A", "C", "D", "E", "F", "G", "H", "I", "K", "L", "M", "N", "P", "Q", "R", "S", "T", "V", "W", "Y"]
-codon_dict  = {"AAA":"K", "AAC":"N", "AAG":"K", "AAT":"N", "ACA":"T", "ACC":"T", "ACG":"T", "ACT":"T", "AGA":"R", "AGC":"S", "AGG":"R", "AGT":"S", "ATA":"I", "ATC":"I", "ATG":"M", "ATT":"I", "CAA":"Q", "CAC":"H", "CAG":"Q", "CAT":"H", "CCA":"P", "CCC":"P", "CCG":"P", "CCT":"P", "CGA":"R", "CGC":"R", "CGG":"R", "CGT":"R", "CTA":"L", "CTC":"L", "CTG":"L", "CTT":"L", "GAA":"E", "GAC":"D", "GAG":"E", "GAT":"D", "GCA":"A", "GCC":"A", "GCG":"A", "GCT":"A", "GGA":"G", "GGC":"G", "GGG":"G", "GGT":"G", "GTA":"V", "GTC":"V", "GTG":"V", "GTT":"V", "TAC":"Y", "TAT":"Y", "TCA":"S", "TCC":"S", "TCG":"S", "TCT":"S", "TGC":"C", "TGG":"W", "TGT":"C", "TTA":"L", "TTC":"F", "TTG":"L", "TTT":"F"}
-codons      = ["AAA", "AAC", "AAG", "AAT", "ACA", "ACC", "ACG", "ACT", "AGA", "AGC", "AGG", "AGT", "ATA", "ATC", "ATG", "ATT", "CAA", "CAC", "CAG", "CAT", "CCA", "CCC", "CCG", "CCT", "CGA", "CGC", "CGG", "CGT", "CTA", "CTC", "CTG", "CTT", "GAA", "GAC", "GAG", "GAT", "GCA", "GCC", "GCG", "GCT", "GGA", "GGC", "GGG", "GGT", "GTA", "GTC", "GTG", "GTT", "TAC", "TAT", "TCA", "TCC", "TCG", "TCT", "TGC", "TGG", "TGT", "TTA", "TTC", "TTG", "TTT"]
-ZERO        = 1e-10
 
 
-def get_nuc_diff(source, target, grab_position = False):
+def get_nuc_diff(source, target):
     diff = ''
     for i in range(3):
         if source[i] != target[i]: 
@@ -29,12 +27,12 @@ def build_metropolis_matrix(amino_prop_dict, mu_dict):
     
     # off-diagonal entries
     for x in range(61):
-        x_codon = codons[x]
-        x_aa = codon_dict[x_codon]
+        x_codon = g.codons[x]
+        x_aa = g.codon_dict[x_codon]
         fx = amino_prop_dict[x_aa]
         for y in range(61):
-            y_codon = codons[y]
-            y_aa = codon_dict[y_codon]
+            y_codon = g.codons[y]
+            y_aa = g.codon_dict[y_codon]
             fy = amino_prop_dict[y_aa]
             diff = get_nuc_diff(x_codon, y_codon)
             if len(diff)==2:
@@ -47,6 +45,7 @@ def build_metropolis_matrix(amino_prop_dict, mu_dict):
         matrix[i][i] = -1. * np.sum(matrix[i]) 
         assert( -ZERO < np.sum(matrix[i]) < ZERO ), "diagonal fail"
     return matrix
+
 
 
 def get_eq_from_eig(m):   
@@ -82,6 +81,8 @@ def get_eq_from_eig(m):
     return max_v
 
 
+
+
 mudict = {'AG':2.4e-5, 'TC':2.4e-5, 'GA':2.3e-5, 'CT':2.3e-5, 'AC':9.0e-6, 'TG':9.0e-6, 'CA':9.4e-6, 'GT':9.4e-6, 'AT':3.0e-6, 'TA':3.0e-6, 'GC':1.9e-6, 'CG':1.9e-6}
 truedir = "true_simulation_parameters/"
 
@@ -99,12 +100,12 @@ for source in ["HA", "NP"]:
     final_entropy = np.zeros(nsites)
     for i in range(nsites):
         print i
-        amino_prefs_dict = dict(zip(amino_acids, raw_preferences[i])) 
-        m = build_metropolis_matrix(amino_prefs_dict, mudict)
+        amino_prefs_dict = dict(zip(g.amino_acids, raw_preferences[i])) 
+        m = bugild_metropolis_matrix(amino_prefs_dict, mudict)
         cf = get_eq_from_eig(m) 
         assert( abs(np.sum(cf) - 1.) < ZERO ), "codon frequencies do not sum to 1" 
 
-        c = dNdS_from_MutSel(dict(zip(codons, cf)), mudict)
+        c = dNdS_from_MutSel(dict(zip(g.codons, cf)), mudict)
         dnds = c.compute_dnds()
 
         final_codon_freqs[i] = cf
