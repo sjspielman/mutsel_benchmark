@@ -98,7 +98,7 @@ def dnds_from_params(site_fitness, mu_dict):
 
 
 
-def calc_sum_absolute_diff(a, b):
+def calculate_sum_absolute_diff(a, b):
     '''
         Compute the sum of absolute differences between amino acid frequency distributions a and b.
     '''
@@ -106,7 +106,7 @@ def calc_sum_absolute_diff(a, b):
 
 
   
-def calc_kl(a,b):
+def calculate_kl(a,b):
     '''
         Compute KL distance from amino acid frequency distributions b to a.
     '''
@@ -121,8 +121,8 @@ def calculate_jsd(p, q):
     '''
 
     m = (p+q)/2.
-    term1 = 0.5*calc_kl(p, m)
-    term2 = 0.5*calc_kl(q, m)
+    term1 = 0.5*calculate_kl(p, m)
+    term2 = 0.5*calculate_kl(q, m)
 
     return np.sqrt( term1 + term2 )
 
@@ -146,13 +146,13 @@ def calculate_save_most_quantities(fitness, mu_dict, true, outfile):
         inferred_aa_freqs = codon_freqs_to_aa_freqs(inferred_codon_freqs)
         
         jsd.append( calculate_jsd(true_aa_freqs, inferred_aa_freqs) )     
-        diffsum.append( calculate_calc_sum_absolute_diff(true_aa_freqs, inferred_aa_freqs) )  
+        diffsum.append( calculate_sum_absolute_diff(true_aa_freqs, inferred_aa_freqs) )  
         dnds.append( dnds_from_params(fitness[i], mu_dict) )
-        entropy.append( calc_entropy(inferred_aa_freqs) )
+        entropy.append( calculate_entropy(inferred_aa_freqs) )
            
-    assert(len(jsd) == len(true)), "\nJSD not fully calculated for a dataset."
+    assert(len(jsd)     == len(true)), "\nJSD not fully calculated for a dataset."
     assert(len(diffsum) == len(true)), "\nSum of absolute differences between frequencies not fully calculated for a dataset."
-    assert(len(dnds) == len(true)), "\ndN/dS not fully calculated for a dataset."
+    assert(len(dnds)    == len(true)), "\ndN/dS not fully calculated for a dataset."
     assert(len(entropy) == len(true)), "\nEntropy not fully calculated for a dataset."
 
     with open(outfile, "w") as outf:
@@ -165,28 +165,47 @@ def main():
     
     method_suffixes = {"swmutsel":"_MLE.txt", "phylobayes":".aap"}
     
-    truedir = "../simulation/true_simulation_parameters/"
-    rawdir  = "../results/"
-    outdir  = rawdir + "dnds_coeffs_jsd/"
+    true_directory = "../simulation/true_simulation_parameters/"
+    output_directory  = "dataframes/"
     
+    # Grab all the true codon frequencies
+    true_frequencies = {} 
+    datasets = ["HA", "NP", "1B4T_A", "1RII_A", "1V9S_B", "1G58_B", "1W7W_B", "2BCG_Y", "2CFE_A", "1R6M_A", "2FLI_A", "1GV3_A", "1IBS_A"]
+    for data in datasets:
+        if "_" in data:
+            for d in ["_delweak", "_delstrong"]:
+                full_data = data + d
+                t = np.loadtxt(true_directory + full_data + "_true_codon_frequencies.txt")
+                true_frequencies[full_data] = t
+        else:
+            t = np.loadtxt(true_directory + data + "_true_codon_frequencies.txt")
+            true_frequencies[data] = t
+             
+
     for method in method_suffixes:
-        indir = rawdir + method + "/"
-        suffix = method_suffixes[method]         
-        filenames = os.listdir(input_directory)
+        input_directory = "../results/" + method + "/"
+        suffix = method_suffixes[method] 
+        filenames = os.listdir(input_directory)         
         for file in filenames:
-    
             prefix = None
             if file.endswith(suffix):
                 prefix = file.split(suffix)[0]
+                print prefix
+                if "del" in prefix:
+                    simprefix = "_".join( prefix.split("_")[:3] )
+                else:
+                    simprefix = prefix.split("_")[0]
             
-                outfile_values = output_directory + prefix + "_dnds_entropy_jsd_diffsum.csv"
+                outfile_values = output_directory + prefix + "_statistics.csv"
                 outfile_coeffs = output_directory + prefix + "_selcoeffs.csv"
 
                 fitness, mu_dict = extract_parameters(input_directory, prefix)                         
-                true_codon_frequencies = np.loadtxt(true_directory + simprefix + "_true_codon_frequencies.txt")
-
-                calculate_save_most_quantities(fitness, mu_dict, true_codon_frequencies, outfile_values)
-                calculate_save_coeffs(fitness, outfile_coeffs)        
+                true_codon_frequencies = true_frequencies[simprefix]
+                
+                if not os.path.exists(outfile_values):
+                    calculate_save_most_quantities(fitness, mu_dict, true_codon_frequencies, outfile_values)
+                if not os.path.exists(outfile_coeffs):
+                    calculate_save_coeffs(fitness, outfile_coeffs)        
 
 main()
 

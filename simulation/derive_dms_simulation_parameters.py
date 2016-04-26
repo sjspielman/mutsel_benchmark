@@ -110,7 +110,7 @@ for source in ["HA", "NP"]:
 
         final_codon_freqs[i] = cf
         final_dnds[i] = dnds
-        final_entropy[i] = calc_entropy( codon_freqs_to_aa_freqs(cf)) 
+        final_entropy[i] = calculate_entropy( codon_freqs_to_aa_freqs(cf)) 
 
     np.savetxt(outfile_freqs, final_codon_freqs)
     with open(outfile_dnds_entropy, "w") as f:

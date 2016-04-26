@@ -100,7 +100,7 @@ for file in yeastfiles:
                     frequencies_strong.append(cf)
                     fitnesses_strong.append(aa_fitness)
                     omegas_strong.append(dnds)
-                    entropies_strong.append(calc_entropy( codon_freqs_to_aa_freqs(cf)) )
+                    entropies_strong.append(calculate_entropy( codon_freqs_to_aa_freqs(cf)) )
                     
                     #### Weakly deleterious ####
                     random_fit = np.random.uniform(low = WEAK_FIT[0], high = WEAK_FIT[1], size = np.sum(aa_fitness <= WEAK_THRESHOLD))
@@ -111,7 +111,7 @@ for file in yeastfiles:
                     frequencies_weak.append(cf)
                     fitnesses_weak.append(aa_fitness)
                     omegas_weak.append(dnds)
-                    entropies_weak.append(calc_entropy( codon_freqs_to_aa_freqs(cf)) )
+                    entropies_weak.append(calculate_entropy( codon_freqs_to_aa_freqs(cf)) )
 
             
             name_strong = output_directory + out_prefix + "_delstrong"

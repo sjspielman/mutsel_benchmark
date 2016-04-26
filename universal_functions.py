@@ -39,11 +39,11 @@ def calculate_save_coeffs(fitness, outfile):
 
 
 
-def calc_entropy(f):
+def calculate_entropy(f):
     '''
         Compute entropy of frequency distribution f.
     '''
-    return -1. * np.sum ( [f > ZERO] * np.log(f[f > ZERO]) )  
+    return -1. * np.sum ( f * np.log(f) )  
     
 
 
@@ -87,10 +87,9 @@ def codon_freqs_to_aa_freqs(codonfreqs):
         total = 0.
         for syn in family:
             total += cf[syn]
-        total /= float(len(family))
         aa_freqs.append(total)
     aa_freqs = np.array(aa_freqs)
-    assert((1. - np.sum(aa_freqs) <= ZERO), "\nImproperly converted codon to amino acid frequencies." 
+    assert((1. - np.sum(aa_freqs)) <= ZERO), "\nImproperly converted codon to amino acid frequencies." 
     return aa_freqs
 
 
