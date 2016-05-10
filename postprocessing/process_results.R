@@ -12,104 +12,67 @@ yeast.datasets <- c("1B4T_A", "1RII_A", "1V9S_B", "1G58_B", "1W7W_B", "2BCG_Y", 
 branch.lengths <- c("0.01", "0.5")
 dms.datasets   <- c("HA", "NP")
 deltypes       <- c("weak", "strong")
-methods        <- c("nopenal", "d0.01", "d0.1", "d1.0", "mvn1", "mvn10", "mvn100" , "phylobayes")
+methods        <- c("nopenal", "d0.01", "d0.1", "mvn10", "mvn100" , "phylobayes") #"d1.0", "mvn1",
 
-
-print("Processing yeast")
-dat.yeast <- data.frame("dataset" = character(), 
-                        "del"     = character(),
-                        "bl"      = numeric(),
-                        "site"    = numeric(), 
-                        "jsd"     = numeric(),
-                        "entropy" = numeric(),
-                        "diffsum" = numeric(),
-                        "dnds"    = numeric(),
-                        "method"  = factor())
+print("Processing yeast datasets")
+dat.yeast <- data.frame("dataset"      = character(),
+                        "del"          = character(),
+                        "bl"           = numeric(),
+                        "site"         = numeric(),
+                        "jsd"          = numeric(),
+                        "entropy"      = numeric(),
+                        "diffsum"      = numeric(),
+                        "dnds"         = numeric(),
+                        "method"       = factor(), 
+                        "true.dnds"    = numeric(),
+                        "true.entropy" = numeric())
 for (name in yeast.datasets)
-{    
+{
     print(name)
     for (deltype in deltypes)
-    { 
+    {
+        true <- read.csv(paste0(truedir, name, "_del", deltype, "_true_dnds_entropy.csv"))
         for (bl in branch.lengths)
         {
             for (meth in methods)
-            {  
+            {
                 dat <- read.csv(paste0(datadir, name, "_del", deltype, "_bl", bl, "_", meth, "_statistics.csv"))
                 l <- nrow(dat)
-                temp <- data.frame("dataset" = name, "del" = deltype, "bl" = bl, "site" = dat$site, "jsd" = dat$jsd, "entropy" = dat$entropy, "diffsum" = dat$abs_sum_differences, "dnds" = dat$dnds, "method" = meth)
+                temp <- data.frame("dataset" = name, "del" = deltype, "bl" = bl, "site" = dat$site, "jsd" = dat$jsd, "entropy" = dat$entropy, "diffsum" = dat$abs_sum_differences, "dnds" = dat$dnds, "method" = meth, "true.dnds" = true$dnds , "true.entropy" = true$entropy)
                 dat.yeast <- rbind(dat.yeast, temp)
             }
         }
     }
 }
-#write.csv(dat.yeast, paste0(datadir, "inferred_yeast.csv"), row.names=FALSE, quote=FALSE)
+write.csv(dat.yeast, paste0(datadir, "yeast_results.csv"), row.names=FALSE, quote=FALSE)
 
-print("Processing true parameters, yeast")
-true.yeast <- data.frame("dataset"      = character(), 
-                         "del"          = character(),
-                         "site"         = numeric(), 
-                         "true.dnds"    = numeric(),
-                         "true.entropy" = numeric())
-for (name in yeast.datasets)
+
+print("Processing deep mutational scanning")
+dat.dms <- data.frame("dataset" = character(), 
+                      "bl"      = numeric(),
+                      "site"    = numeric(), 
+                      "jsd"     = numeric(),
+                      "entropy" = numeric(),
+                      "diffsum" = numeric(),
+                      "dnds"    = numeric(),
+                      "method"  = factor())
+for (name in dms.datasets)
 {    
-    print(name)
-    for (deltype in deltypes)
+    true <- read.csv(paste0(truedir, name, "_true_dnds_entropy.csv"))
+    for (bl in branch.lengths)
     { 
-        true <- read.csv(paste0(truedir, name, "_del", deltype, "_true_dnds_entropy.csv"))
-        temp <- data.frame("dataset" = name, "del" = deltype, "site" = true$site, "true.dnds" = true$dnds , "true.entropy" = true$entropy)
-        true.yeast <- rbind(true.yeast, temp)
+        for (meth in methods)
+        {  
+            dat <- read.csv(paste0(datadir, name, "_bl", bl, "_", meth, "_statistics.csv"))
+            l <- nrow(dat)
+            temp <- data.frame("dataset" = name, "bl" = bl, "site" = dat$site, "jsd" = dat$jsd, "entropy" = dat$entropy, "diffsum" = dat$abs_sum_differences, "dnds" = dat$dnds, "method" = meth, "true.dnds" = true$dnds, "true.entropy" = true$entropy)
+            dat.dms <- rbind(dat.dms, temp)
+        }
+        
     }
 }
-full.yeast <- left_join(dat.yeast, true.yeast)
-write.csv(full.yeast, paste0(datadir, "yeast_results.csv"), row.names=FALSE, quote=FALSE)
+write.csv(dat.dms, paste0(datadir, "dms_results.csv"), row.names=FALSE, quote=FALSE)
 
-
-# print("Processing deep mutational scanning")
-# dat.dms <- data.frame("dataset" = character(), 
-#                       "bl"      = numeric(),
-#                       "site"    = numeric(), 
-#                       "jsd"     = numeric(),
-#                       "entropy" = numeric(),
-#                       "diffsum" = numeric(),
-#                       "dnds"    = numeric(),
-#                       "method"  = factor())
-# for (name in dms.datasets)
-# {    
-#     for (bl in branch.lengths)
-#     { 
-#         for (meth in methods)
-#         {  
-#             dat <- read.csv(paste0(datadir, name, "_bl", bl, "_", meth, "_jsd.csv"))
-#             l <- nrow(dat)
-#             temp <- data.frame("dataset" = name, "bl" = bl, "site" = dat$site, "jsd" = dat$jsd, "entropy" = dat$entropy, "diffsum" = dat$abs_sum_differences, "dnds" = dat$dnds, "method" = meth)
-#             dat.dms <- rbind(dat.dms, temp)
-#         }
-#         
-#     }
-# }
-# write.csv(dat.dms, paste0(datadir, "inferred_dms.csv"), row.names=FALSE, quote=FALSE)
-# 
-# 
-# 
-
-
-# 
-# 
-# print("Processing true parameters, deep mutational scanning")
-# dnds <- data.frame("dataset" = character(), 
-#                    "site"    = numeric(), 
-#                    "dnds"    = numeric(),
-#                    "entropy" = numeric())
-# for (name in dms.datasets)
-# {    
-#     true <- read.csv(paste0(truedir, name, "_true_dnds_entropy.csv"))
-#     temp <- data.frame("dataset" = name, "site" = dat$site, "dnds" = dat$dnds , "entropy" = dat$entropy)
-#         true.dms <- rbind(true.dms, temp)
-# }
-# write.csv(true.dms, paste0(datadir, "true_dms.csv"), row.names=FALSE, quote=FALSE)
-# 
-# 
-# 
 
 # 
 # 
@@ -165,3 +128,26 @@ write.csv(full.yeast, paste0(datadir, "yeast_results.csv"), row.names=FALSE, quo
 #     }
 #     write.csv(sim.selcoeffs, paste0(datadir, full_dataset, "_selection_coefficients.csv"), row.names=FALSE, quote=FALSE)
 # }
+
+
+
+# 
+# kl.breaks <- seq(from=-10, to=10, by=1)
+# 
+# for (dataset in yeast.datasets)
+# {
+#     print(dataset)
+#     true <- read.csv(paste0("../../simulation/true_simulation_parameters/", dataset, "_delstrong_true_selcoeffs.csv"))
+#     true.hist <- hist(true$binnedcoeff, breaks = kl.breaks)
+#     
+#     for (m in c("nopenal", "mvn10", "d0.01", "d0.01", "phylobayes"))
+#     {
+#         dat <- read.csv(paste0(dataset, "_delstrong_bl0.5_", m, "_selcoeffs.csv"))
+#         dat.hist <- hist(dat$binnedcoeff, breaks = kl.breaks)
+#         print(m)
+#         kl <- kl.divergence(true.hist, dat.hist)
+#         print(kl)
+#         stop()
+#     }
+# }
+# 

@@ -145,6 +145,13 @@ def calculate_save_most_quantities(fitness, mu_dict, true, outfile):
         inferred_codon_freqs = np.array( codon_freqs_from_fitness_eigenvector(fitness[i], mu_dict) )
         inferred_aa_freqs = codon_freqs_to_aa_freqs(inferred_codon_freqs)
         
+        # Renormalize (as needed for entropy and KL calculates, what with division) to replace 0's with 1e-10
+        true_aa_freqs[true_aa_freqs <= ZERO] = ZERO
+        inferred_aa_freqs[inferred_aa_freqs <= ZERO] = ZERO
+        true_aa_freqs /= np.sum(true_aa_freqs)
+        inferred_aa_freqs /= np.sum(inferred_aa_freqs)
+        
+        
         jsd.append( calculate_jsd(true_aa_freqs, inferred_aa_freqs) )     
         diffsum.append( calculate_sum_absolute_diff(true_aa_freqs, inferred_aa_freqs) )  
         dnds.append( dnds_from_params(fitness[i], mu_dict) )
@@ -195,7 +202,7 @@ def main():
                     simprefix = "_".join( prefix.split("_")[:3] )
                 else:
                     simprefix = prefix.split("_")[0]
-            
+
                 outfile_values = output_directory + prefix + "_statistics.csv"
                 outfile_coeffs = output_directory + prefix + "_selcoeffs.csv"
 
