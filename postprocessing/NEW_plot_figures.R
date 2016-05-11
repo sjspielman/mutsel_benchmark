@@ -7,17 +7,14 @@ require(tidyr)
 require(readr)
 require(grid)
 
-
-theme_set(theme_cowplot() + theme(panel.border = element_rect(size = 0.5), 
-                                  panel.margin = unit(0.25, "cm"), 
-                                  strip.background = element_rect(fill="white"), 
-                                  strip.text = element_text(size=14)))
+#, strip.background = element_rect(fill="white")
+theme_set(theme_cowplot() + theme(strip.text = element_text(size=14)))
 
 
-result_directory <- "dataframes/"
-true_directory   <- "../simulation/true_simulation_parameters/"
+result_directory          <- "dataframes/"
+true_directory            <- "../simulation/true_simulation_parameters/"
 maintext_plot_directory   <- "NEWfigures/"
-si_plot_directory   <- "NEWfigures/"
+si_plot_directory         <- "NEWfigures/"
 
 yeast <- read.csv(paste0(result_directory, "yeast_results.csv"))
 dms <- read.csv(paste0(result_directory, "dms_results.csv"))
@@ -31,7 +28,7 @@ dms <- dms %>% filter(method %in% methods_levels)
 dms$method <- factor(dms$method, levels = methods_levels, labels = methods_labels)
 dms$bl <- factor(dms$bl, levels = c(0.01, 0.5))
 
-primary.data <- yeast %>% filter(del == "strong") %>% select(-del) %>% left_join(dms)
+primary.data <- yeast %>% filter(del == "strong") %>% select(-del) %>% rbind(dms)
 bl_colors <- c("red", "blue")
 
 
@@ -60,7 +57,8 @@ summarize_dnds_entropy <- function(dat){
 
 yeast.dnds.entropy.stats <- yeast %>% group_by(dataset, del, bl, method) %>% summarize_dnds_entropy()
 dms.dnds.entropy.stats <- dms %>% group_by(dataset, bl, method) %>% summarize_dnds_entropy()
-primary.dnds.entropy.stats <- primary.data %>% group_by(dataset, bl, method) %>% summarize_dnds_entropy()
+primary.dnds.entropy.stats <- primary.data %>% group_by(dataset, bl, method) %>% summarize_dnds_entropy() %>% mutate(type = ifelse(dataset %in% c("NP", "HA"), "dms", "yeast"))
+primary.dnds.entropy.stats$type <- factor(primary.dnds.entropy.stats$type)
 
 # function to return pvalue from an lm object
 lmp <- function (modelobject) {
@@ -72,146 +70,129 @@ lmp <- function (modelobject) {
 }
 
 
-
-##########################################################################################
-################################ Main text plots #########################################
-##########################################################################################
-print("Creating main text plots")
-
-
-
 ##################################################################################################################################
-############### Figure 2: Boxplots of JSD and absolute sum differences for representative dataset, all datasets #################
+##################### Boxplots of JSD and absolute sum differences for representative dataset, all datasets ######################
 ##################################################################################################################################
-print("Figure 2")
 
-yeast %>% filter(del == "strong") %>% left_join(dms) %>% group_by(dataset, method, bl) %>% summarize(meanjsd = mean(jsd), meandiffsum = mean(diffsum)) -> jsd.diffsum
-
-
-bl.legend.raw <- jsd.diffsum %>% ggplot(aes(x = method, y = meanjsd, fill = bl)) + 
-  geom_boxplot() +
-  scale_fill_manual(values = bl_colors, name = "Branch length") + 
-  theme(legend.position = "bottom", legend.title = element_text(size=13), legend.text = element_text(size=12))
-grobs <-  ggplotGrob(bl.legend.raw)$grobs
-bl.legend <- grobs[[which(sapply(grobs, function(x) x$name) == "guide-box")]]
+primary.data %>% group_by(dataset, method, bl) %>% summarize(meanjsd = mean(jsd), meandiffsum = mean(diffsum)) %>% mutate(type = ifelse(dataset %in% c("NP", "HA"), "dms", "yeast"))-> jsd.diffsum
 
 
-yeast %>% filter(dataset == repr_sim, del == "strong") %>%
-  ggplot(aes(x = method, y = jsd, fill = as.factor(bl))) + 
-  geom_boxplot(position = position_dodge(0.9), width=0.5) +
-  xlab("Inference Method") + ylab("Site JSD") + 
-  theme(legend.position = "none") -> box.a
+yeast %>% filter(dataset == repr_sim, del == "strong", bl == 0.5) %>%
+  ggplot(aes(x = method, y = jsd)) + 
+  geom_boxplot() + ggtitle("BL = 0.5") +
+  xlab("Inference Method") + ylab("Site JSD") -> box.a
 
 yeast %>% filter(dataset == repr_sim, del == "strong", bl == 0.01) %>%
   ggplot(aes(x = method, y = jsd)) + 
-  geom_boxplot(position = position_dodge(0.9)) +
-  xlab("Inference Method") + ylab("Site JSD") + 
-  theme(legend.position = "none") -> box.b
+  geom_boxplot() + ggtitle("BL = 0.01") +
+  xlab("Inference Method") + ylab("Site JSD") -> box.c
 
 jsd.diffsum %>% filter(bl == 0.5) %>%
-  ggplot(aes(x = method, y = meanjsd)) + 
-  geom_jitter(width = 0.5) + 
-  xlab("Inference Method") + ylab("Average JSD") +
-  scale_y_continuous(limits=c(0.13,0.5))  + 
-  theme(legend.position = "none") -> box.c
+  ggplot(aes(x = method, y = meanjsd, color = as.factor(type))) + 
+  geom_jitter(width = 0.5) + ggtitle("BL = 0.5") +
+  scale_color_manual(values=c("blue", "red"), name = "Data type") + 
+  xlab("Inference Method") + ylab("Average JSD")-> box.b
 
 jsd.diffsum %>% filter(bl == 0.01) %>%
-  ggplot(aes(x = method, y = meanjsd)) + 
-  geom_jitter(width = 0.5) + 
-  xlab("Inference Method") + ylab("Average JSD") +
-  scale_y_continuous(limits=c(0.13,0.5))  + 
-  theme(legend.position = "none") -> box.d
+  ggplot(aes(x = method, y = meanjsd, color = as.factor(type))) + 
+  geom_jitter(width = 0.5) + ggtitle("BL = 0.01") +
+  scale_color_manual(values=c("blue", "red"), name = "Data type") + 
+  xlab("Inference Method") + ylab("Average JSD") -> box.d
 
+jsd.boxplots.jitters <- plot_grid(box.a, box.b, box.c, box.d, nrow=2, labels=c("A", "B", "C", "D"), rel_widths=c(.9, 1, .9, 1))
+save_plot(paste0(maintext_plot_directory, "jsd_boxplots_jitters.pdf"), jsd.boxplots.jitters, base_width = 14, base_height=6)
 
-jsd.boxplots <- plot_grid(box.a, box.b, box.c, box.d, nrow=2, labels=c("A", "B", "C", "D"))
+jsd.diffsum %>% filter(bl == 0.5) %>%
+    ggplot(aes(x = method, y = meandiffsum)) + 
+    geom_jitter(width = 0.5) + ggtitle("BL = 0.5") +
+    xlab("Inference Method") + ylab("Average difference") +
+    scale_y_continuous(limits=c(0.25,0.6)) -> box.a
 
+jsd.diffsum %>% filter(bl == 0.01) %>%
+    ggplot(aes(x = method, y = meandiffsum)) + 
+    geom_jitter(width = 0.5) + ggtitle("BL = 0.01") +
+    xlab("Inference Method") + ylab("Average difference") +
+    scale_y_continuous(limits=c(0.6, 1.05)) -> box.b
 
-jsd.diffsum %>%
-  ggplot(aes(x = method, y = meanjsd)) + 
-  geom_jitter(width = 0.5, size=2) + facet_grid(~bl)+
-  xlab("Inference Method") + ylab("Average JSD") +
-  scale_y_continuous(limits=c(0.13,0.5))  + 
-  theme(legend.position = "none") -> mean.jsd.boxplots
-
-jsd.diffsum %>%
-  ggplot(aes(x = method, y = meanjsd, fill = as.factor(bl))) + 
-  geom_boxplot(position = position_dodge(0)) +
-  scale_fill_manual(values = bl_colors, name = "Branch length") + 
-  xlab("Inference Method") + ylab("Average JSD") +
-  scale_y_continuous(limits=c(0.13,0.5))  + 
-  theme(legend.position = "none") -> mean.jsd.boxplots
-
-
-
-fig2 <- plot_grid(repr.jsd.boxplots, mean.jsd.boxplots, bl.legend, nrow=3, labels=c("A", "B"), rel_heights=c(1,1,0.13))
-save_plot(paste0(maintext_plot_directory, "jsd_boxplots.pdf"), fig2, base_width = 8, base_height = 5) 
-
-yeast %>% filter(dataset == repr_sim, del == "strong") %>%
-  ggplot(aes(x = method, y = diffsum, fill = as.factor(bl))) + 
-  geom_boxplot(position = position_dodge(0.9)) +
-  scale_fill_manual(values = bl_colors, name = "Branch length") + 
-  xlab("Inference Method") + ylab("Site Difference")  + 
-  theme(legend.position = "none") -> repr.diffsum.boxplots
-
-yeast.jsd.diffsum %>% filter(del == "strong") %>%
-  ggplot(aes(x = method, y = meandiffsum, fill = as.factor(bl))) + 
-  geom_boxplot(position = position_dodge(0.9)) + 
-  scale_fill_manual(values = bl_colors, name = "Branch length") + 
-  xlab("Inference Method") + ylab("Average Difference")  + 
-  theme(legend.position = "none") -> mean.diffsum.boxplots
-
-
-fig.diffsum <- plot_grid(repr.diffsum.boxplots, mean.diffsum.boxplots, bl.legend, nrow=3, labels=c("A", "B"), rel_heights=c(1,1,0.13))
-save_plot(paste0(maintext_plot_directory, "diffsum_boxplots.pdf"), fig.diffsum, base_width = 7, base_height = 5.5) 
+diffsum.jitters <- plot_grid(box.a, box.b, nrow=1, labels=c("A", "B"), scale=0.98)
+save_plot(paste0(si_plot_directory, "diffsum_jitters.pdf"), diffsum.jitters, base_width = 12, base_height=3.5)
 
 
 
 
+################################################################################################################
+################ True vs. predicted dN/dS and entropy: repr scatter, correlation and bias jitters ##############
+################################################################################################################
 
+primary.dnds.entropy.stats %>% filter(dataset %in% c(repr_sim, "HA")) %>% mutate(r2.dnds.short = as.numeric(format(r2.dnds, digits=3)), r2.entropy.short = as.numeric(format(r2.entropy, digits=3))) -> scatter.stats
+stats.bl0.5 <- scatter.stats %>% filter(bl == 0.5)
+stats.bl0.01 <- scatter.stats %>% filter(bl == 0.01)
+primary.data %>% filter(dataset %in% c(repr_sim, "HA"), bl == 0.5) -> scatter.repr.bl0.5
+primary.data %>% filter(dataset %in% c(repr_sim, "HA"), bl == 0.01) -> scatter.repr.bl0.01
 
-
-##########################################################################################
-##### Figure 3: True vs. predicted dN/dS: repr scatter, correlation and bias jitters #####
-##########################################################################################
-print("Figure 3")
-
-
-
-
-
-repr.scatter.dnds <- yeast %>% filter(dataset == repr_sim, del == "strong") %>%
-  ggplot(aes(x = true.dnds, y = dnds)) + 
-  geom_point(size=1) + geom_abline(slope = 1, intercept = 0, color="red") + 
+theme_set(theme_cowplot() + theme(strip.text = element_text(size = 13),
+                                panel.margin = unit(0.75, "lines"),
+                                axis.title = element_text(size=13),
+                                axis.text = element_text(size=12)))
+              
+scatter.dnds.bl0.5 <- ggplot(data = NULL) + 
+  geom_point(data = scatter.repr.bl0.5, aes(x = true.dnds, y = dnds), size=1) + geom_abline(slope = 1, intercept = 0, color="red") + 
+  geom_text(data = stats.bl0.5, aes(label=paste0("r^2==",r2.dnds.short)), x = 0.25, y = 0.88, parse=TRUE, size=5) +
   xlab("True dN/dS") + ylab("Predicted dN/dS") + 
-  scale_y_continuous(limits=c(0,0.88)) + scale_x_continuous(limits=c(0,0.88)) + 
-  facet_grid(bl~method)
-save_plot(paste0(maintext_plot_directory, "repr_scatter_dnds.pdf"),repr.scatter.dnds, base_width=11, base_height=4)
+  scale_y_continuous(limits=c(0,1)) + scale_x_continuous(limits=c(0,1)) + 
+  facet_grid(dataset~method)
+save_plot(paste0(maintext_plot_directory, "scatter_dnds_bl0.5.pdf"), scatter.dnds.bl0.5, base_width=15.5, base_height=5.5)
+
+scatter.dnds.bl0.01 <- ggplot(data = NULL) + 
+    geom_point(data = scatter.repr.bl0.01, aes(x = true.dnds, y = dnds), size=1) + geom_abline(slope = 1, intercept = 0, color="red") + 
+    geom_text(data = stats.bl0.01, aes(label=paste0("r^2==",r2.dnds.short)), x = 0.25, y = 1.06, parse=TRUE, size=4.75) +
+    xlab("True dN/dS") + ylab("Predicted dN/dS") + 
+    scale_y_continuous(limits=c(0,1.1)) + scale_x_continuous(limits=c(0,1.1)) + 
+    facet_grid(dataset~method)
+save_plot(paste0(maintext_plot_directory, "scatter_dnds_bl0.01.pdf"), scatter.dnds.bl0.01, base_width=15.5, base_height=5.5)
+
+
+scatter.entropy.bl0.5 <- ggplot(data = NULL) + 
+    geom_point(data = scatter.repr.bl0.5, aes(x = true.entropy, y = entropy), size=1) + geom_abline(slope = 1, intercept = 0, color="red") + 
+    geom_text(data = stats.bl0.5, aes(label=paste0("r^2==",r2.entropy.short)), x = 0.6, y = 2.5, parse=TRUE, size=4) +
+    xlab("True Entropy") + ylab("Predicted Entropy") + 
+    facet_grid(dataset~method)
+save_plot(paste0(maintext_plot_directory, "scatter_entropy_bl0.5.pdf"), scatter.entropy.bl0.5, base_width=15.5, base_height=5.5)
+
+scatter.entropy.bl0.01 <- ggplot(data = NULL) + 
+    geom_point(data = scatter.repr.bl0.01, aes(x = true.entropy, y = entropy), size=1) + geom_abline(slope = 1, intercept = 0, color="red") + 
+    geom_text(data = stats.bl0.01, aes(label=paste0("r^2==",r2.entropy.short)), x = 0.6, y = 2.9, parse=TRUE, size=4) +
+    xlab("True Entropy") + ylab("Predicted Entropy") + 
+    facet_grid(dataset~method)
+save_plot(paste0(maintext_plot_directory, "scatter_entropy_bl0.01.pdf"), scatter.entropy.bl0.01, base_width=15.5, base_height=5.5)
 
 
 
 
 
-
-jitter.bl.legend.raw <- yeast.dnds.entropy.stats %>%
-  ggplot(aes(x = method, y = r.dnds, color = as.factor(bl))) + 
+jitter.bl.legend.raw <- primary.dnds.entropy.stats %>%
+  ggplot(aes(x = method, y = r2.dnds, color = as.factor(bl))) + 
   geom_jitter() + scale_color_manual(values=bl_colors, name = "Branch Length") + 
   theme(legend.position = "bottom", legend.title = element_text(size = 12))
 grobs <-  ggplotGrob(jitter.bl.legend.raw)$grobs
 jitter.bl.legend <- grobs[[which(sapply(grobs, function(x) x$name) == "guide-box")]]
 
 
-jitter.r.dnds <- yeast.dnds.entropy.stats %>% filter(del == "strong") %>%
-  ggplot(aes(x = method, y = r.dnds, color = as.factor(bl))) + 
-  geom_jitter(width = 0.5, size=2) + scale_color_manual(values=bl_colors) + 
-  xlab("Inference Method") + ylab("Pearson Correlation") + theme(legend.position = "none", axis.title.y = element_text(size=11.5))
+jitter.r2.dnds <- primary.dnds.entropy.stats %>%
+  ggplot(aes(x = method, y = r2.dnds, color = as.factor(type))) + 
+  geom_jitter(width = 0.5, size=2) + scale_color_manual(values=c("red", "blue")) +
+  facet_grid(~bl) + theme(legend.position = "none") + 
+  xlab("Inference Method") + ylab(expression(r^2)) 
 
 
-jitter.b.dnds <- yeast.dnds.entropy.stats %>% filter(del == "strong") %>%
-  ggplot(aes(x = method, y = b.dnds, color = as.factor(bl), shape = b.dnds.sig)) + 
-  geom_jitter(width = 0.5, size=2) + 
-  scale_shape_manual(values=c(1,19)) + scale_color_manual(values=bl_colors) + 
-  xlab("Inference Method") + ylab("Estimator Bias") + 
-  geom_hline(yintercept=0 ) + theme(legend.position = "none", axis.title.y = element_text(size=13))
+jitter.b.dnds <- primary.dnds.entropy.stats %>%
+    ggplot(aes(x = method, y = b.dnds, color = as.factor(type))) + 
+    geom_jitter(width = 0.5, size=2) + scale_color_manual(values=c("red", "blue")) +
+    geom_hline(yintercept=0) + 
+    facet_grid(~bl) + theme(legend.position = "none") + 
+    xlab("Inference Method") + ylab("Estimator Bias")
+
+
 
 r.b.dnds <- plot_grid(jitter.r.dnds, jitter.b.dnds, jitter.bl.legend, nrow=3, labels=c("A", "B"), rel_heights=c(1,1,0.08))
 save_plot(paste0(maintext_plot_directory, "r_bias_dnds.pdf"), r.b.dnds, base_width=8, base_height=5)
