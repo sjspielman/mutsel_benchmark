@@ -17,7 +17,7 @@ from universal_functions import *
 ### Simulation constants and functions ###
 mu_dict        = {'AC':1.,  'CA':1.,  'AG':1.,  'GA':1.,  'AT':1.,  'TA':1.,  'CG':1.,  'GC':1.,  'CT':1.,  'TC':1.,  'GT':1.,  'TG':1.}
 STRONG_FREQ    = 1e-9
-WEAK_FIT       = [-6.0, -4.5] # Lowest fitness, highest fitness   
+WEAK_FIT       = [-6, -4.5]  # Lowest fitness, highest fitness   
 WEAK_THRESHOLD = -10 # Any fitness below here gets increased to an interval in WEAK_FIT
 
 
@@ -105,8 +105,8 @@ for file in yeastfiles:
                     #### Weakly deleterious ####
                     random_fit = np.random.uniform(low = WEAK_FIT[0], high = WEAK_FIT[1], size = np.sum(aa_fitness <= WEAK_THRESHOLD))
                     aa_fitness[aa_fitness <= WEAK_THRESHOLD] = random_fit  
-                    codon_freqs = codon_freqs_from_fitness_eigenvector(aa_fitness, mu_dict)
-                    c = dNdS_from_MutSel(codon_freqs)
+                    cf = codon_freqs_from_fitness_eigenvector(aa_fitness, mu_dict)
+                    c = dNdS_from_MutSel(cf)
                     dnds = c.compute_dnds()
                     frequencies_weak.append(cf)
                     fitnesses_weak.append(aa_fitness)
@@ -114,7 +114,7 @@ for file in yeastfiles:
                     entropies_weak.append(calculate_entropy( codon_freqs_to_aa_freqs(cf)) )
 
             
-            name_strong = output_directory + out_prefix + "_delstrong"
-            name_weak   = output_directory + out_prefix + "_delweak"
-            save_simulation_info(name_strong, frequencies_strong, fitnesses_strong, omegas_strong, entropies_strong)      
-            save_simulation_info(name_weak, frequencies_weak, fitnesses_weak, omegas_weak, entropies_weak)      
+        name_strong = output_directory + out_prefix + "_delstrong"
+        name_weak   = output_directory + out_prefix + "_delweak"
+        save_simulation_info(name_strong, frequencies_strong, fitnesses_strong, omegas_strong, entropies_strong)      
+        save_simulation_info(name_weak, frequencies_weak, fitnesses_weak, omegas_weak, entropies_weak)     
