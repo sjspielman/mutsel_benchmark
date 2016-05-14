@@ -8,8 +8,6 @@ from numpy import savetxt
 # Penalty functions (no penalty + 3 dirichlet + 3 multivariate normal) to run swmutsel with
 penalty = {"d0.01"   :" -p dirichlet,0.01", 
            "d0.1"    :" -p dirichlet,0.1", 
-           "d1.0"    :" -p dirichlet,1.0", 
-           "mvn1"    :" -p mvn,1", 
            "mvn10"   :" -p mvn,10", 
            "mvn100"  :" -p mvn,100",
            "nopenal" :""}
