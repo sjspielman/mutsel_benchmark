@@ -177,17 +177,11 @@ def main():
     
     # Grab all the true codon frequencies
     true_frequencies = {} 
-    datasets = ["HA", "NP", "1B4T_A", "1RII_A", "1V9S_B", "1G58_B", "1W7W_B", "2BCG_Y", "2CFE_A", "1R6M_A", "2FLI_A", "1GV3_A", "1IBS_A"]
-    for data in datasets:
-        if "_" in data:
-            for d in ["_delweak", "_delstrong"]:
-                full_data = data + d
-                t = np.loadtxt(true_directory + full_data + "_true_codon_frequencies.txt")
-                true_frequencies[full_data] = t
-        else:
-            t = np.loadtxt(true_directory + data + "_true_codon_frequencies.txt")
-            true_frequencies[data] = t
-             
+    dms_datasets = ["HA", "NP", "LAC"]
+    all_datasets = ["HA", "NP", "LAC", "1B4T_A", "1RII_A", "1V9S_B", "1G58_B", "1W7W_B", "2BCG_Y", "2CFE_A", "1R6M_A", "2FLI_A", "1GV3_A", "1IBS_A"]
+    for data in all_datasets:
+        t = np.loadtxt(true_directory + data + "_true_codon_frequencies.txt")
+        true_frequencies[data] = t            
 
     for method in method_suffixes:
         input_directory = "../results/" + method + "/"
@@ -197,20 +191,21 @@ def main():
             prefix = None
             if file.endswith(suffix):
                 prefix = file.split(suffix)[0]
-                print prefix
-                if "del" in prefix:
-                    simprefix = "_".join( prefix.split("_")[:3] )
-                else:
+                is_dms = bool(len([x for x in range(len(dms_datasets)) if prefix.startswith(dms_datasets[x])]))
+                if is_dms:
                     simprefix = prefix.split("_")[0]
-
+                else:
+                    simprefix = "_".join( prefix.split("_")[:2] )  
+                print prefix
                 outfile_values = output_directory + prefix + "_statistics.csv"
                 outfile_coeffs = output_directory + prefix + "_selcoeffs.csv"
 
                 fitness, mu_dict = extract_parameters(input_directory, prefix)                         
                 true_codon_frequencies = true_frequencies[simprefix]
-                
+
                 if not os.path.exists(outfile_values):
                     calculate_save_most_quantities(fitness, mu_dict, true_codon_frequencies, outfile_values)
+                    
                 if not os.path.exists(outfile_coeffs):
                     calculate_save_coeffs(fitness, outfile_coeffs)        
 
