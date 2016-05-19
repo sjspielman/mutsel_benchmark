@@ -65,8 +65,9 @@ for file in yeastfiles:
                     aaf2 /= np.sum(aaf2)
                 
                     aa_fitness = np.log(aaf2)
-                    cf, cf_dict = aa_freqs_to_codon_freqs(aaf2)
-                    c = dNdS_from_MutSel(cf_dict)
+                    codon_fitness = aa_fitness_to_codon_fitness(aa_fitness)
+                    cf = codon_freqs_from_fitness_boltzmann(codon_fitness)
+                    c = dNdS_from_MutSel(dict(zip(g.codons, cf)), mu_dict)
                     dnds = c.compute_dnds()
                            
                     frequencies.append(cf)

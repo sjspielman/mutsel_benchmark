@@ -29,10 +29,11 @@ for source in ["HA", "NP", "LAC", "GAL4"]:
     final_entropy = np.zeros(nsites)
     for i in range(nsites):
         print "  ",i
-        aa_freqs    = rawpref[i] / np.sum(rawpref[i]) # Renormalize. They are at a bad tolerance.
-        aa_fitness  = np.log(aa_freqs)
-        cf, cf_dict = aa_freqs_to_codon_freqs(aa_freqs)
-        c = dNdS_from_MutSel(cf_dict, mudict)
+        aa_freqs      = rawpref[i] / np.sum(rawpref[i]) # Renormalize. They are at a bad tolerance.
+        aa_fitness    = np.log(aa_freqs)
+        codon_fitness = aa_fitness_to_codon_fitness(aa_fitness)
+        cf = codon_freqs_from_fitness_boltzmann(codon_fitness)
+        c = dNdS_from_MutSel(dict(zip(g.codons,cf)), mudict)
         dnds = c.compute_dnds()
 
         final_codon_freqs[i] = cf

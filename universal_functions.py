@@ -68,6 +68,24 @@ def save_simulation_info(name, frequencies, fitnesses, omegas, entropies):
 
 
 
+def codon_freqs_from_fitness_boltzmann(codon_fitness):
+    ''' 
+        Convert codon fitness values to stationary codon frequencies using Sella and Hirsh 2005 (Boltzmann).
+        ***Assumes symmetric mutation rates***
+    '''
+    if type(codon_fitness) is not dict:
+        codon_fitness = dict(zip(g.codons, codon_fitness))
+    codon_freqs = np.zeros(61)
+    count = 0
+    for codon in g.codons:
+        codon_freqs[count] = np.exp( codon_fitness[codon] )
+        count += 1
+    codon_freqs /= np.sum(codon_freqs)                   
+    assert( abs(1. - np.sum(codon_freqs)) <= ZERO), "codon_freq doesn't sum to 1 in codon_fitness_to_freqs"
+    return codon_freqs 
+
+
+
 
 def codon_freqs_from_fitness_eigenvector(fitness, mu):
     '''
@@ -75,11 +93,7 @@ def codon_freqs_from_fitness_eigenvector(fitness, mu):
     '''
     params = {"fitness": fitness, "mu": mu}
     m = Model("mutsel", params)
-    matrix = m.matrix
-    eqfreqs = m.extract_state_freqs()
-    return eqfreqs
-
-
+    return m.extract_state_freqs()
 
 
 def aa_fitness_to_codon_fitness(fitness):
