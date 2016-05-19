@@ -97,9 +97,9 @@ save_plot(paste0(maintext_plot_directory, "sc_across_methods.pdf"), figsc_with_l
 
 
 ##########################################################################################
-########## Figure 2: Boxplots of JSD for representative dataset, all datasets ############
+##########  Boxplots of JSD for representative dataset, all datasets ############
 ##########################################################################################
-print("Figure 2")
+
 
 jsd %>% filter(del == "strong") %>% group_by(dataset, method) %>% summarize(meanjsd = mean(jsd)) -> jsd.strong.summary
 jsd.strong.summary$method <- factor(jsd.strong.summary$method, levels = methods_levels, labels = methods_labels)

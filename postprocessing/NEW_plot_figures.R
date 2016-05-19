@@ -1,64 +1,50 @@
 # SJS
 # Creates MS figures (output to either figures/main_text or figures/SI, depending on where figure is located in MS)
 
-require(cowplot)
-require(dplyr)
-require(tidyr)
-require(readr)
-require(grid)
-
-#, strip.background = element_rect(fill="white")
-theme_set(theme_cowplot() + theme(strip.text = element_text(size=14)))
+library(cowplot)
+library(dplyr)
+library(tidyr)
+library(readr)
+library(grid)
 
 
-result_directory          <- "dataframes/"
-true_directory            <- "../simulation/true_simulation_parameters/"
-maintext_plot_directory   <- "NEWfigures/"
-si_plot_directory         <- "NEWfigures/"
 
-yeast <- read.csv(paste0(result_directory, "yeast_results.csv"))
-dms <- read.csv(paste0(result_directory, "dms_results.csv"))
+################### THIS FUNCTION IS FROM THE PACKAGE "SMATR", which cannot be loaded because it breaks my linear models. ################
+slope.test <- function( y, x, test.value=1, V=matrix(0,2,2))
+{
+   
+    iref <- ( is.na(x+y) == FALSE ) #to remove NA cases
+    n    <- sum(iref)
 
-methods_levels <- c("nopenal", "mvn100", "mvn10", "d0.01", "d0.1", "phylobayes") # "mvn1","d1.0", 
-methods_labels <- c("Unpenalized", "mvn100", "mvn10", "d0.01", "d0.1", "pbMutSel")
-yeast <- yeast %>% filter(method %in% methods_levels)
-yeast$method <- factor(yeast$method, levels = methods_levels, labels = methods_labels)
-yeast$bl <- factor(yeast$bl, levels = c(0.01, 0.5))
-dms <- dms %>% filter(method %in% methods_levels)
-dms$method <- factor(dms$method, levels = methods_levels, labels = methods_labels)
-dms$bl <- factor(dms$bl, levels = c(0.01, 0.5))
+    resDF <- n - 2
+    fCrit <- qf( 1-alpha, 1, resDF )
 
-primary.data <- yeast %>% filter(del == "strong") %>% select(-del) %>% rbind(dms)
-bl_colors <- c("red", "blue")
+    dat <- cbind(y[iref], x[iref])
+    r.factor <- 1
+	  vr <- ( cov(dat) - V )*(n-1)
+		vr <- t(dat)%*%dat - V*n
+    r <- vr[1,2]/sqrt( vr[1,1]*vr[2,2] )
 
+    bCI     <- matrix( NA, 1, 2 )
+    varTest <- matrix( 0, 2, 2 )
 
-alpha <- 0.01 # Significance
-corrected.alpha <- alpha/length(methods_levels) #Bonferroni significance
-repr_sim <- "1R6M_A"
-datasets <- c(as.character(unique(yeast$dataset)), "NP", "HA")
+     # linear regression code only. SJS
+     b            <- vr[1,2]/vr[2,2]
+     varRes       <- ( vr[1,1] - 2*b*vr[1,2] + b^2*vr[2,2] )/resDF
+     varB         <- varRes/vr[2,2] * r.factor
+     bCI[1,1]     <- b - sqrt(varB)*sqrt(fCrit)
+     bCI[1,2]     <- b + sqrt(varB)*sqrt(fCrit)
+     varTest[1,1] <- vr[1,1] - 2*test.value*vr[1,2] + test.value^2*vr[2,2]
+     varTest[1,2] <- vr[1,2] - test.value*vr[2,2]
+     varTest[2,2] <- vr[2,2]
+     rTest  <- varTest[1,2] / sqrt( varTest[1,1] ) / sqrt( varTest[2,2] )
+     F      <- rTest^2/(1 - rTest^2)/r.factor*(n-2)
+     pValue <- 1 - pf( F, 1, resDF)
+     list( p=pValue, b=b )
 
-summarize_dnds_entropy <- function(dat){
-  dat %>% do(rraw.dnds = cor(.$true.dnds, .$dnds), 
-     braw.dnds = glm(dnds ~ offset(true.dnds), dat=.),
-     rraw.h = cor(.$true.entropy, .$entropy), 
-     braw.h = glm(entropy ~ offset(true.entropy), dat=.)) %>% 
-    mutate(r2.dnds = rraw.dnds[[1]]^2, 
-           b.dnds = summary(braw.dnds)$coeff[1], 
-           b.dnds.pvalue = summary(braw.dnds)$coeff[4],
-           b.dnds.sig = b.dnds.pvalue<corrected.alpha,
-           r2.entropy = rraw.h[[1]]^2, 
-           b.entropy = summary(braw.h)$coeff[1], 
-           b.entropy.pvalue = summary(braw.h)$coeff[4],
-           b.entropy.sig = b.entropy.pvalue<corrected.alpha) %>% 
-    select(-rraw.dnds, -rraw.h, -braw.dnds, -braw.h, -b.dnds.pvalue, -b.entropy.pvalue) -> dat.sum
-  
-  dat.sum
 }
 
-yeast.dnds.entropy.stats <- yeast %>% group_by(dataset, del, bl, method) %>% summarize_dnds_entropy()
-dms.dnds.entropy.stats <- dms %>% group_by(dataset, bl, method) %>% summarize_dnds_entropy()
-primary.dnds.entropy.stats <- primary.data %>% group_by(dataset, bl, method) %>% summarize_dnds_entropy() %>% mutate(type = ifelse(dataset %in% c("NP", "HA"), "dms", "yeast"))
-primary.dnds.entropy.stats$type <- factor(primary.dnds.entropy.stats$type)
+
 
 # function to return pvalue from an lm object
 lmp <- function (modelobject) {
@@ -69,78 +55,132 @@ lmp <- function (modelobject) {
   return(p)
 }
 
+# Linear models on dnds, entropy inferences
+summarize_dnds_entropy <- function(dat, siglevel){
+  dat %>% group_by(dataset, type, method, bl) %>%
+    do(rraw.dnds = cor(.$dnds, .$true.dnds),
+       braw.dnds = glm(dnds ~ offset(true.dnds), dat=.),
+       rraw.h = cor(.$entropy, .$true.entropy), 
+       braw.h = glm(entropy ~ offset(true.entropy), dat=.))   %>%
+    mutate(r2.dnds   = rraw.dnds[[1]]^2,
+           b.dnds = summary(braw.dnds)$coeff[[1]],
+           b.dnds.sig = summary(braw.dnds)$coeff[4]<siglevel,
+           r2.entropy = rraw.h[[1]]^2,
+           b.entropy = summary(braw.h)$coeff[1],
+           b.entropy.sig = summary(braw.h)$coeff[4]<siglevel) %>%
+    select(-rraw.dnds, -rraw.h, -braw.dnds, -braw.h) -> dat.sum1
 
-##################################################################################################################################
-##################### Boxplots of JSD and absolute sum differences for representative dataset, all datasets ######################
-##################################################################################################################################
+  
+  dat %>% group_by(dataset, method) %>% 
+    do(x = slope.test(.$dnds, .$true.dnds, test.value=1)) %>%
+    mutate(slope.dnds.sig = x$p<siglevel, slope.dnds = x$b) %>%
+    select(-x) -> dat.sum2
+  
+  dat %>% group_by(dataset, method) %>% 
+    do(x = slope.test(.$entropy, .$true.entropy, test.value=1)) %>%
+    mutate(slope.entropy.sig = x$p<siglevel, slope.entropy = x$b) %>%
+    select(-x) -> dat.sum3
+  
+  part <- left_join(dat.sum2, dat.sum3)
+  dat.sum <- left_join(dat.sum1, part)
+  
+  dat.sum
+}
 
-primary.data %>% group_by(dataset, method, bl) %>% summarize(meanjsd = mean(jsd), meandiffsum = mean(diffsum)) %>% mutate(type = ifelse(dataset %in% c("NP", "HA"), "dms", "yeast"))-> jsd.diffsum
+theme_set(theme_cowplot() + theme(panel.margin = unit(0.75, "lines")))
+
+result_directory         <- "dataframes/"
+true_directory           <- "../simulation/true_simulation_parameters/"
+maintext_plot_directory  <- "NEWfigures/"
+si_plot_directory        <- "NEWfigures/"
+repr.datasets            <- c("1R6M_A", "LAC")
+methods_levels           <- c("nopenal", "mvn100", "mvn10", "d0.01", "d0.1", "phylobayes") 
+methods_labels           <- c("Unpenalized", "mvn100", "mvn10", "d0.01", "d0.1", "pbMutSel")
+alpha                    <- 0.01 # Significance
+corrected.alpha          <- alpha/length(methods_levels) #Bonferroni significance
 
 
-yeast %>% filter(dataset == repr_sim, del == "strong", bl == 0.5) %>%
-  ggplot(aes(x = method, y = jsd)) + 
-  geom_boxplot() + ggtitle("BL = 0.5") +
-  xlab("Inference Method") + ylab("Site JSD") -> box.a
+dat <- read.csv(paste0(result_directory, "inference_results.csv"))
+datasets <- c(as.character(unique(dat$dataset)))
 
-yeast %>% filter(dataset == repr_sim, del == "strong", bl == 0.01) %>%
-  ggplot(aes(x = method, y = jsd)) + 
-  geom_boxplot() + ggtitle("BL = 0.01") +
-  xlab("Inference Method") + ylab("Site JSD") -> box.c
+
+#dat$method <- factor(dat$method, levels = methods_levels, labels = methods_labels)
+#dat$bl <- factor(dat$bl, levels = c(0.01, 0.5))
+type.colors <- c("red", "blue")
+dat <- dat %>% mutate(type = ifelse(dataset %in% c("NP", "HA", "LAC"), "dms", "yeast"))
+dat$type <- factor(dat$type, levels=c("yeast", "dms"), labels = c("Yeast", "DMS"))
+dat$method <- factor(dat$method, levels = methods_levels, labels = methods_labels)
+sub.dat <- dat %>% filter(true.dnds >= 0.4, true.dnds <= 0.75)
+
+
+
+sumstats <- dat %>% summarize_dnds_entropy(corrected.alpha)
+sub.sumstats <- sub.dat %>% summarize_dnds_entropy(corrected.alpha)
+###################### JSD and diff sum #######################
+
+dat %>% group_by(dataset, type, method, bl) %>% summarize(meanjsd = mean(jsd), meandiffsum = mean(diffsum))-> jsd.diffsum
+jsd.diffsum$method <- factor(jsd.diffsum$method, levels = methods_levels, labels = methods_labels)
+
+jsd.diffsum %>% 
+  ggplot(aes(x = method, y = meanjsd, color = as.factor(type))) + 
+  geom_jitter(width = 0.5) +
+  scale_color_manual(values=type.colors, name = "Data type ") + 
+  theme(legend.position = "bottom") -> type.legend.raw
+grobs <- ggplotGrob(type.legend.raw)$grobs
+type.legend <- grobs[[which(sapply(grobs, function(x) x$name) == "guide-box")]]
 
 jsd.diffsum %>% filter(bl == 0.5) %>%
   ggplot(aes(x = method, y = meanjsd, color = as.factor(type))) + 
   geom_jitter(width = 0.5) + ggtitle("BL = 0.5") +
-  scale_color_manual(values=c("blue", "red"), name = "Data type") + 
-  xlab("Inference Method") + ylab("Average JSD")-> box.b
-
+  scale_color_manual(values=type.colors, name = "Data type") + 
+  xlab("Inference Method") + ylab("Average JSD") + theme(legend.position = "none", axis.text.x = element_text(size=11)) -> jsd.jitters.raw1
 jsd.diffsum %>% filter(bl == 0.01) %>%
   ggplot(aes(x = method, y = meanjsd, color = as.factor(type))) + 
   geom_jitter(width = 0.5) + ggtitle("BL = 0.01") +
-  scale_color_manual(values=c("blue", "red"), name = "Data type") + 
-  xlab("Inference Method") + ylab("Average JSD") -> box.d
+  scale_color_manual(values=type.colors, name = "Data type") + 
+  xlab("Inference Method") + ylab("Average JSD") + theme(legend.position = "none", axis.text.x = element_text(size=11)) -> jsd.jitters.raw2
+jsd.jitters1 <- plot_grid(jsd.jitters.raw1, jsd.jitters.raw2, nrow=1, labels=c("A", "B"), scale=0.98)
+jsd.jitters  <- plot_grid(jsd.jitters1, type.legend, ncol=1, rel_heights=c(1, 0.07))
+save_plot(paste0(maintext_plot_directory, "jsd_jitters.pdf"), jsd.jitters, base_width = 11, base_height=3)
 
-jsd.boxplots.jitters <- plot_grid(box.a, box.b, box.c, box.d, nrow=2, labels=c("A", "B", "C", "D"), rel_widths=c(.9, 1, .9, 1))
-save_plot(paste0(maintext_plot_directory, "jsd_boxplots_jitters.pdf"), jsd.boxplots.jitters, base_width = 14, base_height=6)
 
 jsd.diffsum %>% filter(bl == 0.5) %>%
-    ggplot(aes(x = method, y = meandiffsum)) + 
-    geom_jitter(width = 0.5) + ggtitle("BL = 0.5") +
-    xlab("Inference Method") + ylab("Average difference") +
-    scale_y_continuous(limits=c(0.25,0.6)) -> box.a
-
+  ggplot(aes(x = method, y = meandiffsum, color = as.factor(type))) + 
+  geom_jitter(width = 0.5) + ggtitle("BL = 0.5") +
+  scale_color_manual(values=type.colors, name = "Data type") + 
+  xlab("Inference Method") + ylab("Average Difference") + theme(legend.position = "none") -> diffsum.jitters.raw1
 jsd.diffsum %>% filter(bl == 0.01) %>%
-    ggplot(aes(x = method, y = meandiffsum)) + 
-    geom_jitter(width = 0.5) + ggtitle("BL = 0.01") +
-    xlab("Inference Method") + ylab("Average difference") +
-    scale_y_continuous(limits=c(0.6, 1.05)) -> box.b
-
-diffsum.jitters <- plot_grid(box.a, box.b, nrow=1, labels=c("A", "B"), scale=0.98)
-save_plot(paste0(si_plot_directory, "diffsum_jitters.pdf"), diffsum.jitters, base_width = 12, base_height=3.5)
-
-
+  ggplot(aes(x = method, y = meandiffsum, color = as.factor(type))) + 
+  geom_jitter(width = 0.5) + ggtitle("BL = 0.01") +
+  scale_color_manual(values=type.colors, name = "Data type") + 
+  xlab("Inference Method") + ylab("Average Difference") + theme(legend.position = "none") -> diffsum.jitters.raw2
+diffsum.jitters1 <- plot_grid(diffsum.jitters.raw1, diffsum.jitters.raw2, nrow=1, labels=c("A", "B"), scale=0.98)
+diffsum.jitters  <- plot_grid(diffsum.jitters1, type.legend, ncol=1, rel_heights=c(1, 0.07))
+save_plot(paste0(maintext_plot_directory, "diffsum_jitters.pdf"), diffsum.jitters, base_width = 11.5, base_height=3.5)
 
 
-################################################################################################################
-################ True vs. predicted dN/dS and entropy: repr scatter, correlation and bias jitters ##############
-################################################################################################################
+###################### dN/dS and entropy scatterplots #######################
 
-primary.dnds.entropy.stats %>% filter(dataset %in% c(repr_sim, "HA")) %>% mutate(r2.dnds.short = as.numeric(format(r2.dnds, digits=3)), r2.entropy.short = as.numeric(format(r2.entropy, digits=3))) -> scatter.stats
+sumstats %>% 
+    select(-b.dnds, -b.dnds.sig, -b.entropy, -b.entropy.sig, -slope.dnds.sig, -slope.dnds, -slope.entropy.sig, -slope.entropy) %>%
+    filter(dataset %in% repr.datasets) %>% select(-dataset) %>% group_by(type, method) %>%
+    mutate(r2.dnds.short = as.numeric(format(r2.dnds, digits=3)), r2.entropy.short = as.numeric(format(r2.entropy, digits=3))) -> scatter.stats
+scatter.stats %>%  -> scatter.stats
 stats.bl0.5 <- scatter.stats %>% filter(bl == 0.5)
 stats.bl0.01 <- scatter.stats %>% filter(bl == 0.01)
-primary.data %>% filter(dataset %in% c(repr_sim, "HA"), bl == 0.5) -> scatter.repr.bl0.5
-primary.data %>% filter(dataset %in% c(repr_sim, "HA"), bl == 0.01) -> scatter.repr.bl0.01
+dat %>% filter(dataset %in% repr.datasets, bl == 0.5) %>% select(-dataset) -> scatter.repr.bl0.5
+dat %>% filter(dataset %in% repr.datasets, bl == 0.01)%>% select(-dataset)  -> scatter.repr.bl0.01
 
 theme_set(theme_cowplot() + theme(strip.text = element_text(size = 13),
                                 panel.margin = unit(0.75, "lines"),
-                                axis.title = element_text(size=13),
-                                axis.text = element_text(size=12)))
+                                axis.text = element_text(size=10)))
               
 scatter.dnds.bl0.5 <- ggplot(data = NULL) + 
   geom_point(data = scatter.repr.bl0.5, aes(x = true.dnds, y = dnds), size=1) + geom_abline(slope = 1, intercept = 0, color="red") + 
   geom_text(data = stats.bl0.5, aes(label=paste0("r^2==",r2.dnds.short)), x = 0.25, y = 0.88, parse=TRUE, size=5) +
   xlab("True dN/dS") + ylab("Predicted dN/dS") + 
   scale_y_continuous(limits=c(0,1)) + scale_x_continuous(limits=c(0,1)) + 
-  facet_grid(dataset~method)
+  facet_grid(type~method)
 save_plot(paste0(maintext_plot_directory, "scatter_dnds_bl0.5.pdf"), scatter.dnds.bl0.5, base_width=15.5, base_height=5.5)
 
 scatter.dnds.bl0.01 <- ggplot(data = NULL) + 
@@ -148,7 +188,7 @@ scatter.dnds.bl0.01 <- ggplot(data = NULL) +
     geom_text(data = stats.bl0.01, aes(label=paste0("r^2==",r2.dnds.short)), x = 0.25, y = 1.06, parse=TRUE, size=4.75) +
     xlab("True dN/dS") + ylab("Predicted dN/dS") + 
     scale_y_continuous(limits=c(0,1.1)) + scale_x_continuous(limits=c(0,1.1)) + 
-    facet_grid(dataset~method)
+    facet_grid(type~method)
 save_plot(paste0(maintext_plot_directory, "scatter_dnds_bl0.01.pdf"), scatter.dnds.bl0.01, base_width=15.5, base_height=5.5)
 
 
@@ -156,79 +196,98 @@ scatter.entropy.bl0.5 <- ggplot(data = NULL) +
     geom_point(data = scatter.repr.bl0.5, aes(x = true.entropy, y = entropy), size=1) + geom_abline(slope = 1, intercept = 0, color="red") + 
     geom_text(data = stats.bl0.5, aes(label=paste0("r^2==",r2.entropy.short)), x = 0.6, y = 2.5, parse=TRUE, size=4) +
     xlab("True Entropy") + ylab("Predicted Entropy") + 
-    facet_grid(dataset~method)
+    facet_grid(type~method)
 save_plot(paste0(maintext_plot_directory, "scatter_entropy_bl0.5.pdf"), scatter.entropy.bl0.5, base_width=15.5, base_height=5.5)
 
 scatter.entropy.bl0.01 <- ggplot(data = NULL) + 
     geom_point(data = scatter.repr.bl0.01, aes(x = true.entropy, y = entropy), size=1) + geom_abline(slope = 1, intercept = 0, color="red") + 
     geom_text(data = stats.bl0.01, aes(label=paste0("r^2==",r2.entropy.short)), x = 0.6, y = 2.9, parse=TRUE, size=4) +
     xlab("True Entropy") + ylab("Predicted Entropy") + 
-    facet_grid(dataset~method)
+    facet_grid(type~method)
 save_plot(paste0(maintext_plot_directory, "scatter_entropy_bl0.01.pdf"), scatter.entropy.bl0.01, base_width=15.5, base_height=5.5)
 
 
 
 
+theme_set(theme_cowplot() + theme(strip.text = element_text(size = 13),
+                                  panel.margin = unit(0.75, "lines"),
+                                  axis.text = element_text(size=10)))
 
-jitter.bl.legend.raw <- primary.dnds.entropy.stats %>%
-  ggplot(aes(x = method, y = r2.dnds, color = as.factor(bl))) + 
-  geom_jitter() + scale_color_manual(values=bl_colors, name = "Branch Length") + 
-  theme(legend.position = "bottom", legend.title = element_text(size = 12))
-grobs <-  ggplotGrob(jitter.bl.legend.raw)$grobs
-jitter.bl.legend <- grobs[[which(sapply(grobs, function(x) x$name) == "guide-box")]]
-
-
-jitter.r2.dnds <- primary.dnds.entropy.stats %>%
+jitter.r2.dnds <- sumstats %>% # All r2 are significant
   ggplot(aes(x = method, y = r2.dnds, color = as.factor(type))) + 
-  geom_jitter(width = 0.5, size=2) + scale_color_manual(values=c("red", "blue")) +
+  geom_jitter(width = 0.6, size=2, alpha=0.7) + 
+  scale_color_manual(values=c("red", "blue")) +
   facet_grid(~bl) + theme(legend.position = "none") + 
   xlab("Inference Method") + ylab(expression(r^2)) 
-
-
-jitter.b.dnds <- primary.dnds.entropy.stats %>%
-    ggplot(aes(x = method, y = b.dnds, color = as.factor(type))) + 
-    geom_jitter(width = 0.5, size=2) + scale_color_manual(values=c("red", "blue")) +
+jitter.b.dnds <- sumstats %>%
+    ggplot(aes(x = method, y = b.dnds, color = as.factor(type), shape = as.factor(b.dnds.sig))) + 
+    geom_jitter(width = 0.6, size=2, alpha=0.7) + 
+    scale_color_manual(values=c("red", "blue")) + 
+    scale_shape_manual(values=c(1,19)) +
     geom_hline(yintercept=0) + 
     facet_grid(~bl) + theme(legend.position = "none") + 
     xlab("Inference Method") + ylab("Estimator Bias")
+jitter.slope.dnds <- sumstats %>%   # All slopes are significant
+  ggplot(aes(x = method, y = slope.dnds, color = as.factor(type))) + 
+  geom_jitter(width = 0.6, size=2, alpha=0.7) + 
+  scale_color_manual(values=c("red", "blue")) +
+  geom_hline(yintercept=0) + 
+  facet_grid(~bl) + theme(legend.position = "none") + 
+  xlab("Inference Method") + ylab("True-Inferred Slope")
+r2.b.slope.dnds <- plot_grid(jitter.r2.dnds, jitter.b.dnds, jitter.slope.dnds, nrow=3, labels=c("A", "B", "C"))
+save_plot(paste0(maintext_plot_directory, "r2_bias_slope_dnds.pdf"), r2.b.slope.dnds, base_width=8.5, base_height=7.5)
+
+jitter.r2.entropy <- sumstats %>%
+  ggplot(aes(x = method, y = r2.entropy, color = as.factor(type))) + 
+  geom_jitter(width = 0.6, size=2, alpha=0.7) + 
+  scale_color_manual(values=c("red", "blue")) +
+  facet_grid(~bl) + theme(legend.position = "none") + 
+  xlab("Inference Method") + ylab(expression(r^2)) 
+jitter.b.entropy <- sumstats %>%
+  ggplot(aes(x = method, y = b.entropy, color = as.factor(type), shape = as.factor(b.entropy.sig))) + 
+  geom_jitter(width = 0.6, size=2, alpha=0.7) + 
+  scale_color_manual(values=c("red", "blue")) + 
+  scale_shape_manual(values=c(1,19)) +
+  geom_hline(yintercept=0) + 
+  facet_grid(~bl) + theme(legend.position = "none") + 
+  xlab("Inference Method") + ylab("Estimator Bias")
+jitter.slope.entropy <- sumstats %>% 
+  ggplot(aes(x = method, y = slope.entropy, color = as.factor(type), shape = as.factor(slope.entropy.sig))) +
+  geom_jitter(width = 0.6, size=2, alpha=0.7) + 
+  scale_color_manual(values=c("red", "blue")) +
+  scale_shape_manual(values=c(1,19)) +
+  geom_hline(yintercept=0) + 
+  facet_grid(~bl) + theme(legend.position = "none") + 
+  xlab("Inference Method") + ylab("True-Inferred Slope")
+r2.b.slope.entropy <- plot_grid(jitter.r2.entropy, jitter.b.entropy, jitter.slope.entropy, nrow=3, labels=c("A", "B", "C"))
+save_plot(paste0(maintext_plot_directory, "r2_bias_slope_entropy.pdf"), r2.b.slope.entropy, base_width=8.5, base_height=7.5)
 
 
 
-r.b.dnds <- plot_grid(jitter.r.dnds, jitter.b.dnds, jitter.bl.legend, nrow=3, labels=c("A", "B"), rel_heights=c(1,1,0.08))
-save_plot(paste0(maintext_plot_directory, "r_bias_dnds.pdf"), r.b.dnds, base_width=8, base_height=5)
-
-
-jitter.r.entropy <- yeast.dnds.entropy.stats %>% filter(del == "strong") %>%
-  ggplot(aes(x = method, y = r.entropy, color = as.factor(bl))) + 
-  geom_jitter(width = 0.5, size=2) + scale_color_manual(values=bl_colors) + 
-  xlab("Inference Method") + ylab("Pearson Correlation") + theme(legend.position = "none", axis.title.y = element_text(size=11.5))
-jitter.b.entropy <- yeast.dnds.entropy.stats %>% filter(del == "strong") %>%
-  ggplot(aes(x = method, y = b.entropy, color = as.factor(bl), shape = b.entropy.sig)) + 
-  geom_jitter(width = 0.5, size=2) + 
-  scale_shape_manual(values=c(1,19)) + scale_color_manual(values=bl_colors) + 
-  xlab("Inference Method") + ylab("Estimator Bias") + 
-  geom_hline(yintercept=0 ) + theme(legend.position = "none", axis.title.y = element_text(size=13))
-r.b.entropy <- plot_grid(jitter.r.dnds, jitter.b.dnds, jitter.bl.legend, nrow=3, labels=c("A", "B"), rel_heights=c(1,1,0.08))
-save_plot(paste0(si_plot_directory, "r_bias_entropy.pdf"), r.b.dnds, base_width=8, base_height=5)
 
 
 
 
 
-###### RESULTS DIFFER BETWEEN BRANCH LENGTHS FOR THIS SECTION, SO THINK A BIT MORE ABOUT WHAT TO DO HERE #######
-##### More specifically, pattern is the same but relationship to 0 is different. This is fully ok with me, because dN/dS is fairly useless at bl0.01.
+
 
 ##########################################################################################
 ##### Figure 4: JSD regressed on true dN/dS for representative, and slopes for all #######
 ##########################################################################################
 print("Figure 4")
-
-dnds.on.jsd.bl0.5 <- yeast %>% filter(del == "strong", dataset == repr_sim, bl == 0.5) %>%
+dms.bl0.5 <- dms %>% filter(bl == 0.5)
+yeast %>% filter(dataset == repr_sim, bl == 0.5) %>% 
+  select(-dataset) %>% 
+  mutate(dataset = del) %>% 
+  select(-del) %>% 
+  rbind(dms.bl0.5) %>%
   ggplot(aes(x = true.dnds, y = jsd)) + 
-  geom_point(size=1) + facet_grid(~method) + 
+  geom_point(size=1) + facet_grid(dataset~method) + 
   geom_smooth(method="lm", color="red") + 
-  scale_y_continuous(limits=c(0, 0.6)) + 
-  xlab("True dN/dS") + ylab("Site JSD")
+  xlab("True dN/dS") + ylab("Site JSD") -> jsd.dnds.reprs
+save_plot(paste0(maintext_plot_directory, "jsd_dnds_scatter.pdf"), jsd.dnds.reprs,base_width = 11, base_height=8)
+
+
 
 #dnds.on.jsd.bl0.01 <- yeast %>% filter(del == "strong", dataset == repr_sim, bl == 0.01) %>%
 #  ggplot(aes(x = true.dnds, y = jsd)) + 
@@ -258,8 +317,8 @@ dnds.jsd.jitter.bl0.5 <- jsd.true.slope.p %>% filter(bl == 0.5) %>%
 #  theme(legend.position="none") + 
 #  xlab("Inference Method") + ylab("Slope")
 
-fig4 <- plot_grid(dnds.on.jsd.bl0.5, dnds.jsd.jitter.bl0.5, nrow=2, labels=c("A", "B"))
-save_plot(paste0(maintext_plot_directory, "jsd_dnds.pdf"), fig4, base_width=9.5, base_height=4)
+fig4 <- plot_grid(, dnds.jsd.jitter.bl0.5, nrow=2, labels=c("A", "B"))
+save_plot(paste0(maintext_plot_directory, "jsd_dnds_scatter.pdf"), dnds.on.jsd.bl0.5, base_width=9.5, base_height=4)
 
 
 

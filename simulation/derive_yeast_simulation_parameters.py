@@ -25,26 +25,6 @@ def apply_weakdel(fitness):
     random_fit = np.random.uniform(low = WEAK_FIT[0], high = WEAK_FIT[1], size = np.sum(fitness <= WEAK_THRESHOLD))
     fitness[fitness <= WEAK_THRESHOLD] = random_fit  
     return fitness
-
-
-
-def save_simulation_info(name, frequencies, fitnesses, omegas, entropies):
-    '''
-        Save simulation parameters to files.
-    '''
-    freqfile = name + "_true_codon_frequencies.txt"
-    fitfile  = name + "_true_aa_fitness.txt"
-    selcfile = name + "_true_selcoeffs.csv"
-    dnds_entropy_file = name + "_true_dnds_entropy.csv"
-
-    np.savetxt(freqfile, frequencies)
-    np.savetxt(fitfile, fitnesses)
-    calculate_save_coeffs(fitnesses, selcfile)
-
-    with open(dnds_entropy_file, "w") as f:
-        f.write("site,dnds,entropy\n")
-        for i in range(len(omegas)):
-            f.write(str(i+1)+","+str(omegas[i])+","+str(entropies[i])+"\n")
             
             
 output_directory = "true_simulation_parameters/"

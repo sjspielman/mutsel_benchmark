@@ -48,6 +48,27 @@ def calculate_entropy(f):
 
 
 
+def save_simulation_info(name, frequencies, fitnesses, omegas, entropies):
+    '''
+        Save simulation parameters to files.
+    '''
+    freqfile = name + "_true_codon_frequencies.txt"
+    fitfile  = name + "_true_aa_fitness.txt"
+    selcfile = name + "_true_selcoeffs.csv"
+    dnds_entropy_file = name + "_true_dnds_entropy.csv"
+
+    np.savetxt(freqfile, frequencies)
+    np.savetxt(fitfile, fitnesses)
+    calculate_save_coeffs(fitnesses, selcfile)
+
+    with open(dnds_entropy_file, "w") as f:
+        f.write("site,dnds,entropy\n")
+        for i in range(len(omegas)):
+            f.write(str(i+1)+","+str(omegas[i])+","+str(entropies[i])+"\n")
+
+
+
+
 def codon_freqs_from_fitness_eigenvector(fitness, mu):
     '''
         Extract equilibrium frequencies from eigenvector of MutSel matrix, built from fitness values and mutation rates.
@@ -57,6 +78,25 @@ def codon_freqs_from_fitness_eigenvector(fitness, mu):
     matrix = m.matrix
     eqfreqs = m.extract_state_freqs()
     return eqfreqs
+
+
+
+
+def aa_fitness_to_codon_fitness(fitness):
+    '''
+        Convert amino-acid fitnesses to codon fitnesses.
+    '''
+    
+    d = {}
+    for i in range(20):
+        syn_codons = g.genetic_code[i]
+        for syn in syn_codons:
+            d[ syn ] = fitness[i]   
+    codon_fitness = np.zeros(61)
+    count = 0
+    for i in range(61):
+        codon_fitness[i] = d[g.codons[i]]
+    return codon_fitness
 
 
 
@@ -240,41 +280,6 @@ class dNdS_from_MutSel():
 
 
 
-
-
-
-
-
-
-##### old unused ########
-# def codon_freqs_from_fitness_boltzmann(codon_fitness):
-#     '''
-#         Convert codon fitness to equilibrium frequencies using Boltzmann distribution (Sella and Hirsh 2005).
-#     '''
-#     codon_freqs = np.zeros(61)
-#     count = 0
-#     for codon in g.codons:
-#         codon_freqs[count] = np.exp( codon_fitness[codon] )
-#         count += 1
-#     codon_freqs /= np.sum(codon_freqs)                   
-#     assert( abs(1. - np.sum(codon_freqs)) <= ZERO), "codon_freq doesn't sum to 1 in codon_fitness_to_freqs"
-#     return codon_freqs 
-# 
-# def aa_fitness_to_codon_fitness(fitness):
-#     '''
-#         Convert amino-acid fitnesses to codon fitnesses.
-#     '''
-#     
-#     d = {}
-#     for i in range(20):
-#         syn_codons = g.genetic_code[i]
-#         for syn in syn_codons:
-#             d[ syn ] = fitness[i]   
-#     codon_fitness = np.zeros(61)
-#     count = 0
-#     for i in range(61):
-#         codon_fitness[i] = d[g.codons[i]]
-#     return codon_fitness
 
 
 # 
