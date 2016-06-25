@@ -1,6 +1,9 @@
 # SJS
 # Creates MS figures and perform some stats
 
+library(multcomp)
+library(lme4)
+library(lmerTest)
 library(cowplot)
 library(ggrepel)
 library(dplyr)
@@ -8,9 +11,7 @@ library(tidyr)
 library(readr)
 library(purrr)
 library(grid)
-library(multcomp)
-library(lme4)
-library(lmerTest)
+
 
 # Function to test whether a slope for simple linear regression is significantly different from 1
 test.slope <- function(y, x, compare=1)
@@ -200,13 +201,13 @@ scatter.dnds.bl0.5 <- ggplot(data = NULL) +
   geom_point(data = scatter.repr.bl0.5, aes(x = true.dnds, y = dnds, color = as.factor(type)), size=1) +
   geom_abline(slope = 1, intercept = 0, size=0.75) +
   geom_text(data = stats.bl0.5, aes(label=paste0("r^2==",r2.dnds.short)), x = 0.25, y = 0.95, parse=TRUE, size=r2.size) +
-  xlab("True dN/dS") + ylab("Predicted dN/dS") + facet_grid(dataset~method)+ scale_color_manual(values=type.colors, name = "Dataset") + scatter.theme + scale_x_continuous(limits=c(0,1), breaks=c(0,0.5,1)) + scale_y_continuous(limits=c(0,1), breaks=c(0,0.5,1))
+  xlab("True dN/dS") + ylab("Predicted dN/dS") + facet_grid(dataset~method)+ scale_color_manual(values=type.colors, name = "Dataset") + scatter.theme + scale_x_continuous(limits=c(0,1), breaks=c(0,0.5,1)) + scale_y_continuous(limits=c(0,1), breaks=c(0,0.5,1)) + panel_border()
 scatter.entropy.bl0.5 <- ggplot(data = NULL) +
     geom_point(data = scatter.repr.bl0.5, aes(x = true.entropy, y = entropy, color = as.factor(type)), size=1) +
     geom_abline(slope = 1, intercept = 0, size=0.75) +
     geom_text(data = stats.bl0.5, aes(label=paste0("r^2==",r2.entropy.short)), x = 0.75, y = 2.75, parse=TRUE, size=r2.size) +
     xlab("True Entropy") + ylab("Predicted Entropy") + scatter.theme +
-    facet_grid(dataset~method) + scale_color_manual(values=type.colors, name = "Dataset") + coord_cartesian(xlim=c(0,3.1), ylim=c(0,3.1))
+    facet_grid(dataset~method) + scale_color_manual(values=type.colors, name = "Dataset") + coord_cartesian(xlim=c(0,3.1), ylim=c(0,3.1)) + panel_border()
 #scatter.bl0.5.grid <- plot_grid(scatter.dnds.bl0.5, scatter.entropy.bl0.5, nrow=2, labels="AUTO", align ="v")
 #save_plot(paste0(maintext_plot_directory, "scatter_dnds_entropy_bl0.5.pdf"), scatter.bl0.5.grid, base_width=10, base_height=5.75)
 
@@ -216,13 +217,13 @@ scatter.dnds.bl0.01 <- ggplot(data = NULL) +
   geom_text(data = stats.bl0.01, aes(label=paste0("r^2==",r2.dnds.short)), x = 0.3, y = 1.12, parse=TRUE, size=r2.size) +
   xlab("True dN/dS") + ylab("Predicted dN/dS") +
   scale_x_continuous(limits=c(0,1.1), breaks=c(0,0.5,1)) + scale_y_continuous(limits=c(0,1.2), breaks=c(0,0.5,1)) +
-  facet_grid(dataset~method) + scale_color_manual(values=type.colors, name = "Dataset")+ scatter.theme
+  facet_grid(dataset~method) + scale_color_manual(values=type.colors, name = "Dataset")+ scatter.theme + panel_border()
 scatter.entropy.bl0.01 <- ggplot(data = NULL) +
   geom_point(data = scatter.repr.bl0.01, aes(x = true.entropy, y = entropy, color = as.factor(type)), size=1) +
   geom_abline(slope = 1, intercept = 0, size=0.75) +
   geom_text(data = stats.bl0.01, aes(label=paste0("r^2==",r2.entropy.short)), x = 0.67, y =3, parse=TRUE, size=r2.size-0.25) +
   xlab("True Entropy") + ylab("Predicted Entropy") + scatter.theme +
-  coord_cartesian(xlim=c(0,3.1), ylim=c(0,3.1)) + scale_color_manual(values=type.colors, name = "Dataset") + facet_grid(dataset~method)
+  coord_cartesian(xlim=c(0,3.1), ylim=c(0,3.1)) + scale_color_manual(values=type.colors, name = "Dataset") + facet_grid(dataset~method) + panel_border()
 #scatter.bl0.01.grid <- plot_grid(scatter.dnds.bl0.01, scatter.entropy.bl0.01, nrow=2, labels="AUTO")
 #save_plot(paste0(si_plot_directory, "scatter_dnds_entropy_bl0.01.pdf"), scatter.bl0.01.grid, base_width=11.5,                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                base_height=6)
 
@@ -269,29 +270,29 @@ b.dnds.bl0.5 <- sumstats2 %>% filter(bl==0.5) %>%
   geom_text_repel(data = subset(sumstats2, method == "pbMutSel" & bl==0.5 & type == "DMS"), nudge_x = 0.5, x=6, size=3, aes(label = dataset)) +
   scale_x_continuous(name = "Inference Method", breaks = sort(unique(sumstats2$x)), labels = levels(sumstats2$method),limits = c(1, max(sumstats2$x) + 0.6)) +
   scale_color_manual(values=type.colors) + scale_shape_manual(values=c(1,19)) +
-  geom_hline(yintercept=0) + this.theme + ylab("Estimator Bias")
+  geom_hline(yintercept=0) + this.theme + scale_y_continuous(name = "Estimator Bias", limits=c(-0.05, 0.15), breaks=c(-0.05, 0, 0.05, 0.1, 0.15))
 b.h.bl0.5 <- sumstats2 %>% filter(bl==0.5) %>%
   ggplot(aes(x = x, y = b.entropy, group = dataset, color = as.factor(type), shape = as.factor(b.entropy.sig))) +
   geom_point(size=2) + geom_line(alpha = 0.5) +
   geom_text_repel(data = subset(sumstats2, method == "pbMutSel" & bl==0.5 & type == "DMS"), nudge_x = 0.5, x=6, size=3, aes(label = dataset)) +
   scale_x_continuous(name = "Inference Method", breaks = sort(unique(sumstats2$x)), labels = levels(sumstats2$method),limits = c(1, max(sumstats2$x) + 0.6)) +
   scale_color_manual(values=type.colors) + scale_shape_manual(values=c(1,19)) +
-  geom_hline(yintercept=0) + this.theme  + ylab("Estimator Bias")
+  geom_hline(yintercept=0) + this.theme  + scale_y_continuous(name = "Estimator Bias", limits=c(-0.25, 0.75), breaks=c(-0.25, 0, 0.25, 0.5, 0.75))
 
 slope.dnds.bl0.5 <- sumstats2 %>% filter(bl==0.5) %>%
   ggplot(aes(x = x, y = slope.dnds, group = dataset, color = as.factor(type), shape = as.factor(slope.entropy.sig))) +
   geom_point(size=2) + geom_line(alpha=0.5) +
   scale_color_manual(values=type.colors) + scale_shape_manual(values=c(1,19)) +
   geom_text_repel(data = subset(sumstats2, method == "pbMutSel" & bl==0.5 & type == "DMS"), nudge_x = 0.5, x=6, size=3, aes(label = dataset)) +
-  scale_x_continuous(name = "Inference Method", breaks = sort(unique(sumstats2$x)), labels = levels(sumstats2$method),limits = c(1, max(sumstats2$x) + 0.6)) + scale_y_continuous(name = "True-Inferred Slope", limits=c(0.2, 1.1)) + geom_hline(yintercept=1) + this.theme
+  scale_x_continuous(name = "Inference Method", breaks = sort(unique(sumstats2$x)), labels = levels(sumstats2$method),limits = c(1, max(sumstats2$x) + 0.6)) + scale_y_continuous(name = "True-Inferred Slope", limits=c(0.2, 1.1), breaks=c(0.2, 0.4, 0.6, 0.8, 1.0)) + geom_hline(yintercept=1) + this.theme
 slope.h.bl0.5 <- sumstats2 %>% filter(bl==0.5) %>%
   ggplot(aes(x = x, y = slope.entropy, group = dataset, color = as.factor(type), shape = as.factor(slope.entropy.sig))) +
   geom_point(size=2) + geom_line(alpha=0.5) +
   scale_color_manual(values=type.colors) + scale_shape_manual(values=c(1,19)) +
-  geom_text_repel(data = subset(sumstats2, method == "pbMutSel" & bl==0.5 & type == "DMS"), nudge_x = 0.5, x=6, size=3, aes(label = dataset)) + scale_y_continuous(name = "True-Inferred Slope", limits=c(0.2, 1.1)) +
+  geom_text_repel(data = subset(sumstats2, method == "pbMutSel" & bl==0.5 & type == "DMS"), nudge_x = 0.5, x=6, size=3, aes(label = dataset)) + scale_y_continuous(name = "True-Inferred Slope", limits=c(0.2, 1.1), breaks=c(0.2, 0.4, 0.6, 0.8, 1.0)) +
   scale_x_continuous(name = "Inference Method", breaks = sort(unique(sumstats2$x)), labels = levels(sumstats2$method),limits = c(1, max(sumstats2$x) + 0.6)) + geom_hline(yintercept=1) + this.theme
-dnds.grid.bl0.5 <- plot_grid(r2.dnds.bl0.5, b.dnds.bl0.5, slope.dnds.bl0.5, nrow=3, labels=c("A", "B", "C"), align="hv")
-entropy.grid.bl0.5 <- plot_grid(r2.h.bl0.5, b.h.bl0.5, slope.h.bl0.5, nrow=3, labels=c("D", "E", "F"), align="hv")
+dnds.grid.bl0.5 <- plot_grid(r2.dnds.bl0.5, b.dnds.bl0.5, slope.dnds.bl0.5, nrow=3, labels=c("A", "C", "E"), align="hv")
+entropy.grid.bl0.5 <- plot_grid(r2.h.bl0.5, b.h.bl0.5, slope.h.bl0.5, nrow=3, labels=c("B", "D", "F"), align="hv")
 stats.grid.bl0.5 <- plot_grid(dnds.grid.bl0.5, entropy.grid.bl0.5, ncol=2, align = "h")
 save_plot(paste0(maintext_plot_directory, "r2_bias_slope_bl0.5.pdf"), stats.grid.bl0.5, base_width=9.75, base_height=7)
 
@@ -323,24 +324,26 @@ b.dnds.bl0.01 <- sumstats2 %>% filter(bl==0.01) %>%
 b.h.bl0.01 <- sumstats2 %>% filter(bl==0.01) %>%
   ggplot(aes(x = x, y = b.entropy, group = dataset, color = as.factor(type), shape = as.factor(b.entropy.sig))) +
   geom_point(size=2) + geom_line(alpha=0.5) +
-  geom_text_repel(data = subset(sumstats2, method == "pbMutSel" & bl==0.01 & type == "DMS"), nudge_x = 0.01, x=6, size=3, aes(label = dataset)) +
-  scale_x_continuous(name = "Inference Method", breaks = sort(unique(sumstats2$x)), labels = levels(sumstats2$method),limits = c(1, max(sumstats2$x) + 0.6)) +
   scale_color_manual(values=type.colors) + scale_shape_manual(values=c(1,19)) +
-  geom_hline(yintercept=0) + this.theme  + ylab("Estimator Bias")
+  geom_text_repel(data = subset(sumstats2, method == "pbMutSel" & bl==0.01 & type == "DMS"), nudge_x = 0.01, x=6, size=3, aes(label = dataset)) +
+  scale_x_continuous(name = "Inference Method", breaks = sort(unique(sumstats2$x)), labels = levels(sumstats2$method),limits = c(1, max(sumstats2$x) + 0.6)) + geom_hline(yintercept=0) + this.theme  + ylab("Estimator Bias")
+slope.dnds.bl0.01 <- sumstats2 %>% filter(bl==0.01) %>%
+  ggplot(aes(x = x, y = slope.dnds, group = dataset, color = as.factor(type), shape = as.factor(b.entropy.sig))) +
+  geom_point(size=2) + geom_line(alpha=0.5) +
+  scale_color_manual(values=type.colors) + scale_shape_manual(values=c(1,19)) +
+  geom_text_repel(data = subset(sumstats2, method == "pbMutSel" & bl==0.01 & type == "DMS"), nudge_x=0.5, x=6, size=3, aes(label = dataset)) +
+  scale_x_continuous(name = "Inference Method", breaks = sort(unique(sumstats2$x)), labels = levels(sumstats2$method),limits = c(1, max(sumstats2$x) + 0.6)) + scale_y_continuous(name = "True-Inferred Slope") + geom_hline(yintercept=1) + this.theme
+slope.h.bl0.01 <- sumstats2 %>% filter(bl==0.01) %>%
+  ggplot(aes(x = x, y = slope.entropy, group = dataset, color = as.factor(type), shape = as.factor(b.entropy.sig))) +
+  geom_point(size=2) + geom_line(alpha=0.5) +
+  scale_color_manual(values=type.colors) + scale_shape_manual(values=c(1,19)) +
+  geom_text_repel(data = subset(sumstats2, method == "pbMutSel" & bl==0.01 & type == "DMS"), nudge_x=0.5, x=6, size=3, aes(label = dataset)) +
+  scale_x_continuous(name = "Inference Method", breaks = sort(unique(sumstats2$x)), labels = levels(sumstats2$method),limits = c(1, max(sumstats2$x) + 0.6)) + scale_y_continuous(name = "True-Inferred Slope") + geom_hline(yintercept=1) + this.theme
 
-
-
-
-
-
-
-
-
-
-
-
-
-
+dnds.grid.bl0.01 <- plot_grid(r2.dnds.bl0.01, b.dnds.bl0.01, slope.dnds.bl0.01, nrow=3, labels=c("A", "C", "E"), align="hv")
+entropy.grid.bl0.01 <- plot_grid(r2.h.bl0.01, b.h.bl0.01, slope.h.bl0.01, nrow=3, labels=c("B", "D", "F"), align="hv")
+stats.grid.bl0.01 <- plot_grid(dnds.grid.bl0.01, entropy.grid.bl0.01, ncol=2, align = "h")
+save_plot(paste0(si_plot_directory, "r2_bias_slope_bl0.01.pdf"), stats.grid.bl0.01, base_width=9.75, base_height=7)
 
 
 
@@ -360,6 +363,7 @@ subset <- dat %>% filter(true.dnds >= 0.3 & true.dnds <= 0.6) %>%
   mutate(slope = round(fit[[1]][[2]],3), pvalue = lmp(fit), sig = pvalue < corrected.alpha) %>%
   dplyr::select(-fit)
 
+
 full2 <- mutate(full, x=as.numeric(method))
 subset2 <- mutate(subset, x=as.numeric(method))
 
@@ -370,7 +374,7 @@ dat %>% filter(dataset %in% repr.datasets, bl == 0.5) %>%
   geom_point(size=1) + facet_grid(dataset~method) +
   geom_smooth(method="lm", color = "black") + scale_color_manual(values = type.colors) +
   scale_x_continuous(limits=c(0,1), breaks=c(0,0.25,0.5,0.75,1), labels=c('0.0', '0.25', '0.5', '0.75', '1.0'))+
-  xlab("True dN/dS") + ylab("Site JSD") + theme(legend.position = "none") -> jsd.dnds.reprs.bl0.5
+  xlab("True dN/dS") + ylab("Site JSD") + theme(legend.position = "none") + panel_border() -> jsd.dnds.reprs.bl0.5
 dnds.jsd.bl0.5 <- full2 %>% filter(bl == 0.5) %>%
   ggplot(aes(x = x, y = slope, shape=sig, group = dataset, color = as.factor(type))) +
   geom_point(size=2) + geom_line(alpha = 0.5) +
@@ -392,74 +396,74 @@ jsd.dnds.true.slope <- ggdraw() + draw_plot(jsd.dnds.reprs.bl0.5, 0, 0.5, 1, 0.5
                                   draw_plot(subset.dnds.jsd.bl0.5, 0.5, 0, 0.5, 0.5) +
                                   draw_plot_label(c("A", "B", "C"), c(0, 0, 0.5), c(1, 0.5, 0.5), size = 15)
 
-save_plot(paste0(maintext_plot_directory, "jsd_truednds_slopes.pdf"), jsd.dnds.true.slope , base_width = 11.5, base_height = 5)
+save_plot(paste0(maintext_plot_directory, "jsd_truednds_slopes.pdf"), jsd.dnds.true.slope , base_width = 11, base_height = 6)
 
 
-
-
-entropy.jsd.bl0.5 <- full2 %>% filter(bl == 0.5) %>%
-  ggplot(aes(x = x, y = slope, shape=sig, group = dataset, color = as.factor(type))) +
-  geom_point(size=2) + geom_line(alpha = 0.5) +
-  geom_text_repel(data = subset(full2, method == "pbMutSel" & bl == 0.5 & type == "DMS"), nudge_x = 0.5, x=6.1, size=4, aes(label = dataset)) +
-  scale_x_continuous(name = "Inference Method", breaks = sort(unique(full2$x)), labels = levels(full2$method),limits = c(1, max(full2$x) + 0.35)) +
-  scale_shape_manual(values=c(1,19)) + scale_color_manual(values = type.colors) +
-  geom_hline(yintercept=0) + theme(legend.position="none") +
-  xlab("Inference Method") + ylab("Slope") + ggtitle("Full")
-subset.entropy.jsd.bl0.5 <- subset2 %>% filter(bl == 0.5) %>%
-  ggplot(aes(x = x, y = slope, shape=sig, group = dataset, color = as.factor(type))) +
-  geom_point(size=2) + geom_line(alpha = 0.5) +
-  geom_text_repel(data = subset(subset2, method == "pbMutSel" & bl == 0.5 & type == "DMS"), nudge_x = 0.25, x=6.1, size=4, aes(label = dataset)) +
-  scale_x_continuous(name = "Inference Method", breaks = sort(unique(subset2$x)), labels = levels(subset2$method),limits = c(1, max(subset2$x) + 0.35)) +
-  scale_shape_manual(values=c(1,19)) + scale_color_manual(values = type.colors) +
-  geom_hline(yintercept=0) +  theme(legend.position="none") +
-  xlab("Inference Method") + ylab("Slope") + ggtitle("Subset")
-
-jsd.true.slope <- plot_grid(entropy.jsd.bl0.5, subset.entropy.jsd.bl0.5, nrow=2, labels="AUTO", align = "hv")
-save_plot(paste0(si_plot_directory, "jsd_trueentropy_slopes.pdf"), jsd.true.slope, base_width = 7, base_height = 6)
-
-
-
-
-dnds.jsd.bl0.01 <- full2 %>% filter(bl == 0.01) %>%
-  ggplot(aes(x = x, y = slope, shape=sig, group = dataset, color = as.factor(type))) +
-  geom_point(size=2) + geom_line(alpha = 0.5) +
-  geom_text_repel(data = subset(full2, method == "pbMutSel" & bl == 0.01 & type == "DMS"), nudge_x = 0.5, x=6.1, size=4, aes(label = dataset)) +
-  scale_x_continuous(name = "Inference Method", breaks = sort(unique(full2$x)), labels = levels(full2$method),limits = c(1, max(full2$x) + 0.5)) +
-  scale_shape_manual(values=c(1,19)) + scale_color_manual(values = type.colors) +
-  geom_hline(yintercept=0) + theme(legend.position="none") +
-  xlab("Inference Method") + ylab("Slope") + ggtitle("BL = 0.01")
-subset.dnds.jsd.bl0.01 <- subset2 %>% filter(bl == 0.01) %>%
-  ggplot(aes(x = x, y = slope, shape=sig, group = dataset, color = as.factor(type))) +
-  geom_point(size=2) + geom_line(alpha = 0.5) +
-  geom_text_repel(data = subset(subset2, method == "pbMutSel" & bl == 0.01 & type == "DMS"), nudge_x = 0.25, x=6.1, size=4, aes(label = dataset)) +
-  scale_x_continuous(name = "Inference Method", breaks = sort(unique(subset2$x)), labels = levels(subset2$method),limits = c(1, max(subset2$x) + 0.5)) +
-  scale_shape_manual(values=c(1,19)) + scale_color_manual(values = type.colors) +
-  geom_hline(yintercept=0) +  theme(legend.position="none") +
-  xlab("Inference Method") + ylab("Slope") + ggtitle("Subset")
-jsd.true.slope <- plot_grid(dnds.jsd.bl0.01, subset.dnds.jsd.bl0.01, nrow=2, labels="AUTO", align = "hv")
-save_plot(paste0(si_plot_directory, "jsd_truednds_slopes_bl0.01.pdf"), jsd.true.slope, base_width = 7, base_height = 6)
-
-
-
-entropy.jsd.bl0.01 <- full2 %>% filter(bl == 0.01) %>%
-  ggplot(aes(x = x, y = slope, shape=sig, group = dataset, color = as.factor(type))) +
-  geom_point(size=2) + geom_line(alpha = 0.5) +
-  geom_text_repel(data = subset(full2, method == "pbMutSel" & bl == 0.01 & type == "DMS"), nudge_x = 0.5, x=6.1, size=4, aes(label = dataset)) +
-  scale_x_continuous(name = "Inference Method", breaks = sort(unique(full2$x)), labels = levels(full2$method),limits = c(1, max(full2$x) + 0.5)) +
-  scale_shape_manual(values=c(1,19)) + scale_color_manual(values = type.colors) +
-  geom_hline(yintercept=0) + theme(legend.position="none") +
-  xlab("Inference Method") + ylab("Slope") + ggtitle("BL = 0.01")
-subset.entropy.jsd.bl0.01 <- subset2 %>% filter(bl == 0.01) %>%
-  ggplot(aes(x = x, y = slope, shape=sig, group = dataset, color = as.factor(type))) +
-  geom_point(size=2) + geom_line(alpha = 0.5) +
-  geom_text_repel(data = subset(subset2, method == "pbMutSel" & bl == 0.01 & type == "DMS"), nudge_x = 0.25, x=6.1, size=4, aes(label = dataset)) +
-  scale_x_continuous(name = "Inference Method", breaks = sort(unique(subset2$x)), labels = levels(subset2$method),limits = c(1, max(subset2$x) + 0.5)) +
-  scale_shape_manual(values=c(1,19)) + scale_color_manual(values = type.colors) +
-  geom_hline(yintercept=0) +  theme(legend.position="none") +
-  xlab("Inference Method") + ylab("Slope") + ggtitle("Subset")
-jsd.true.slope <- plot_grid(entropy.jsd.bl0.01, subset.entropy.jsd.bl0.01, nrow=2, labels="AUTO", align = "hv")
-save_plot(paste0(si_plot_directory, "jsd_trueentropy_slopes_bl0.01.pdf"), jsd.true.slope, base_width = 7, base_height = 6)
-
+##### COMMENTED OUT PLOTS ARE NOT USED #####
+#
+# entropy.jsd.bl0.5 <- full2 %>% filter(bl == 0.5) %>%
+#   ggplot(aes(x = x, y = slope, shape=sig, group = dataset, color = as.factor(type))) +
+#   geom_point(size=2) + geom_line(alpha = 0.5) +
+#   geom_text_repel(data = subset(full2, method == "pbMutSel" & bl == 0.5 & type == "DMS"), nudge_x = 0.5, x=6.1, size=4, aes(label = dataset)) +
+#   scale_x_continuous(name = "Inference Method", breaks = sort(unique(full2$x)), labels = levels(full2$method),limits = c(1, max(full2$x) + 0.35)) +
+#   scale_shape_manual(values=c(1,19)) + scale_color_manual(values = type.colors) +
+#   geom_hline(yintercept=0) + theme(legend.position="none") +
+#   xlab("Inference Method") + ylab("Slope") + ggtitle("Full")
+# subset.entropy.jsd.bl0.5 <- subset2 %>% filter(bl == 0.5) %>%
+#   ggplot(aes(x = x, y = slope, shape=sig, group = dataset, color = as.factor(type))) +
+#   geom_point(size=2) + geom_line(alpha = 0.5) +
+#   geom_text_repel(data = subset(subset2, method == "pbMutSel" & bl == 0.5 & type == "DMS"), nudge_x = 0.25, x=6.1, size=4, aes(label = dataset)) +
+#   scale_x_continuous(name = "Inference Method", breaks = sort(unique(subset2$x)), labels = levels(subset2$method),limits = c(1, max(subset2$x) + 0.35)) +
+#   scale_shape_manual(values=c(1,19)) + scale_color_manual(values = type.colors) +
+#   geom_hline(yintercept=0) +  theme(legend.position="none") +
+#   xlab("Inference Method") + ylab("Slope") + ggtitle("Subset")
+#
+# jsd.true.slope <- plot_grid(entropy.jsd.bl0.5, subset.entropy.jsd.bl0.5, nrow=2, labels="AUTO", align = "hv")
+# save_plot(paste0(si_plot_directory, "jsd_trueentropy_slopes.pdf"), jsd.true.slope, base_width = 7, base_height = 6)
+#
+#
+#
+#
+# dnds.jsd.bl0.01 <- full2 %>% filter(bl == 0.01) %>%
+#   ggplot(aes(x = x, y = slope, shape=sig, group = dataset, color = as.factor(type))) +
+#   geom_point(size=2) + geom_line(alpha = 0.5) +
+#   geom_text_repel(data = subset(full2, method == "pbMutSel" & bl == 0.01 & type == "DMS"), nudge_x = 0.5, x=6.1, size=4, aes(label = dataset)) +
+#   scale_x_continuous(name = "Inference Method", breaks = sort(unique(full2$x)), labels = levels(full2$method),limits = c(1, max(full2$x) + 0.5)) +
+#   scale_shape_manual(values=c(1,19)) + scale_color_manual(values = type.colors) +
+#   geom_hline(yintercept=0) + theme(legend.position="none") +
+#   xlab("Inference Method") + ylab("Slope") + ggtitle("BL = 0.01")
+# subset.dnds.jsd.bl0.01 <- subset2 %>% filter(bl == 0.01) %>%
+#   ggplot(aes(x = x, y = slope, shape=sig, group = dataset, color = as.factor(type))) +
+#   geom_point(size=2) + geom_line(alpha = 0.5) +
+#   geom_text_repel(data = subset(subset2, method == "pbMutSel" & bl == 0.01 & type == "DMS"), nudge_x = 0.25, x=6.1, size=4, aes(label = dataset)) +
+#   scale_x_continuous(name = "Inference Method", breaks = sort(unique(subset2$x)), labels = levels(subset2$method),limits = c(1, max(subset2$x) + 0.5)) +
+#   scale_shape_manual(values=c(1,19)) + scale_color_manual(values = type.colors) +
+#   geom_hline(yintercept=0) +  theme(legend.position="none") +
+#   xlab("Inference Method") + ylab("Slope") + ggtitle("Subset")
+# jsd.true.slope <- plot_grid(dnds.jsd.bl0.01, subset.dnds.jsd.bl0.01, nrow=2, labels="AUTO", align = "hv")
+# save_plot(paste0(si_plot_directory, "jsd_truednds_slopes_bl0.01.pdf"), jsd.true.slope, base_width = 7, base_height = 6)
+#
+#
+#
+# entropy.jsd.bl0.01 <- full2 %>% filter(bl == 0.01) %>%
+#   ggplot(aes(x = x, y = slope, shape=sig, group = dataset, color = as.factor(type))) +
+#   geom_point(size=2) + geom_line(alpha = 0.5) +
+#   geom_text_repel(data = subset(full2, method == "pbMutSel" & bl == 0.01 & type == "DMS"), nudge_x = 0.5, x=6.1, size=4, aes(label = dataset)) +
+#   scale_x_continuous(name = "Inference Method", breaks = sort(unique(full2$x)), labels = levels(full2$method),limits = c(1, max(full2$x) + 0.5)) +
+#   scale_shape_manual(values=c(1,19)) + scale_color_manual(values = type.colors) +
+#   geom_hline(yintercept=0) + theme(legend.position="none") +
+#   xlab("Inference Method") + ylab("Slope") + ggtitle("BL = 0.01")
+# subset.entropy.jsd.bl0.01 <- subset2 %>% filter(bl == 0.01) %>%
+#   ggplot(aes(x = x, y = slope, shape=sig, group = dataset, color = as.factor(type))) +
+#   geom_point(size=2) + geom_line(alpha = 0.5) +
+#   geom_text_repel(data = subset(subset2, method == "pbMutSel" & bl == 0.01 & type == "DMS"), nudge_x = 0.25, x=6.1, size=4, aes(label = dataset)) +
+#   scale_x_continuous(name = "Inference Method", breaks = sort(unique(subset2$x)), labels = levels(subset2$method),limits = c(1, max(subset2$x) + 0.5)) +
+#   scale_shape_manual(values=c(1,19)) + scale_color_manual(values = type.colors) +
+#   geom_hline(yintercept=0) +  theme(legend.position="none") +
+#   xlab("Inference Method") + ylab("Slope") + ggtitle("Subset")
+# jsd.true.slope <- plot_grid(entropy.jsd.bl0.01, subset.entropy.jsd.bl0.01, nrow=2, labels="AUTO", align = "hv")
+# save_plot(paste0(si_plot_directory, "jsd_trueentropy_slopes_bl0.01.pdf"), jsd.true.slope, base_width = 7, base_height = 6)
+#
 
 
 
@@ -518,7 +522,8 @@ save_plot(paste0(si_plot_directory, "scatter_entropy_bl0.01_full.pdf"), scatter.
 # Plot a subset of histograms, place the remaining structural in SI
 theme_set(theme_cowplot() + theme(plot.margin = unit(c(0.2, 2, 0.2, 0.2),"cm"),
                                   legend.position = "none",
-                                  strip.text = element_text(size=10)))
+                                  strip.text = element_text(size=10),
+                                  axis.text.x = element_text(size=10)))
 grid_list <- c()
 i <- 1
 for (d in sub.datasets){
@@ -562,8 +567,15 @@ for (d in datasets){
     temp <- data.frame(dataset = d, binnedcoeffs = sc.temp$binnedcoeff, method = m)
     sc <- rbind(sc, temp)
   }
+  if(d %in% dms.datasets){
+    col <- "blue"
+  }
+  else
+  {
+  col <- "red"
+  }
   sc$method <- factor(sc$method, levels = c("True", "nopenal", "mvn100", "mvn10", "d0.01", "d0.1", "phylobayes"), labels = c("True", "Unpenalized", "mvn100", "mvn10", "d0.01", "d0.1", "pbMutSel"))
-  x <- ggplot(sc, aes(x = binnedcoeffs)) + geom_histogram(fill = "grey40", color = "grey40") + facet_grid(~method) + xlab("") + ylab("Count")
+  x <- ggplot(sc, aes(x = binnedcoeffs)) + geom_histogram(fill = col, color = col) + facet_grid(~method) + xlab("") + ylab("Count")
   x2 <- ggdraw(x) + draw_label(d, x = 0.96, y = 0.6, size=label_size, fontface = "bold")
   grid_list[[i]] <- x2
   i <- i + 1
@@ -587,8 +599,15 @@ for (d in datasets){
     temp <- data.frame(dataset = d, binnedcoeffs = sc.temp$binnedcoeff, method = m)
     sc <- rbind(sc, temp)
   }
+  if(d %in% dms.datasets){
+    col <- "blue"
+  }
+  else
+  {
+  col <- "red"
+  }
   sc$method <- factor(sc$method, levels = c("True", "nopenal", "mvn100", "mvn10", "d0.01", "d0.1", "phylobayes"), labels = c("True", "Unpenalized", "mvn100", "mvn10", "d0.01", "d0.1", "pbMutSel"))
-  x <- ggplot(sc, aes(x = binnedcoeffs)) + geom_histogram(fill = "grey40", color = "grey40") + facet_grid(~method) + ylab("Count") + xlab("")
+  x <- ggplot(sc, aes(x = binnedcoeffs)) + geom_histogram(fill = col, color = col) + facet_grid(~method) + ylab("Count") + xlab("")
   x2 <- ggdraw(x) + draw_label(d, x = 0.96, y = 0.7, size=label_size, fontface = "bold")
 
   if (d %in% dms.datasets){

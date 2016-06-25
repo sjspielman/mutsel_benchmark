@@ -16,7 +16,7 @@ import numpy as np
 mudict  = {'AC':1.,  'CA':1.,  'AG':1.,  'GA':1.,  'AT':1.,  'TA':1.,  'CG':1.,  'GC':1.,  'CT':1.,  'TC':1.,  'GT':1.,  'TG':1.}
 truedir = "true_simulation_parameters/"
 
-for source in ["HA", "NP", "LAC", "GAL4"]:
+for source in ["HA", "NP", "LAC", "Gal4"]:
     print source
     infile  = truedir + source + "_prefs.txt"   
     outname = truedir + source   

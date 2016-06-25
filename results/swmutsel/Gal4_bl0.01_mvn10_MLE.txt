@@ -1,5 +1,5 @@
 -sequences
-GAL4_bl0.01.phy
+Gal4_bl0.01.phy
 
 -geneticcode
 standard

@@ -177,8 +177,8 @@ def main():
     
     # Grab all the true codon frequencies
     true_frequencies = {} 
-    dms_datasets = ["HA", "NP", "LAC", "GAL4"]
-    all_datasets = ["HA", "NP", "LAC", "GAL4", "1B4T_A", "1RII_A", "1V9S_B", "1G58_B", "1W7W_B", "2BCG_Y", "2CFE_A", "1R6M_A", "2FLI_A", "1GV3_A", "1IBS_A"]
+    dms_datasets = ["HA", "NP", "LAC", "Gal4"]
+    all_datasets = ["HA", "NP", "LAC", "Gal4", "1B4T_A", "1RII_A", "1V9S_B", "1G58_B", "1W7W_B", "2BCG_Y", "2CFE_A", "1R6M_A", "2FLI_A", "1GV3_A", "1IBS_A"]
     for data in all_datasets:
         t = np.loadtxt(true_directory + data + "_true_codon_frequencies.txt")
         true_frequencies[data] = t            

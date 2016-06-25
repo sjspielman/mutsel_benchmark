@@ -8,9 +8,9 @@ resdir       <- "dataframes/"
 truedir      <- "../simulation/true_simulation_parameters/"
 datadir      <- "dataframes/"
 
-all.datasets   <- c("1B4T_A", "1RII_A", "1V9S_B", "1G58_B", "1W7W_B", "2BCG_Y", "2CFE_A", "1R6M_A", "2FLI_A", "1GV3_A", "1IBS_A", "HA", "NP", "LAC", "GAL4")
+all.datasets   <- c("1B4T_A", "1RII_A", "1V9S_B", "1G58_B", "1W7W_B", "2BCG_Y", "2CFE_A", "1R6M_A", "2FLI_A", "1GV3_A", "1IBS_A", "HA", "NP", "LAC", "Gal4")
 branch.lengths <- c("0.01", "0.5")
-dms.datasets   <- c("HA", "NP", "LAC", "GAL4")
+dms.datasets   <- c("HA", "NP", "LAC", "Gal4")
 methods        <- c("nopenal", "d0.01", "d0.1", "mvn10", "mvn100" , "phylobayes")
 
 dat <- data.frame("dataset"      = character(),
