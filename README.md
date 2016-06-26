@@ -19,7 +19,7 @@
 
 - `postprocessing/` contains all code used to process, analyze, and plot data (mostly `R` scripts). All generated plots are also in this directory. **Note**: R code requires the packages cowplot, ggrepel, dplyr, tidyr, readr, grid, lme4, multcomp, and lmerTest.
     - [`calculate_inferred_quantities.py`](./postprocessing/calculate_inferred_quantities.py) calculates *dN/dS*, entropy, selection coefficient distributions, and JSD for inferences in `results/`. Resulting quantities are in the subdirectory [dataframes](./postprocessing/dataframes).
-    - [`process_results.R`](./postprocessing/process_results.R) processes inference results in [dataframes](./postprocessing/dataframes) to create the final csv file [inference_results.csv](./postprocessing/dataframes/inference_results.csv
+    - [`process_results.R`](./postprocessing/process_results.R) processes inference results in [dataframes](./postprocessing/dataframes) to create the final csv file [inference_results.csv](./postprocessing/dataframes/inference_results.csv)
     - [`plot_figures.R`](./postprocessing/plot_figures.R) makes all the figures in the manuscript. Figures are saved in either in the subdirectory [`maintext_figures/`](./postprocessing/maintext_figures/) or [`SI_figures/`](./postprocessing/SI_figures/)
 
 - `universal_functions.py` is just a python module containing various functions used throughout the repository.
