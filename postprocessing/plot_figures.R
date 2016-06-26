@@ -9,7 +9,6 @@ library(ggrepel)
 library(dplyr)
 library(tidyr)
 library(readr)
-library(purrr)
 library(grid)
 
 
@@ -71,18 +70,18 @@ result_directory         <- "dataframes/"
 true_directory           <- "../simulation/true_simulation_parameters/"
 maintext_plot_directory  <- "maintext_figures/"
 si_plot_directory        <- "SI_figures/"
-repr.datasets            <- c("1R6M_A", "NP")
-dms.datasets             <- c("Gal4", "LAC", "HA", "NP")
 methods_levels           <- c("nopenal", "mvn100", "mvn10", "d0.01", "d0.1", "phylobayes")
 methods_labels           <- c("Unpenalized", "mvn100", "mvn10", "d0.01", "d0.1", "pbMutSel")
-alpha                    <- 0.01 # Significance
+alpha                    <- 0.05 # Significance
 corrected.alpha          <- alpha/length(methods_levels) #Bonferroni significance
 
 
 dat <- read.csv(paste0(result_directory, "inference_results.csv"))
 true.selcoeffs <- read_csv(paste0(result_directory, "true_selection_coefficients.csv"))
-datasets <- c("1B4T_A", "1RII_A", "1V9S_B", "1G58_B", "1W7W_B", "2BCG_Y", "2CFE_A", "1R6M_A", "2FLI_A", "1GV3_A", "1IBS_A", "Gal4", "LAC", "HA", "NP")
-sub.datasets <- c("1R6M_A", "Gal4", "LAC", "HA", "NP")
+datasets      <- c("1B4T_A", "1RII_A", "1V9S_B", "1G58_B", "1W7W_B", "2BCG_Y", "2CFE_A", "1R6M_A", "2FLI_A", "1GV3_A", "1IBS_A", "Gal4", "LAC", "HA", "NP")
+sub.datasets  <- c("1GV3_A", "Gal4", "LAC", "HA", "NP")
+repr.datasets <- c("1GV3_A", "NP")
+dms.datasets  <- c("Gal4", "LAC", "HA", "NP")
 
 
 dat <- mutate(dat, type = ifelse(!(dataset %in% dms.datasets), "Natural", "DMS"))
@@ -396,7 +395,10 @@ jsd.dnds.true.slope <- ggdraw() + draw_plot(jsd.dnds.reprs.bl0.5, 0, 0.5, 1, 0.5
                                   draw_plot(subset.dnds.jsd.bl0.5, 0.5, 0, 0.5, 0.5) +
                                   draw_plot_label(c("A", "B", "C"), c(0, 0, 0.5), c(1, 0.5, 0.5), size = 15)
 
-save_plot(paste0(maintext_plot_directory, "jsd_truednds_slopes.pdf"), jsd.dnds.true.slope , base_width = 11, base_height = 6)
+save_plot(paste0(maintext_plot_directory, "jsd_truednds_slopes.pdf"), jsd.dnds.true.slope , base_width = 11.5, base_height = 6)
+
+
+
 
 
 ##### COMMENTED OUT PLOTS ARE NOT USED #####
