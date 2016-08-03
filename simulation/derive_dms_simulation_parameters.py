@@ -1,7 +1,7 @@
 """
     SJS
     Script to extract parameters for simulation from deep mutational scanning data. Some notes..
-        Extract codon frequencies, dnds from deep mutational scanning AA preferences combined with experimental mutation rates. 
+        Extract codon frequencies, dnds from deep mutational scanning AA preferences combined with experimental mutation rates.
         Note that these parameters, as they are experimental, are simply taken as they are, and NOT subjected to a strongly/weakly deleterious regime.
 """
 
@@ -18,8 +18,8 @@ truedir = "true_simulation_parameters/"
 
 for source in ["HA", "NP", "LAC", "Gal4"]:
     print source
-    infile  = truedir + source + "_prefs.txt"   
-    outname = truedir + source   
+    infile  = truedir + source + "_prefs.txt"
+    outname = truedir + source
     rawpref = np.loadtxt(infile)
     nsites  = len(rawpref)
 
@@ -28,7 +28,6 @@ for source in ["HA", "NP", "LAC", "Gal4"]:
     final_dnds = np.zeros(nsites)
     final_entropy = np.zeros(nsites)
     for i in range(nsites):
-        print "  ",i
         aa_freqs      = rawpref[i] / np.sum(rawpref[i]) # Renormalize. They are at a bad tolerance.
         aa_fitness    = np.log(aa_freqs)
         codon_fitness = aa_fitness_to_codon_fitness(aa_fitness)
@@ -39,7 +38,7 @@ for source in ["HA", "NP", "LAC", "Gal4"]:
         final_codon_freqs[i] = cf
         final_fitness[i]     = aa_fitness
         final_dnds[i]        = dnds
-        final_entropy[i]     = calculate_entropy( aa_freqs ) 
+        final_entropy[i]     = calculate_entropy( aa_freqs )
 
 
     save_simulation_info(outname, final_codon_freqs, final_fitness, final_dnds, final_entropy)

@@ -115,7 +115,7 @@ sub.selcoeffs$dataset <- factor(sub.selcoeffs$dataset, levels=sub.datasets)
 dat %>% filter(dataset %in% sub.datasets, method == "mvn10") -> sub.dat
 sub.dat$dataset <- factor(sub.dat$dataset, levels=sub.datasets)
 
-compare.truesc <- sub.selcoeffs %>% ggplot(aes(x = binnedcoeffs)) + geom_density(aes(fill = type), alpha=0.7) + facet_grid(~dataset, scales="free_y") + scale_x_continuous(limits=c(-10,10)) + ylab("Density")  + xlab("True S") + scale_fill_manual(name = "Data Type", values = type.colors) + theme(legend.title = element_text(size=12), legend.text = element_text(size=10), legend.key.size = unit(0.4, "cm"))
+compare.truesc <- sub.selcoeffs %>% ggplot(aes(x = binnedcoeff)) + geom_density(aes(fill = type), alpha=0.7) + facet_grid(~dataset, scales="free_y") + scale_x_continuous(limits=c(-10,10)) + ylab("Density")  + xlab("True S") + scale_fill_manual(name = "Data Type", values = type.colors) + theme(legend.title = element_text(size=12), legend.text = element_text(size=10), legend.key.size = unit(0.4, "cm"))
 save_plot(paste0(maintext_plot_directory, "small_selcoeffs.pdf"), compare.truesc, base_width=10, base_height=2)
 
 
@@ -401,78 +401,6 @@ save_plot(paste0(maintext_plot_directory, "jsd_truednds_slopes.pdf"), jsd.dnds.t
 
 
 
-##### COMMENTED OUT PLOTS ARE NOT USED #####
-#
-# entropy.jsd.bl0.5 <- full2 %>% filter(bl == 0.5) %>%
-#   ggplot(aes(x = x, y = slope, shape=sig, group = dataset, color = as.factor(type))) +
-#   geom_point(size=2) + geom_line(alpha = 0.5) +
-#   geom_text_repel(data = subset(full2, method == "pbMutSel" & bl == 0.5 & type == "DMS"), nudge_x = 0.5, x=6.1, size=4, aes(label = dataset)) +
-#   scale_x_continuous(name = "Inference Method", breaks = sort(unique(full2$x)), labels = levels(full2$method),limits = c(1, max(full2$x) + 0.35)) +
-#   scale_shape_manual(values=c(1,19)) + scale_color_manual(values = type.colors) +
-#   geom_hline(yintercept=0) + theme(legend.position="none") +
-#   xlab("Inference Method") + ylab("Slope") + ggtitle("Full")
-# subset.entropy.jsd.bl0.5 <- subset2 %>% filter(bl == 0.5) %>%
-#   ggplot(aes(x = x, y = slope, shape=sig, group = dataset, color = as.factor(type))) +
-#   geom_point(size=2) + geom_line(alpha = 0.5) +
-#   geom_text_repel(data = subset(subset2, method == "pbMutSel" & bl == 0.5 & type == "DMS"), nudge_x = 0.25, x=6.1, size=4, aes(label = dataset)) +
-#   scale_x_continuous(name = "Inference Method", breaks = sort(unique(subset2$x)), labels = levels(subset2$method),limits = c(1, max(subset2$x) + 0.35)) +
-#   scale_shape_manual(values=c(1,19)) + scale_color_manual(values = type.colors) +
-#   geom_hline(yintercept=0) +  theme(legend.position="none") +
-#   xlab("Inference Method") + ylab("Slope") + ggtitle("Subset")
-#
-# jsd.true.slope <- plot_grid(entropy.jsd.bl0.5, subset.entropy.jsd.bl0.5, nrow=2, labels="AUTO", align = "hv")
-# save_plot(paste0(si_plot_directory, "jsd_trueentropy_slopes.pdf"), jsd.true.slope, base_width = 7, base_height = 6)
-#
-#
-#
-#
-# dnds.jsd.bl0.01 <- full2 %>% filter(bl == 0.01) %>%
-#   ggplot(aes(x = x, y = slope, shape=sig, group = dataset, color = as.factor(type))) +
-#   geom_point(size=2) + geom_line(alpha = 0.5) +
-#   geom_text_repel(data = subset(full2, method == "pbMutSel" & bl == 0.01 & type == "DMS"), nudge_x = 0.5, x=6.1, size=4, aes(label = dataset)) +
-#   scale_x_continuous(name = "Inference Method", breaks = sort(unique(full2$x)), labels = levels(full2$method),limits = c(1, max(full2$x) + 0.5)) +
-#   scale_shape_manual(values=c(1,19)) + scale_color_manual(values = type.colors) +
-#   geom_hline(yintercept=0) + theme(legend.position="none") +
-#   xlab("Inference Method") + ylab("Slope") + ggtitle("BL = 0.01")
-# subset.dnds.jsd.bl0.01 <- subset2 %>% filter(bl == 0.01) %>%
-#   ggplot(aes(x = x, y = slope, shape=sig, group = dataset, color = as.factor(type))) +
-#   geom_point(size=2) + geom_line(alpha = 0.5) +
-#   geom_text_repel(data = subset(subset2, method == "pbMutSel" & bl == 0.01 & type == "DMS"), nudge_x = 0.25, x=6.1, size=4, aes(label = dataset)) +
-#   scale_x_continuous(name = "Inference Method", breaks = sort(unique(subset2$x)), labels = levels(subset2$method),limits = c(1, max(subset2$x) + 0.5)) +
-#   scale_shape_manual(values=c(1,19)) + scale_color_manual(values = type.colors) +
-#   geom_hline(yintercept=0) +  theme(legend.position="none") +
-#   xlab("Inference Method") + ylab("Slope") + ggtitle("Subset")
-# jsd.true.slope <- plot_grid(dnds.jsd.bl0.01, subset.dnds.jsd.bl0.01, nrow=2, labels="AUTO", align = "hv")
-# save_plot(paste0(si_plot_directory, "jsd_truednds_slopes_bl0.01.pdf"), jsd.true.slope, base_width = 7, base_height = 6)
-#
-#
-#
-# entropy.jsd.bl0.01 <- full2 %>% filter(bl == 0.01) %>%
-#   ggplot(aes(x = x, y = slope, shape=sig, group = dataset, color = as.factor(type))) +
-#   geom_point(size=2) + geom_line(alpha = 0.5) +
-#   geom_text_repel(data = subset(full2, method == "pbMutSel" & bl == 0.01 & type == "DMS"), nudge_x = 0.5, x=6.1, size=4, aes(label = dataset)) +
-#   scale_x_continuous(name = "Inference Method", breaks = sort(unique(full2$x)), labels = levels(full2$method),limits = c(1, max(full2$x) + 0.5)) +
-#   scale_shape_manual(values=c(1,19)) + scale_color_manual(values = type.colors) +
-#   geom_hline(yintercept=0) + theme(legend.position="none") +
-#   xlab("Inference Method") + ylab("Slope") + ggtitle("BL = 0.01")
-# subset.entropy.jsd.bl0.01 <- subset2 %>% filter(bl == 0.01) %>%
-#   ggplot(aes(x = x, y = slope, shape=sig, group = dataset, color = as.factor(type))) +
-#   geom_point(size=2) + geom_line(alpha = 0.5) +
-#   geom_text_repel(data = subset(subset2, method == "pbMutSel" & bl == 0.01 & type == "DMS"), nudge_x = 0.25, x=6.1, size=4, aes(label = dataset)) +
-#   scale_x_continuous(name = "Inference Method", breaks = sort(unique(subset2$x)), labels = levels(subset2$method),limits = c(1, max(subset2$x) + 0.5)) +
-#   scale_shape_manual(values=c(1,19)) + scale_color_manual(values = type.colors) +
-#   geom_hline(yintercept=0) +  theme(legend.position="none") +
-#   xlab("Inference Method") + ylab("Slope") + ggtitle("Subset")
-# jsd.true.slope <- plot_grid(entropy.jsd.bl0.01, subset.entropy.jsd.bl0.01, nrow=2, labels="AUTO", align = "hv")
-# save_plot(paste0(si_plot_directory, "jsd_trueentropy_slopes_bl0.01.pdf"), jsd.true.slope, base_width = 7, base_height = 6)
-#
-
-
-
-
-
-
-
 #############################################################################################
 ##################################### All the scatterplots ##################################
 
@@ -526,13 +454,14 @@ theme_set(theme_cowplot() + theme(plot.margin = unit(c(0.2, 2, 0.2, 0.2),"cm"),
                                   legend.position = "none",
                                   strip.text = element_text(size=10),
                                   axis.text.x = element_text(size=10)))
+
 grid_list <- c()
 i <- 1
 for (d in sub.datasets){
   sc <- true.selcoeffs %>% filter(dataset == d) %>% mutate(method = "True")
   for (m in methods_levels){
     sc.temp <- read.csv(paste0("dataframes/",d,"_bl0.5_", m, "_selcoeffs.csv"))
-    temp <- data.frame(dataset = d, binnedcoeffs = sc.temp$binnedcoeff, method = m)
+    temp <- data.frame(dataset = d, binnedcoeff = sc.temp$binnedcoeff, method = m)
     sc <- rbind(sc, temp)
   }
   if(d %in% dms.datasets){
@@ -543,7 +472,7 @@ for (d in sub.datasets){
   col <- "red"
   }
   sc$method <- factor(sc$method, levels = c("True", "nopenal", "mvn100", "mvn10", "d0.01", "d0.1", "phylobayes"), labels = c("True", "Unpenalized", "mvn100", "mvn10", "d0.01", "d0.1", "pbMutSel"))
-  x <- ggplot(sc, aes(x = binnedcoeffs)) + geom_histogram(fill = col, color = col) + facet_grid(~method) + xlab("Selection Coefficients") + ylab("Count")
+  x <- ggplot(sc, aes(x = binnedcoeff)) + geom_histogram(fill = col, color = col) + facet_grid(~method) + xlab("Selection Coefficients") + ylab("Count")
   x2 <- ggdraw(x) + draw_label(d, x = 0.955, y = 0.5, size=14, fontface = "bold")
   grid_list[[i]] <- x2
   i <- i + 1
@@ -566,7 +495,7 @@ for (d in datasets){
   sc <- true.selcoeffs %>% filter(dataset == d) %>% mutate(method = "True")
   for (m in methods_levels){
     sc.temp <- read.csv(paste0("dataframes/",d,"_bl0.5_", m, "_selcoeffs.csv"))
-    temp <- data.frame(dataset = d, binnedcoeffs = sc.temp$binnedcoeff, method = m)
+    temp <- data.frame(dataset = d, binnedcoeff = sc.temp$binnedcoeff, method = m)
     sc <- rbind(sc, temp)
   }
   if(d %in% dms.datasets){
@@ -577,7 +506,7 @@ for (d in datasets){
   col <- "red"
   }
   sc$method <- factor(sc$method, levels = c("True", "nopenal", "mvn100", "mvn10", "d0.01", "d0.1", "phylobayes"), labels = c("True", "Unpenalized", "mvn100", "mvn10", "d0.01", "d0.1", "pbMutSel"))
-  x <- ggplot(sc, aes(x = binnedcoeffs)) + geom_histogram(fill = col, color = col) + facet_grid(~method) + xlab("") + ylab("Count")
+  x <- ggplot(sc, aes(x = binnedcoeff)) + geom_histogram(fill = col, color = col) + facet_grid(~method) + xlab("") + ylab("Count")
   x2 <- ggdraw(x) + draw_label(d, x = 0.96, y = 0.6, size=label_size, fontface = "bold")
   grid_list[[i]] <- x2
   i <- i + 1
@@ -598,7 +527,7 @@ for (d in datasets){
   sc <- true.selcoeffs %>% filter(dataset == d) %>% mutate(method = "True")
   for (m in methods_levels){
     sc.temp <- read.csv(paste0("dataframes/",d,"_bl0.01_", m, "_selcoeffs.csv"))
-    temp <- data.frame(dataset = d, binnedcoeffs = sc.temp$binnedcoeff, method = m)
+    temp <- data.frame(dataset = d, binnedcoeff = sc.temp$binnedcoeff, method = m)
     sc <- rbind(sc, temp)
   }
   if(d %in% dms.datasets){
@@ -609,7 +538,7 @@ for (d in datasets){
   col <- "red"
   }
   sc$method <- factor(sc$method, levels = c("True", "nopenal", "mvn100", "mvn10", "d0.01", "d0.1", "phylobayes"), labels = c("True", "Unpenalized", "mvn100", "mvn10", "d0.01", "d0.1", "pbMutSel"))
-  x <- ggplot(sc, aes(x = binnedcoeffs)) + geom_histogram(fill = col, color = col) + facet_grid(~method) + ylab("Count") + xlab("")
+  x <- ggplot(sc, aes(x = binnedcoeff)) + geom_histogram(fill = col, color = col) + facet_grid(~method) + ylab("Count") + xlab("")
   x2 <- ggdraw(x) + draw_label(d, x = 0.96, y = 0.7, size=label_size, fontface = "bold")
 
   if (d %in% dms.datasets){

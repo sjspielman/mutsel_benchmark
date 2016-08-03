@@ -16,15 +16,7 @@ from universal_functions import *
 
 ### Simulation constants and functions ###
 mu_dict        = {'AC':1.,  'CA':1.,  'AG':1.,  'GA':1.,  'AT':1.,  'TA':1.,  'CG':1.,  'GC':1.,  'CT':1.,  'TC':1.,  'GT':1.,  'TG':1.}
-STRONG_FREQ    = 1e-9
-
-def apply_weakdel(fitness):
-    '''
-        Convert a fitness distribution to weakly deleterious regime.
-    '''
-    random_fit = np.random.uniform(low = WEAK_FIT[0], high = WEAK_FIT[1], size = np.sum(fitness <= WEAK_THRESHOLD))
-    fitness[fitness <= WEAK_THRESHOLD] = random_fit
-    return fitness
+unseen_aa_freq = 1e-9
 
 
 output_directory = "true_simulation_parameters/"
@@ -59,9 +51,8 @@ for file in yeastfiles:
                 aaf = fraw.compute_frequencies()
                 if np.count_nonzero(aaf) > 1:
 
-                    #### Highly deleterious ####
                     aaf2 = np.copy(aaf)
-                    aaf2[aaf2 == 0.] = STRONG_FREQ
+                    aaf2[aaf2 == 0.] = unseen_aa_freq
                     aaf2 /= np.sum(aaf2)
 
                     aa_fitness = np.log(aaf2)
