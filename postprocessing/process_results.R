@@ -45,7 +45,6 @@ for (name in all.datasets)
     {
         for (meth in methods)
         {
-            if (bl == 0.5 & name == "LAC" & meth == "phylobayes") next
             results <- read.csv(paste0(datadir, name, "_bl", bl, "_", meth, "_statistics.csv"))
             temp <- data.frame("dataset" = name, "bl" = bl, "site" = results$site, "jsd" = results$jsd, "diffsum" = results$abs_sum_differences, "entropy" = results$entropy, "neff.aa" = exp(results$entropy), "dnds" = results$dnds, "method" = meth, "true.dnds" = true$dnds , "true.entropy" = true$entropy)
             dat <- rbind(dat, temp)

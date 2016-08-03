@@ -154,8 +154,7 @@ jsd.diffsum %>% filter(bl == 0.01) %>%
   scale_color_manual(values=type.colors, name = "Data type") + ylab("Average JSD")+
   scale_x_continuous(name = "Inference Method", breaks = sort(unique(jsd.diffsum$x)), labels = levels(jsd.diffsum$method),limits = c(1, max(jsd.diffsum$x) + 1))  +
   theme(legend.position = "none") -> jsd.lineplot.raw2
-jsd.lineplot1 <- plot_grid(jsd.lineplot.raw1, jsd.lineplot.raw2, nrow=1, labels="AUTO")
-jsd.lineplot  <- plot_grid(jsd.lineplot1, type.legend, ncol=1, rel_heights=c(1, 0.09))
+jsd.lineplot <- plot_grid(jsd.lineplot.raw1, jsd.lineplot.raw2, nrow=1, labels="AUTO")
 save_plot(paste0(maintext_plot_directory, "jsd_lineplot.pdf"), jsd.lineplot, base_width = 12, base_height=3.5)
 
 jsd.diffsum %>% filter(bl == 0.5) %>%
@@ -172,8 +171,7 @@ jsd.diffsum %>% filter(bl == 0.01) %>%
   scale_color_manual(values=type.colors, name = "Data type") + ylab("Average Sum of Differences")+
   scale_x_continuous(name = "Inference Method", breaks = sort(unique(jsd.diffsum$x)), labels = levels(jsd.diffsum$method),limits = c(1, max(jsd.diffsum$x) + 1))  +
   theme(legend.position = "none") -> diffsum.lineplot.raw2
-diffsum.lineplot1 <- plot_grid(diffsum.lineplot.raw1, diffsum.lineplot.raw2, nrow=1, labels="AUTO")
-diffsum.lineplot  <- plot_grid(diffsum.lineplot1, type.legend, ncol=1, rel_heights=c(1, 0.09))
+diffsum.lineplot <- plot_grid(diffsum.lineplot.raw1, diffsum.lineplot.raw2, nrow=1, labels="AUTO")
 save_plot(paste0(si_plot_directory, "diffsum_lineplot.pdf"), diffsum.lineplot, base_width = 12, base_height=3.5)
 
 
