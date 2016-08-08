@@ -1,3 +1,5 @@
+# Quick script to extract fitness from swmutsel inferences into own file, as needed for certain runs due to our ancient cluster bailing from time to time 
+
 import os
 from numpy import savetxt
 
@@ -18,4 +20,4 @@ for file in files:
                     fitness.append( [float(y) for (x,y) in sorted(zip(new_order,newline))] )
 
         # Save a file with the correctly-ordered (well, my order) amino-acid fitness values
-        savetxt("swmutsel/" + fitfile, fitness, delimiter = '\t')        
+        savetxt("swmutsel/" + fitfile, fitness, delimiter = '\t')
