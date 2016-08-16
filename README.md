@@ -1,6 +1,8 @@
 ### Repository for *Extensively parameterized mutation–selection models reliably capture site-specific selective constraint*, by SJS\* and COW. 
 
-### Contents of repository:
+#### Please cite the following article, as needed: [http://mbe.oxfordjournals.org/content/early/2016/08/10/molbev.msw171.abstract](http://mbe.oxfordjournals.org/content/early/2016/08/10/molbev.msw171.abstract)
+
+#### Contents of repository:
 
 - `data/` contains all simulated alignments, and the 512-taxon balanced trees (with branch lengths of either 0.5 or 0.01) used during simulation. Alignments are named with this format: ``<dataset_name>_bl<0.5/0.01>.phy``, where ``bl`` indicates the branch lengths of the tree used for simulation.
 
